@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "AquaKart",
+    "slug": "aquakart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "aquakart",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0A4DA2"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A4DA2"
+      },
+      "package": "com.aquakart.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

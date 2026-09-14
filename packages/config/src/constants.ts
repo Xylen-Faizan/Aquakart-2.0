@@ -1,0 +1,12 @@
+export const ORDER_STATUSES = { PLACED: 'placed', ACCEPTED: 'accepted', REJECTED: 'rejected', PREPARING: 'preparing', OUT_FOR_DELIVERY: 'out_for_delivery', DELIVERED: 'delivered', CANCELLED: 'cancelled' } as const;
+export const PAYMENT_METHODS = { CASH: 'cash', UPI: 'upi' } as const;
+export const PAYMENT_STATUSES = { PENDING: 'pending', PAID: 'paid' } as const;
+export const USER_ROLES = { CUSTOMER: 'customer', SUPPLIER: 'supplier', ADMIN: 'admin' } as const;
+export const ADDRESS_LABELS = { HOME: 'Home', OFFICE: 'Office', OTHER: 'Other' } as const;
+export const DELIVERY_FEE = 0;
+export const CURRENCY_SYMBOL = '\u20b9';
+export type OrderStatus = typeof ORDER_STATUSES[keyof typeof ORDER_STATUSES];
+export type PaymentMethod = typeof PAYMENT_METHODS[keyof typeof PAYMENT_METHODS];
+export type PaymentStatus = typeof PAYMENT_STATUSES[keyof typeof PAYMENT_STATUSES];
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type AddressLabel = typeof ADDRESS_LABELS[keyof typeof ADDRESS_LABELS];
