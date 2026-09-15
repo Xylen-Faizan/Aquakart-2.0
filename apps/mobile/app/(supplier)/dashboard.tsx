@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { theme } from '../../constants/theme';
 import { SupplierCapacityService } from '../../services/supplier-capacity';
 import { SupplierOrderService } from '../../services/supplier-order';
 import { SupplierService } from '../../services/supplier';
+import { useSupplierOrderRealtime } from '../../hooks/useSupplierOrderRealtime';
 
 export default function DashboardScreen() {
   const { profile, signOut } = useAuth();
@@ -21,32 +22,22 @@ export default function DashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [supplierProfile, setSupplierProfile] = useState<any>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchDashboardData();
-    }, [])
-  );
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [capData, allOrders, ownProf] = await Promise.all([
-        SupplierCapacityService.getTodayCapacity(),
-        SupplierOrderService.getAssignedOrders(),
-        SupplierService.getOwnProfile()
-      ]);
-      
-      setCapacity(capData);
-      if (ownProf && ownProf.supplier) {
-        setSupplierProfile(ownProf.supplier);
-      }
-      
+      const supplier = await SupplierService.getCurrentSupplier();
+      setSupplierProfile(supplier);
+
+      const cap = await SupplierCapacityService.getTodayCapacity();
+      setCapacity(cap);
+
+      const allOrders = await SupplierOrderService.getAssignedOrders();
       if (allOrders) {
-        const active = allOrders.filter((o: any) => 
+        const activeCount = allOrders.filter((o: any) => 
           ['placed', 'accepted', 'preparing', 'out_for_delivery'].includes(o.status)
-        );
-        setActiveOrdersCount(active.length);
+        ).length;
+        setActiveOrdersCount(activeCount);
         
         // Show up to 3 recent pending orders
         const recent = allOrders
@@ -56,12 +47,20 @@ export default function DashboardScreen() {
           
         setOrders(recent);
       }
-    } catch (e: any) {
-      setError(e.message || 'Failed to load dashboard data');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [fetchDashboardData])
+  );
+
+  useSupplierOrderRealtime(supplierProfile?.id, fetchDashboardData);
 
   const getStatusVariant = (status: string) => {
     switch (status) {

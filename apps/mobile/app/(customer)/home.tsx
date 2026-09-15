@@ -174,7 +174,7 @@ export default function HomeScreen() {
                 </View>
                 
                 <View style={styles.supplierProductRow}>
-                  <Text style={styles.supplierProductText}>20L Jar • ₹{supplier.price || 80}</Text>
+                  <Text style={styles.supplierProductText}>20L Jar • {supplier.price ? `₹${supplier.price}` : 'Price varies'}</Text>
                 </View>
                 
                 <View style={styles.supplierStatusRow}>
@@ -205,14 +205,14 @@ export default function HomeScreen() {
                 <Image source={require('../../assets/images/jar_20l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>20L Jar</Text>
-              <Text style={styles.productPrice}>₹20</Text>
+              <Text style={styles.productPrice}>View prices</Text>
             </View>
             <View style={styles.productCard}>
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/bottle_1l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>1L Bottles</Text>
-              <Text style={styles.productPrice}>₹25</Text>
+              <Text style={styles.productPrice}>View prices</Text>
             </View>
           </View>
         </View>

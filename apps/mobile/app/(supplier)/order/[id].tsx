@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { Button, Card, Badge } from '../../../components/ui';
 import { ErrorState, LoadingState } from '../../../components/feedback';
 import { supabase } from '../../../lib/supabase/client';
 import { VALID_TRANSITIONS, OrderStatus } from '@aquakart/config';
+import { useSupplierOrderRealtime } from '../../../hooks/useSupplierOrderRealtime';
 
 export default function SupplierOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,26 +22,7 @@ export default function SupplierOrderDetailScreen() {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  useEffect(() => {
-    fetchOrder();
-
-    const subscription = supabase
-      .channel(`public:orders:id=eq.${id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${id}` },
-        (payload) => {
-          setOrder((prev: any) => ({ ...prev, ...payload.new }));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [id]);
-
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -51,7 +33,13 @@ export default function SupplierOrderDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
+
+  useSupplierOrderRealtime(order?.supplier_id, fetchOrder);
 
   const handleAccept = async () => {
     try {

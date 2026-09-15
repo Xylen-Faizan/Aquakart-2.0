@@ -1,18 +1,11 @@
 import { supabase } from '../lib/supabase/client';
+import { getIndiaBusinessDate } from '../lib/date';
+import { SupplierService } from './supplier';
 
 export const SupplierCapacityService = {
   async getTodayCapacity() {
-    const today = new Date().toISOString().split('T')[0];
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: supplier } = await supabase
-      .from('suppliers')
-      .select('id')
-      .eq('profile_id', user.id)
-      .single();
-
-    if (!supplier) throw new Error('Supplier profile not found');
+    const today = getIndiaBusinessDate();
+    const supplier = await SupplierService.getCurrentSupplier();
 
     const { data, error } = await supabase
       .from('supplier_capacity_view')
@@ -26,7 +19,7 @@ export const SupplierCapacityService = {
   },
 
   async setCapacity(maxCapacity: number) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getIndiaBusinessDate();
     const { error } = await supabase.rpc('set_supplier_capacity', {
       p_date: today,
       p_max_capacity: maxCapacity

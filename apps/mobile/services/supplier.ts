@@ -10,7 +10,30 @@ export const SupplierService = {
       });
 
     if (error) throw error;
-    return data as AvailableSupplier[];
+    
+    // Normalize and validate response
+    const normalized = (data ?? []).map((supplier: any) => ({
+      ...supplier,
+      business_name: supplier.business_name?.trim() || 'Water Supplier',
+    }));
+    
+    return normalized as AvailableSupplier[];
+  },
+
+  async getCurrentSupplier() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: supplier, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .eq('profile_id', user.id)
+      .single();
+
+    if (error) throw error;
+    if (!supplier) throw new Error('Supplier profile not found');
+    
+    return supplier as Supplier;
   },
 
   async getSupplierDetails(supplierId: string) {

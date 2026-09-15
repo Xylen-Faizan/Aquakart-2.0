@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SupplierOrderService } from '../../services/supplier-order';
+import { SupplierService } from '../../services/supplier';
 import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
 import { EmptyState, ErrorState, LoadingState } from '../../components/feedback';
-import { supabase } from '../../lib/supabase/client';
+import { useSupplierOrderRealtime } from '../../hooks/useSupplierOrderRealtime';
+import { VALID_TRANSITIONS } from '@aquakart/config';
 import type { OrderStatus } from '@aquakart/types';
 
 type TabType = 'pending' | 'active' | 'completed';
@@ -15,35 +17,33 @@ type TabType = 'pending' | 'active' | 'completed';
 export default function SupplierOrdersScreen() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
+  const [supplierId, setSupplierId] = useState<string>();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchOrders();
-
-    const subscription = supabase
-      .channel('public:orders:supplier')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!supplierId) {
+        const supplier = await SupplierService.getCurrentSupplier();
+        setSupplierId(supplier.id);
+      }
       const data = await SupplierOrderService.getAssignedOrders();
       setOrders(data);
+      setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load orders');
     } finally {
       setLoading(false);
     }
-  };
+  }, [supplierId]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  useSupplierOrderRealtime(supplierId, fetchOrders);
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -75,12 +75,38 @@ export default function SupplierOrdersScreen() {
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      // In a real app we'd call the API:
-      // await SupplierOrderService.updateOrderStatus(orderId, newStatus);
-      // For now we just update locally
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      setActionLoading(true);
+      await SupplierOrderService.updateOrderStatus(orderId, newStatus);
+      // Removed local mutation. We wait for realtime to fire or explicit fetch.
+      await fetchOrders();
     } catch (err: any) {
       Alert.alert('Update Failed', err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAccept = async (orderId: string) => {
+    try {
+      setActionLoading(true);
+      await SupplierOrderService.acceptOrder(orderId);
+      await fetchOrders();
+    } catch (err: any) {
+      Alert.alert('Accept Failed', err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async (orderId: string) => {
+    try {
+      setActionLoading(true);
+      await SupplierOrderService.rejectOrder(orderId, 'Rejected by supplier from list');
+      await fetchOrders();
+    } catch (err: any) {
+      Alert.alert('Reject Failed', err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -127,6 +153,7 @@ export default function SupplierOrdersScreen() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => {
           const totalItems = item.order_items?.reduce((sum: number, oi: any) => sum + oi.quantity, 0) || 1;
+          const availableTransitions = VALID_TRANSITIONS[item.status as OrderStatus] || [];
           
           return (
             <TouchableOpacity onPress={() => router.push(`/(supplier)/order/${item.id}`)} activeOpacity={0.9}>
@@ -166,37 +193,31 @@ export default function SupplierOrdersScreen() {
                     <Button 
                       title="Reject" 
                       variant="outline" 
+                      disabled={actionLoading}
                       style={styles.actionButton}
-                      onPress={() => handleUpdateStatus(item.id, 'rejected')}
+                      onPress={() => handleReject(item.id)}
                     />
                     <View style={{ width: theme.spacing.md }} />
                     <Button 
                       title="Accept" 
+                      disabled={actionLoading}
                       style={styles.actionButton}
-                      onPress={() => handleUpdateStatus(item.id, 'accepted')}
+                      onPress={() => handleAccept(item.id)}
                     />
                   </View>
                 )}
 
-                {activeTab === 'active' && item.status === 'accepted' && (
-                  <View style={styles.actionsRow}>
+                {/* Forward Transitions */}
+                {activeTab === 'active' && item.status !== 'placed' && availableTransitions.filter(t => t !== 'cancelled' && t !== 'rejected').map((status: any) => (
+                  <View key={status} style={styles.actionsRow}>
                     <Button 
-                      title="Mark Out for Delivery" 
+                      title={`Mark as ${status.replace(/_/g, ' ')}`} 
                       style={styles.fullWidthButton}
-                      onPress={() => handleUpdateStatus(item.id, 'out_for_delivery')}
+                      disabled={actionLoading}
+                      onPress={() => handleUpdateStatus(item.id, status)}
                     />
                   </View>
-                )}
-                
-                {activeTab === 'active' && item.status === 'out_for_delivery' && (
-                  <View style={styles.actionsRow}>
-                    <Button 
-                      title="Mark Delivered" 
-                      style={styles.fullWidthButton}
-                      onPress={() => handleUpdateStatus(item.id, 'delivered')}
-                    />
-                  </View>
-                )}
+                ))}
               </Card>
             </TouchableOpacity>
           );

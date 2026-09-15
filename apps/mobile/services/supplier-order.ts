@@ -1,17 +1,9 @@
 import { supabase } from '../lib/supabase/client';
+import { SupplierService } from './supplier';
 
 export const SupplierOrderService = {
   async getAssignedOrders() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: supplier } = await supabase
-      .from('suppliers')
-      .select('id')
-      .eq('profile_id', user.id)
-      .single();
-
-    if (!supplier) throw new Error('Supplier profile not found');
+    const supplier = await SupplierService.getCurrentSupplier();
 
     const { data, error } = await supabase
       .from('orders')
