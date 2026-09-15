@@ -71,7 +71,10 @@ export default function DashboardScreen() {
   };
 
   const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (!isoString) return 'Unknown time';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return 'Invalid time';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   if (loading) return <LoadingState message="Loading dashboard..." />;
@@ -127,7 +130,7 @@ export default function DashboardScreen() {
                 </View>
               </View>
               <Text style={styles.cardValue}>{activeOrdersCount}</Text>
-              <Text style={styles.cardLabel}>Pending Orders</Text>
+              <Text style={styles.cardLabel}>Active Orders</Text>
             </TouchableOpacity>
 
           </View>
@@ -150,10 +153,10 @@ export default function DashboardScreen() {
           ) : (
             <View style={styles.recentOrdersList}>
               {orders.map((order) => (
-                <Card key={order.id} style={styles.orderCard}>
+                <Card key={order.id || Math.random().toString()} style={styles.orderCard}>
                   <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>#{order.display_id}</Text>
-                    <Badge label={order.status.toUpperCase()} variant={getStatusVariant(order.status)} />
+                    <Text style={styles.orderId}>#{order.display_id || 'UNKNOWN'}</Text>
+                    <Badge label={(order.status || 'placed').toUpperCase()} variant={getStatusVariant(order.status || 'placed')} />
                   </View>
                   
                   <View style={styles.orderBody}>

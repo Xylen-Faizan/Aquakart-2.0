@@ -25,10 +25,6 @@ export default function SupplierOrdersScreen() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      if (!supplierId) {
-        const supplier = await SupplierService.getCurrentSupplier();
-        setSupplierId(supplier.id);
-      }
       const data = await SupplierOrderService.getAssignedOrders();
       setOrders(data);
       setError(null);
@@ -37,10 +33,24 @@ export default function SupplierOrdersScreen() {
     } finally {
       setLoading(false);
     }
-  }, [supplierId]);
+  }, []);
 
   useEffect(() => {
-    fetchOrders();
+    let mounted = true;
+    const init = async () => {
+      try {
+        const sup = await SupplierService.getCurrentSupplier();
+        if (mounted) setSupplierId(sup.id);
+        await fetchOrders();
+      } catch (err: any) {
+        if (mounted) {
+          setError(err.message || 'Failed to initialize');
+          setLoading(false);
+        }
+      }
+    };
+    init();
+    return () => { mounted = false; };
   }, [fetchOrders]);
 
   useSupplierOrderRealtime(supplierId, fetchOrders);
@@ -70,7 +80,10 @@ export default function SupplierOrdersScreen() {
   });
 
   const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (!isoString) return 'Unknown time';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return 'Invalid time';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
@@ -148,12 +161,13 @@ export default function SupplierOrdersScreen() {
 
       <FlatList
         data={filteredOrders}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id || Math.random().toString()}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => {
           const totalItems = item.order_items?.reduce((sum: number, oi: any) => sum + oi.quantity, 0) || 1;
-          const availableTransitions = VALID_TRANSITIONS[item.status as OrderStatus] || [];
+          const statusStr = item.status || 'placed';
+          const availableTransitions = VALID_TRANSITIONS[statusStr as OrderStatus] || [];
           
           return (
             <TouchableOpacity onPress={() => router.push(`/(supplier)/order/${item.id}`)} activeOpacity={0.9}>
@@ -161,10 +175,10 @@ export default function SupplierOrdersScreen() {
                 {/* Card Header */}
                 <View style={styles.cardHeader}>
                   <View style={styles.orderIdContainer}>
-                    <Text style={styles.orderId}>#{item.display_id}</Text>
+                    <Text style={styles.orderId}>#{item.display_id || 'UNKNOWN'}</Text>
                     <Text style={styles.timeText}>{formatTime(item.created_at)}</Text>
                   </View>
-                  <Badge label={item.status.toUpperCase().replace(/_/g, ' ')} variant={getStatusVariant(item.status)} />
+                  <Badge label={statusStr.toUpperCase().replace(/_/g, ' ')} variant={getStatusVariant(statusStr)} />
                 </View>
 
                 {/* Customer Details */}
@@ -173,16 +187,16 @@ export default function SupplierOrdersScreen() {
                   <View style={styles.addressRow}>
                     <Ionicons name="location" size={16} color={theme.colors.primary} />
                     <Text style={styles.addressText} numberOfLines={1}>
-                      {item.address?.address}
+                      {item.address?.address || 'Address missing'}
                     </Text>
                   </View>
                 </View>
 
                 {/* Order Meta */}
                 <View style={styles.orderMetaRow}>
-                  <Text style={styles.metaText}>{totalItems}x 20L Water Can</Text>
+                  <Text style={styles.metaText}>{totalItems}x Cans</Text>
                   <Text style={styles.metaDivider}>•</Text>
-                  <Text style={styles.metaTextPrice}>₹{item.total_amount || item.total}</Text>
+                  <Text style={styles.metaTextPrice}>₹{item.total_amount || item.total || 0}</Text>
                   <Text style={styles.metaDivider}>•</Text>
                   <Text style={styles.metaText}>{item.payment_method?.toUpperCase() || 'CASH'}</Text>
                 </View>

@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, ErrorBoundary } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../features/auth/AuthProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingState } from '../components/feedback';
+
+export { ErrorBoundary };
 
 function ProtectedLayout() {
   const { user, role, loading } = useAuth();
@@ -53,10 +56,13 @@ function ProtectedLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <StatusBar style="dark" />
-        <ProtectedLayout />
-      </AuthProvider>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <ProtectedLayout />
+        </AuthProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+

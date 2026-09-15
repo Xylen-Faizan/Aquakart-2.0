@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { supabase } from '../lib/supabase/client';
 
 export function useSupplierOrderRealtime(supplierId: string | undefined, onRefetch: () => void) {
   const [status, setStatus] = useState<'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR'>('CLOSED');
+  const timerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (!supplierId) return;
@@ -26,15 +27,13 @@ export function useSupplierOrderRealtime(supplierId: string | undefined, onRefet
             onRefetch();
           }
         )
-        .subscribe((status, err) => {
-          setStatus(status);
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        .subscribe((subStatus, err) => {
+          setStatus(subStatus);
+          if (subStatus === 'CHANNEL_ERROR' || subStatus === 'TIMED_OUT') {
             console.error('Realtime subscription error:', err);
-            // Attempt to reconnect after a delay
-            setTimeout(() => {
-              if (subscription) {
-                supabase.removeChannel(subscription);
-              }
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+              if (subscription) supabase.removeChannel(subscription);
               setupSubscription();
             }, 5000);
           }
@@ -45,19 +44,16 @@ export function useSupplierOrderRealtime(supplierId: string | undefined, onRefet
 
     const appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        // App came to foreground, force a refetch and ensure subscription is active
         onRefetch();
-        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-           if (subscription) supabase.removeChannel(subscription);
-           setupSubscription();
-        }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        if (subscription) supabase.removeChannel(subscription);
+        setupSubscription();
       }
     });
 
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (subscription) supabase.removeChannel(subscription);
       appStateSubscription.remove();
       setStatus('CLOSED');
     };

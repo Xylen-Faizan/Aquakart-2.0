@@ -10,13 +10,14 @@ export const SupplierOrderService = {
       .select(`
         *,
         customer:customer_id (name, phone),
-        address:address_id (label, address)
+        address:address_id (label, address),
+        order_items (*)
       `)
       .eq('supplier_id', supplier.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getOrderDetails(orderId: string) {
