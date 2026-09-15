@@ -7,18 +7,29 @@
     "scheme": "aquakart",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "icon": "./assets/images/app_icon.jpg",
     "splash": {
-      "backgroundColor": "#0A4DA2"
+      "backgroundColor": "#0A4DA2",
+      "image": "./assets/images/logo.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A4DA2"
+        "foregroundImage": "./assets/images/app_icon.jpg",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.aquakart.app"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5201edad-f694-4374-872a-b27872ff3085"
+      }
     }
   }
 }

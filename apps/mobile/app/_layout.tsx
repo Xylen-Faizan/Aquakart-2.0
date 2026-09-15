@@ -1,17 +1,62 @@
-import React from 'react';
-import { Stack } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider } from '../features/auth/AuthProvider';
+import { AuthProvider, useAuth } from '../features/auth/AuthProvider';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { LoadingState } from '../components/feedback';
+
+function ProtectedLayout() {
+  const { user, role, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const inCustomerGroup = segments[0] === '(customer)';
+    const inSupplierGroup = segments[0] === '(supplier)';
+
+    if (!user) {
+      // If user is not logged in, and they are trying to access protected routes, redirect to welcome
+      if (inCustomerGroup || inSupplierGroup || (segments.length as number) === 0) {
+        router.replace('/(auth)/welcome');
+      }
+    } else {
+      // User is logged in
+      if (role === 'supplier') {
+        if (!inSupplierGroup) {
+          router.replace('/(supplier)/dashboard');
+        }
+      } else {
+        // Customer or undefined role (defaults to customer layout)
+        if (!inCustomerGroup) {
+          router.replace('/(customer)/home');
+        }
+      }
+    }
+  }, [user, role, loading, segments]);
+
+  if (loading) {
+    return <LoadingState message="Starting AquaKart..." />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(customer)" />
+      <Stack.Screen name="(supplier)" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(customer)" />
-        <Stack.Screen name="(supplier)" />
-      </Stack>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <ProtectedLayout />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

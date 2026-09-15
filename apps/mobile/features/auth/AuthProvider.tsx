@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { AppState } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase/client';
 
@@ -35,42 +35,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!error && data) {
         setProfile(data);
         setRole(data.role);
+        return data;
       }
+      return null;
     } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+      console.error('fetchProfile error:', e);
+      return null;
     }
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    let mounted = true;
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Only set loading and fetch if it's a new sign in or initial load where we don't have the role yet
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || !profile) {
-          setLoading(true); 
-          fetchProfile(session.user.id);
+    async function initializeSession() {
+      try {
+        console.log('[AuthProvider] Boot: restoring persisted Supabase session...');
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (error) {
+          console.error('[AuthProvider] getSession error:', error);
+          setLoading(false);
+          return;
         }
-      } else {
-        setProfile(null);
-        setRole(null);
-        setLoading(false);
+
+        if (initialSession?.user) {
+          console.log('[AuthProvider] Boot: persisted session', initialSession.user.email);
+          setSession(initialSession);
+          setUser(initialSession.user);
+          // Wait for profile so role is ready for navigation guard
+          await fetchProfile(initialSession.user.id);
+        } else {
+          console.log('[AuthProvider] Boot: persisted session (none)');
+        }
+      } catch (err) {
+        console.error('[AuthProvider] Initialization crash:', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-    });
+    }
+
+    // Run deterministic initialization
+    initializeSession();
+
+    // Listen for ongoing auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!mounted) return;
+        
+        console.log('[AuthProvider] onAuthStateChange:', event, !!currentSession);
+
+        if (event === 'SIGNED_IN') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          if (currentSession?.user) {
+            await fetchProfile(currentSession.user.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setRole(null);
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refreshed, ensure session object is updated but don't wipe active profile state
+          if (currentSession?.user) {
+             setSession(currentSession);
+             setUser(currentSession.user);
+          }
+        } else if (event === 'USER_UPDATED') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+        }
+      }
+    );
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -93,7 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.replace('/(auth)/welcome');
   };
 
   const refreshProfile = async () => {

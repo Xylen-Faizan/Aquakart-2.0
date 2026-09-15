@@ -1,24 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, TouchableOpacity, Platform, TextInput, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Link, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback } from 'react';
 import { useAuth } from '../../features/auth/AuthProvider';
 import { theme } from '../../constants/theme';
 import { SupplierService } from '../../services/supplier';
-import type { AvailableSupplier } from '@aquakart/types';
+import { AddressService } from '../../services/address';
+import type { AvailableSupplier, Address } from '@aquakart/types';
 
 export default function HomeScreen() {
-  const { profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<AvailableSupplier[]>([]);
+  const [activeAddress, setActiveAddress] = useState<Address | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadHomeData();
+    }, [user?.id])
+  );
 
-  const fetchSuppliers = async () => {
+  const loadHomeData = async () => {
     try {
-      const data = await SupplierService.getAvailableSuppliers();
+      setLoading(true);
+      if (!user?.id) return;
+      const addresses = await AddressService.getAddresses(user.id);
+      if (addresses && addresses.length > 0) {
+        const storedId = await AsyncStorage.getItem('selectedAddressId');
+        let addr = addresses.find(a => a.id === storedId);
+        if (!addr) {
+          addr = addresses[0];
+          await AsyncStorage.setItem('selectedAddressId', addr.id);
+        }
+        setActiveAddress(addr);
+        await fetchSuppliers(addr.lat ?? undefined, addr.lng ?? undefined);
+      } else {
+        setActiveAddress(null);
+        setSuppliers([]);
+        await AsyncStorage.removeItem('selectedAddressId');
+      }
+    } catch (e) {
+      console.error('Error loading home data:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSuppliers = async (lat?: number, lng?: number) => {
+    try {
+      const data = await SupplierService.getAvailableSuppliers(lat, lng);
       setSuppliers(data);
     } catch (e) {
       console.error(e);
@@ -30,21 +63,37 @@ export default function HomeScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.deliverToLabel}>Deliver to</Text>
-            <View style={styles.locationContainer}>
-              <Ionicons name="location" size={16} color={theme.colors.primary} />
-              <Text style={styles.locationText}>Sector 4, Bokaro</Text>
-              <Ionicons name="chevron-down" size={16} color={theme.colors.textPrimary} style={{ marginLeft: 4 }} />
-            </View>
-          </View>
+          <Link href="/(customer)/addresses" asChild>
+            <Pressable 
+              style={styles.headerLeftBtn}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 40 }}
+            >
+              <Text style={styles.deliverToLabel}>Deliver to</Text>
+              <View style={styles.locationContainer}>
+                <Ionicons name="location" size={16} color={theme.colors.primary} />
+                {activeAddress ? (
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {activeAddress.address.includes('|') 
+                      ? activeAddress.address.split('|')[1].trim() 
+                      : activeAddress.address}
+                  </Text>
+                ) : (
+                  <Text style={styles.locationText}>Add delivery address</Text>
+                )}
+                <Ionicons name="chevron-down" size={16} color={theme.colors.textPrimary} style={{ marginLeft: 4 }} />
+              </View>
+            </Pressable>
+          </Link>
           <View style={styles.headerRight}>
-            <Pressable style={styles.avatarBtn}>
-              <Text style={styles.avatarText}>{profile?.name?.[0]?.toUpperCase() || 'U'}</Text>
-            </Pressable>
-            <Pressable style={styles.iconBtn} onPress={signOut}>
-              <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-            </Pressable>
+            <Link href="/(customer)/profile" asChild>
+              <Pressable style={styles.avatarBtn}>
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarBtnImage} />
+                ) : (
+                  <Text style={styles.avatarText}>{profile?.name?.[0]?.toUpperCase() || 'U'}</Text>
+                )}
+              </Pressable>
+            </Link>
           </View>
         </View>
 
@@ -74,7 +123,13 @@ export default function HomeScreen() {
             </View>
             <Pressable 
               style={styles.orderButton} 
-              onPress={() => router.push('/(customer)/suppliers')}
+              onPress={() => {
+                if (!activeAddress) {
+                  router.push('/(customer)/addresses');
+                } else {
+                  router.push('/(customer)/suppliers');
+                }
+              }}
             >
               <Text style={styles.orderButtonText}>Order Now</Text>
             </Pressable>
@@ -85,9 +140,11 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Suppliers</Text>
-            <Pressable onPress={() => router.push('/(customer)/suppliers')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </Pressable>
+            {activeAddress && (
+              <Pressable onPress={() => router.push('/(customer)/suppliers')}>
+                <Text style={styles.seeAllText}>See All</Text>
+              </Pressable>
+            )}
           </View>
           
           <View style={styles.suppliersList}>
@@ -106,8 +163,12 @@ export default function HomeScreen() {
                     <View style={styles.supplierMetaRow}>
                       <Ionicons name="star" size={12} color={theme.colors.warning} />
                       <Text style={styles.supplierRating}>4.8</Text>
-                      <Text style={styles.supplierDot}>•</Text>
-                      <Text style={styles.supplierDistance}>{(supplier.distance_km || 1.2).toFixed(1)} km</Text>
+                      {supplier.distance_km != null && (
+                        <>
+                          <Text style={styles.supplierDot}>•</Text>
+                          <Text style={styles.supplierDistance}>~ {supplier.distance_km.toFixed(1)} km</Text>
+                        </>
+                      )}
                     </View>
                   </View>
                 </View>
@@ -124,7 +185,13 @@ export default function HomeScreen() {
                 </View>
               </Pressable>
             )) : (
-              <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', padding: theme.spacing.lg }}>Finding nearby suppliers...</Text>
+              <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', padding: theme.spacing.lg }}>
+                {!activeAddress 
+                  ? 'Please add a delivery address to find nearby suppliers.' 
+                  : loading 
+                    ? 'Finding nearby suppliers...' 
+                    : 'No suppliers available in your area.'}
+              </Text>
             )}
           </View>
         </View>
@@ -135,17 +202,17 @@ export default function HomeScreen() {
           <View style={styles.productsGrid}>
             <View style={styles.productCard}>
               <View style={styles.productIconWrapper}>
-                <Text style={styles.productIcon}>💧</Text>
+                <Image source={require('../../assets/images/jar_20l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>20L Jar</Text>
-              <Text style={styles.productPrice}>₹80</Text>
+              <Text style={styles.productPrice}>₹20</Text>
             </View>
             <View style={styles.productCard}>
               <View style={styles.productIconWrapper}>
-                <Text style={styles.productIcon}>🍾</Text>
+                <Image source={require('../../assets/images/bottle_1l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>1L Bottles</Text>
-              <Text style={styles.productPrice}>₹120</Text>
+              <Text style={styles.productPrice}>₹25</Text>
             </View>
           </View>
         </View>
@@ -173,6 +240,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+  },
+  headerLeftBtn: {
+    flex: 1,
+    paddingVertical: theme.spacing.xs,
+    paddingRight: theme.spacing.md,
   },
   deliverToLabel: {
     fontSize: 12,
@@ -202,6 +274,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarBtnImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   avatarText: {
     color: theme.colors.primary,
@@ -406,9 +483,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: theme.spacing.md,
+    overflow: 'hidden',
   },
   productIcon: {
     fontSize: 32,
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
   },
   productName: {
     fontSize: theme.fontSize.md,

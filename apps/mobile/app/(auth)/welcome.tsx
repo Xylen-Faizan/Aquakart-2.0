@@ -1,15 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, ImageBackground, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { theme } from '../../constants/theme';
+import { InteractiveWaterBackground } from '../../components/ui/InteractiveWaterBackground';
 
 export default function WelcomeScreen() {
   return (
-    <ImageBackground 
-      source={require('../../assets/images/water_splash_bg.jpg')} 
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <InteractiveWaterBackground>
       <SafeAreaView style={styles.safe}>
         <StatusBar barStyle="light-content" />
         <View style={styles.container}>
@@ -46,16 +43,11 @@ export default function WelcomeScreen() {
           </View>
         </View>
       </SafeAreaView>
-    </ImageBackground>
+    </InteractiveWaterBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
   safe: {
     flex: 1,
     backgroundColor: 'transparent',

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b8462c46-27ff-4ebe-8127-0f60816051c6"
+      }
+    },
+    "android": {
+      "package": "com.faizan07.aquakart2"
+    }
+  }
+}

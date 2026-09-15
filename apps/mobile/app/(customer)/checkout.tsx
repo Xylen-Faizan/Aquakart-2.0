@@ -21,7 +21,7 @@ export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [submittingPhone, setSubmittingPhone] = useState(false);
 
@@ -34,7 +34,8 @@ export default function CheckoutScreen() {
   useEffect(() => {
     const fetchAddresses = async () => {
       try {
-        const data = await AddressService.getAddresses();
+        if (!user?.id) return;
+        const data = await AddressService.getAddresses(user.id);
         setAddresses(data);
         if (data.length > 0) {
           setSelectedAddress(data[0].id);

@@ -2,28 +2,26 @@ import { supabase } from '../lib/supabase/client';
 import type { Address, AddressInput } from '@aquakart/types';
 
 export const AddressService = {
-  async getAddresses() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+  async getAddresses(userId: string) {
+    if (!userId) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
       .from('addresses')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data as Address[];
   },
 
-  async addAddress(address: AddressInput) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+  async addAddress(userId: string, address: AddressInput) {
+    if (!userId) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
       .from('addresses')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         label: address.label,
         address: address.address,
         lat: address.lat,

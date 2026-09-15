@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -86,6 +86,14 @@ export default function OrderDetailScreen() {
     ]);
   };
 
+  const handleCall = () => {
+    if (order?.supplier?.phone) {
+      Linking.openURL(`tel:${order.supplier.phone}`);
+    } else {
+      Alert.alert('Unavailable', 'No phone number provided for this supplier.');
+    }
+  };
+
   if (loading) return <LoadingState message="Loading order details..." />;
   if (error) return <ErrorState title="Error" message={error} onRetry={fetchOrder} />;
   if (!order) return <ErrorState title="Not Found" message="Order not found." />;
@@ -162,7 +170,7 @@ export default function OrderDetailScreen() {
                 <Text style={styles.supplierPhone}>{order.supplier?.phone || 'No phone provided'}</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.callButton}>
+            <TouchableOpacity style={styles.callButton} onPress={handleCall}>
               <Ionicons name="call" size={20} color={theme.colors.white} />
             </TouchableOpacity>
           </Card>

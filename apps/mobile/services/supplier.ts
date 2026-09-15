@@ -40,10 +40,16 @@ export const SupplierService = {
   },
 
   async getOwnProfile() {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+
+    if (!userId) return null;
+
     const { data: supplier, error: supplierError } = await supabase
       .from('suppliers')
       .select('*')
-      .single(); // RLS restricts it to own record
+      .eq('profile_id', userId)
+      .single();
 
     if (supplierError && supplierError.code !== 'PGRST116') {
       throw supplierError;

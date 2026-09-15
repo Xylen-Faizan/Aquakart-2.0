@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../features/auth/AuthProvider';
 import { Button, Card, Badge } from '../../components/ui';
@@ -8,6 +8,7 @@ import { LoadingState, ErrorState, EmptyState } from '../../components/feedback'
 import { theme } from '../../constants/theme';
 import { SupplierCapacityService } from '../../services/supplier-capacity';
 import { SupplierOrderService } from '../../services/supplier-order';
+import { SupplierService } from '../../services/supplier';
 
 export default function DashboardScreen() {
   const { profile, signOut } = useAuth();
@@ -18,21 +19,28 @@ export default function DashboardScreen() {
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [supplierProfile, setSupplierProfile] = useState<any>(null);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [])
+  );
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [capData, allOrders] = await Promise.all([
+      const [capData, allOrders, ownProf] = await Promise.all([
         SupplierCapacityService.getTodayCapacity(),
-        SupplierOrderService.getAssignedOrders()
+        SupplierOrderService.getAssignedOrders(),
+        SupplierService.getOwnProfile()
       ]);
       
       setCapacity(capData);
+      if (ownProf && ownProf.supplier) {
+        setSupplierProfile(ownProf.supplier);
+      }
       
       if (allOrders) {
         const active = allOrders.filter((o: any) => 
@@ -40,9 +48,9 @@ export default function DashboardScreen() {
         );
         setActiveOrdersCount(active.length);
         
-        // Show up to 3 recent pending/placed orders
+        // Show up to 3 recent pending orders
         const recent = allOrders
-          .filter((o: any) => o.status === 'placed' || o.status === 'accepted')
+          .filter((o: any) => o.status === 'placed')
           .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           .slice(0, 3);
           
@@ -77,7 +85,7 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello, {profile?.name}</Text>
-            <Text style={styles.title}>{profile?.business_name || 'Aqua Pure Solutions'}</Text>
+            <Text style={styles.title}>{supplierProfile?.business_name || profile?.business_name || 'Aqua Pure Solutions'}</Text>
           </View>
           <TouchableOpacity 
             style={styles.profileButton}

@@ -5,6 +5,11 @@ import { theme } from '../../constants/theme';
 import { WaterRipple } from '../../components/ui';
 import { supabase } from '../../lib/supabase/client';
 import { LoadingState } from '../../components/feedback';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as Linking from 'expo-linking';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function CustomerAuthScreen() {
   const [loading, setLoading] = useState(false);
@@ -15,8 +20,8 @@ export default function CustomerAuthScreen() {
       setLoading(true);
       setError(null);
 
-      if (__DEV__ && Platform.OS === 'web') {
-        // Mock seamless Google Login for local web development to test DB flow
+      if (__DEV__) {
+        // Mock seamless Google Login for local development to test DB flow without deep link headaches
         const mockEmail = 'google_demo@gmail.com';
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: mockEmail,
@@ -38,13 +43,53 @@ export default function CustomerAuthScreen() {
       }
 
       // Production Supabase OAuth flow
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = makeRedirectUri({
+        scheme: 'aquakart',
+        path: '(customer)/home',
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'aquakart://(customer)/home'
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
         }
       });
       if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        if (result.type === 'success' && result.url) {
+          // Parse URL to get session tokens or authorization code
+          const parsedUrl = Linking.parse(result.url);
+          const params = parsedUrl.queryParams || {};
+          
+          // 1. Native PKCE flow (Recommended for mobile)
+          const code = params.code as string;
+          if (code) {
+            const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+            if (sessionError) throw sessionError;
+            return; // Success handled by AuthProvider listener
+          }
+          
+          // 2. Fallback Implicit flow (Legacy)
+          // OAuth tokens can be in the hash or query string depending on provider config
+          // Sometimes fragment is not parsed into queryParams depending on expo-linking version
+          const urlObj = new URL(result.url.replace('#', '?'));
+          const accessToken = params.access_token as string || urlObj.searchParams.get('access_token');
+          const refreshToken = params.refresh_token as string || urlObj.searchParams.get('refresh_token');
+          
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            if (sessionError) throw sessionError;
+          } else {
+             throw new Error('Authentication failed: No valid session tokens returned from provider.');
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
