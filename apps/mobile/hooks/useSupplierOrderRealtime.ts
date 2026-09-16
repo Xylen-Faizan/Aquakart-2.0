@@ -11,9 +11,12 @@ export function useSupplierOrderRealtime(supplierId: string | undefined, onRefet
 
     let subscription: any;
 
+    const uniqueSuffix = Math.random().toString(36).substring(2, 9);
+    const channelName = `supplier-orders-${supplierId}-${uniqueSuffix}`;
+
     const setupSubscription = () => {
       subscription = supabase
-        .channel(`supplier-orders-${supplierId}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           { 
