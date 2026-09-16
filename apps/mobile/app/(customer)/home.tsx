@@ -200,20 +200,26 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Popular Products</Text>
           <View style={styles.productsGrid}>
-            <View style={styles.productCard}>
+            <Pressable 
+              style={styles.productCard}
+              onPress={() => router.push('/(customer)/suppliers')}
+            >
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/jar_20l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>20L Jar</Text>
               <Text style={styles.productPrice}>View prices</Text>
-            </View>
-            <View style={styles.productCard}>
+            </Pressable>
+            <Pressable 
+              style={styles.productCard}
+              onPress={() => router.push('/(customer)/suppliers')}
+            >
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/bottle_1l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>1L Bottles</Text>
               <Text style={styles.productPrice}>View prices</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
         

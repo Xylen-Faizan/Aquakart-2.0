@@ -216,7 +216,7 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
           </Pressable>
           
-          <Pressable style={styles.settingItem}>
+          <Pressable style={styles.settingItem} onPress={() => router.push('/(customer)/orders')}>
             <View style={styles.settingItemLeft}>
               <View style={styles.settingIconWrapper}>
                 <Ionicons name="time-outline" size={20} color={theme.colors.primary} />
@@ -230,7 +230,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           
-          <Pressable style={styles.settingItem}>
+          <Pressable style={styles.settingItem} onPress={() => Alert.alert('Help Center', 'Our customer support team is available at support@aquakart.com')}>
             <View style={styles.settingItemLeft}>
               <View style={styles.settingIconWrapper}>
                 <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.primary} />

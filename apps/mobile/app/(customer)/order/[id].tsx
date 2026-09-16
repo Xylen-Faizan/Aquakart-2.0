@@ -66,13 +66,15 @@ export default function OrderDetailScreen() {
   const stages: { status: OrderStatus, label: string }[] = [
     { status: 'placed', label: 'Order Placed' },
     { status: 'accepted', label: 'Order Accepted' },
+    { status: 'preparing', label: 'Preparing Order' },
     { status: 'out_for_delivery', label: 'Out for Delivery' },
     { status: 'delivered', label: 'Delivered' }
   ];
 
   const getStageIndex = (status: OrderStatus) => {
     if (status === 'rejected' || status === 'cancelled') return -1;
-    return stages.findIndex(s => s.status === status) >= 0 ? stages.findIndex(s => s.status === status) : 0; // Default to 0 for unrecognized like 'preparing'
+    const index = stages.findIndex(s => s.status === status);
+    return index >= 0 ? index : 0;
   };
 
   const handleCancelOrder = async () => {
