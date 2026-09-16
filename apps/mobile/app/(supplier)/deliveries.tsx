@@ -82,7 +82,7 @@ export default function DeliveriesScreen() {
             <Text style={styles.headerTitle}>Today's Deliveries</Text>
             <Text style={styles.headerSubtitle}>{manifest.length} Stops Remaining</Text>
           </View>
-          <Badge variant="warning" text="Route Active" />
+          <Badge variant="warning" label="Route Active" />
         </View>
 
         <View style={styles.tabContainer}>
@@ -124,7 +124,7 @@ export default function DeliveriesScreen() {
                 </View>
                 <Card style={styles.stopCard}>
                   <View style={styles.stopHeader}>
-                    <Badge variant={index === 0 ? "warning" : "default"} text={`Stop ${index + 1}`} />
+                    <Badge variant={index === 0 ? "warning" : "neutral"} label={`Stop ${index + 1}`} />
                     <TouchableOpacity style={styles.iconBtn}>
                       <Ionicons name="navigate" size={18} color={theme.colors.primary} />
                     </TouchableOpacity>
@@ -145,8 +145,8 @@ export default function DeliveriesScreen() {
                   </View>
 
                   <View style={styles.actionRow}>
-                    <Button title="Call" variant="outline" size="small" style={{ flex: 1 }} icon={<Ionicons name="call-outline" size={16} color={theme.colors.primary} />} />
-                    <Button title="Mark Delivered" variant="primary" size="small" style={{ flex: 2 }} onPress={() => openCompletionModal(item)} />
+                    <Button title="Call" variant="outline" size="sm" style={{ flex: 1 }}  />
+                    <Button title="Mark Delivered" variant="primary" size="sm" style={{ flex: 2 }} onPress={() => openCompletionModal(item)} />
                   </View>
                 </Card>
               </View>
@@ -169,7 +169,7 @@ export default function DeliveriesScreen() {
               {selectedDelivery?.customer_name}
             </Text>
             
-            <Text style={styles.inputLabel}>Jars Delivered</Text>
+            <Text >Jars Delivered</Text>
             <TextInput 
               style={styles.input} 
               keyboardType="numeric"
@@ -177,7 +177,7 @@ export default function DeliveriesScreen() {
               onChangeText={setJarsDelivered} 
             />
 
-            <Text style={styles.inputLabel}>Jars Returned (Empty)</Text>
+            <Text >Jars Returned (Empty)</Text>
             <TextInput 
               style={styles.input} 
               keyboardType="numeric"
@@ -185,7 +185,7 @@ export default function DeliveriesScreen() {
               onChangeText={setJarsReturned} 
             />
 
-            <Text style={styles.inputLabel}>Amount Collected (₹)</Text>
+            <Text >Amount Collected (₹)</Text>
             <TextInput 
               style={styles.input} 
               keyboardType="numeric"
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 13,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   customerAddress: {
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     fontWeight: '500',
   },
   actionRow: {
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   inputLabel: {
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   modalActions: {
     flexDirection: 'row',

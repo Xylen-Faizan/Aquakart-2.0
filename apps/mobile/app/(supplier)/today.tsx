@@ -105,7 +105,7 @@ export default function SupplierTodayScreen() {
           {manifest.length === 0 ? (
             <Card style={{ padding: 24, alignItems: 'center' }}>
               <Ionicons name="checkmark-circle-outline" size={48} color={theme.colors.success} style={{ marginBottom: 12 }} />
-              <Text style={{ fontSize: 16, color: theme.colors.text, fontWeight: '600' }}>All Caught Up!</Text>
+              <Text style={{ fontSize: 16, color: theme.colors.textPrimary, fontWeight: '600' }}>All Caught Up!</Text>
               <Text style={{ textAlign: 'center', color: theme.colors.textSecondary, marginTop: 4 }}>
                 No pending deliveries remaining for today.
               </Text>
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   statLabel: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   manifestCard: {
     padding: 16,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 2,
   },
   customerLocation: {
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     fontWeight: '500',
   }
 });

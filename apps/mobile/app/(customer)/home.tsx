@@ -163,10 +163,10 @@ export default function HomeScreen() {
                     <View style={styles.supplierMetaRow}>
                       <Ionicons name="star" size={12} color={theme.colors.warning} />
                       <Text style={styles.supplierRating}>4.8</Text>
-                      {supplier.distance_km != null && (
+                      {supplier.distance != null && (
                         <>
                           <Text style={styles.supplierDot}>•</Text>
-                          <Text style={styles.supplierDistance}>~ {supplier.distance_km.toFixed(1)} km</Text>
+                          <Text style={styles.supplierDistance}>~ {supplier.distance.toFixed(1)} km</Text>
                         </>
                       )}
                     </View>
@@ -174,7 +174,7 @@ export default function HomeScreen() {
                 </View>
                 
                 <View style={styles.supplierProductRow}>
-                  <Text style={styles.supplierProductText}>20L Jar • {supplier.price ? `₹${supplier.price}` : 'Price varies'}</Text>
+                  <Text style={styles.supplierProductText}>20L Jar • {(supplier.products?.[0]?.price || 0) ? `₹${(supplier.products?.[0]?.price || 0)}` : 'Price varies'}</Text>
                 </View>
                 
                 <View style={styles.supplierStatusRow}>

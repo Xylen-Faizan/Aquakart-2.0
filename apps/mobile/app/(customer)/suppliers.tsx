@@ -80,7 +80,7 @@ export default function SuppliersScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
-            const isLowCapacity = (item.available_quantity || 0) < 20;
+            const isLowCapacity = (item.capacity?.available || 0 || 0) < 20;
             return (
               <TouchableOpacity activeOpacity={0.9} onPress={() => handleSelectSupplier(item.id)}>
                 <Card elevated style={styles.card}>
@@ -90,13 +90,13 @@ export default function SuppliersScreen() {
                       <View style={styles.distanceContainer}>
                         <Ionicons name="location" size={12} color={theme.colors.textSecondary} />
                         <Text style={styles.distanceText}>
-                          {item.distance_km != null ? `${item.distance_km.toFixed(1)} km away` : 'Nearby'}
+                          {item.distance != null ? `${item.distance.toFixed(1)} km away` : 'Nearby'}
                         </Text>
                       </View>
                     </View>
                     <View style={styles.priceContainer}>
                       <Text style={styles.priceSymbol}>₹</Text>
-                      <Text style={styles.priceValue}>{item.price}</Text>
+                      <Text style={styles.priceValue}>{item.products?.[0]?.price || 0}</Text>
                       <Text style={styles.priceUnit}>/can</Text>
                     </View>
                   </View>
@@ -109,7 +109,7 @@ export default function SuppliersScreen() {
                       variant={isLowCapacity ? "warning" : "success"} 
                     />
                     <Text style={styles.capacityText}>
-                      Capacity: {item.available_quantity || 0} cans
+                      Capacity: {item.capacity?.available || 0 || 0} cans
                     </Text>
                   </View>
                 </Card>

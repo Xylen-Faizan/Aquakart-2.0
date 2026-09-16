@@ -59,10 +59,8 @@ export default function CheckoutScreen() {
       setSubmitting(true);
       const orderId = await OrderService.placeOrder({
         supplier_id: params.supplier_id!,
-        address_id: selectedAddress,
-        product_id: params.product_id!,
-        quantity,
-        payment_method: paymentMethod,
+        delivery_address_id: selectedAddress,
+        items: [{ product_id: params.product_id!, quantity }]
       });
       
       router.replace(`/(customer)/order/${orderId}`);

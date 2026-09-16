@@ -59,8 +59,6 @@ export default function MoreScreen() {
           variant="outline" 
           style={styles.signOutBtn}
           onPress={signOut}
-          icon={<Ionicons name="log-out-outline" size={20} color={theme.colors.error} />}
-          textStyle={{ color: theme.colors.error }}
         />
 
         <View style={{ height: 40 }} />
@@ -83,7 +81,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   container: {
     flex: 1,
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   menuSubtitle: {

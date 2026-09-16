@@ -243,7 +243,7 @@ export default function CustomersScreen() {
             <Text style={styles.headerTitle}>Customers</Text>
             <Text style={styles.headerSubtitle}>My Business • {customers.length} Total Accounts</Text>
           </View>
-          <Badge variant="success" text={`Active (${activeCount})`} />
+          <Badge variant="success" label={`Active (${activeCount})`} />
         </View>
 
         <View style={styles.searchRow}>
@@ -257,7 +257,7 @@ export default function CustomersScreen() {
               onChangeText={setSearchQuery}
             />
           </View>
-          <Button title="+ Add Customer" size="small" style={styles.addButton} onPress={() => setAddModalVisible(true)} />
+          <Button title="+ Add Customer" size="sm" style={styles.addButton} onPress={() => setAddModalVisible(true)} />
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
@@ -317,8 +317,8 @@ export default function CustomersScreen() {
                 </View>
                 
                 <View style={styles.tagsRow}>
-                  <Badge variant={customer.customer_type === 'household' ? 'default' : 'warning'} text={customer.customer_type} />
-                  <Badge variant="success" text={customer.active_price ? `₹${customer.active_price} / 20L` : 'Default Price'} />
+                  <Badge variant={customer.customer_type === 'household' ? 'neutral' : 'warning'} label={customer.customer_type} />
+                  <Badge variant="success" label={customer.active_price ? `₹${customer.active_price} / 20L` : 'Default Price'} />
                 </View>
                 
                 <View style={styles.statsRow}>
@@ -335,9 +335,9 @@ export default function CustomersScreen() {
                 </View>
 
                 <View style={styles.cardActions}>
-                  <Button title="Schedule" variant="outline" size="small" style={styles.actionBtn} onPress={() => handleSchedule(customer)} />
-                  <Button title="Edit Price" variant="outline" size="small" style={styles.actionBtn} onPress={() => handleEditPrice(customer)} />
-                  <Button title="Ledger" variant="primary" size="small" style={styles.actionBtn} onPress={() => handleViewLedger(customer)} />
+                  <Button title="Schedule" variant="outline" size="sm" style={styles.actionBtn} onPress={() => handleSchedule(customer)} />
+                  <Button title="Edit Price" variant="outline" size="sm" style={styles.actionBtn} onPress={() => handleEditPrice(customer)} />
+                  <Button title="Ledger" variant="primary" size="sm" style={styles.actionBtn} onPress={() => handleViewLedger(customer)} />
                 </View>
               </Card>
             ))
@@ -469,7 +469,7 @@ export default function CustomersScreen() {
                   </Text>
                 </Card>
 
-                <Text style={styles.inputLabel}>Record Payment</Text>
+                <Text >Record Payment</Text>
                 <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
                   <TextInput 
                     style={[styles.input, { flex: 1, marginTop: 0 }]} 
@@ -481,12 +481,12 @@ export default function CustomersScreen() {
                   <Button title="Accept Cash" variant="primary" loading={isPaying} onPress={handleRecordPayment} />
                 </View>
 
-                <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.text, marginBottom: 12 }}>Transaction History</Text>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.textPrimary, marginBottom: 12 }}>Transaction History</Text>
                 <ScrollView>
                   {ledgerData?.entries.map(entry => (
                     <View key={entry.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
                       <View>
-                        <Text style={{ fontSize: 15, fontWeight: '500', color: theme.colors.text }}>
+                        <Text style={{ fontSize: 15, fontWeight: '500', color: theme.colors.textPrimary }}>
                           {entry.reference_type === 'delivery' ? 'Delivery Cost' : 'Payment Received'}
                         </Text>
                         <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 13,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 14,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   addButton: {
     height: 40,
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   summaryLabel: {
     fontSize: 12,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 2,
   },
   customerAddress: {
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   statLabel: {
     fontSize: 12,
@@ -748,183 +748,3 @@ const styles = StyleSheet.create({
   }
 });
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    backgroundColor: theme.colors.surface,
-    paddingTop: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
-    gap: 12,
-    marginBottom: 16,
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: theme.colors.text,
-  },
-  addButton: {
-    height: 40,
-    paddingHorizontal: 16,
-  },
-  filterScroll: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 16,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  filterChipActive: {
-    backgroundColor: theme.colors.primary + '10',
-    borderColor: theme.colors.primary,
-  },
-  filterText: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    fontWeight: '500',
-  },
-  filterTextActive: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: theme.spacing.lg,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: theme.colors.border,
-  },
-  summaryValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  customerList: {
-    gap: 16,
-  },
-  customerCard: {
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  customerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  customerAddress: {
-    fontSize: 13,
-    color: theme.colors.textTertiary,
-    width: 250,
-  },
-  callButton: {
-    padding: 8,
-    backgroundColor: theme.colors.primary + '10',
-    borderRadius: 20,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.background,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    gap: 16,
-  },
-  statBox: {
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionBtn: {
-    flex: 1,
-  }
-});

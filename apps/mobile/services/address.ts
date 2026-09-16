@@ -15,7 +15,7 @@ export const AddressService = {
     return data as Address[];
   },
 
-  async addAddress(userId: string, address: AddressInput) {
+  async addAddress(userId: string, address: Omit<AddressInput, "user_id">) {
     if (!userId) throw new Error('Not authenticated');
 
     const { data, error } = await supabase

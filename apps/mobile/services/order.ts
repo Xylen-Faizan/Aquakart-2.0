@@ -6,10 +6,10 @@ export const OrderService = {
     const { data: orderId, error } = await supabase
       .rpc('place_order', {
         p_supplier_id: params.supplier_id,
-        p_address_id: params.address_id,
-        p_product_id: params.product_id,
-        p_quantity: params.quantity,
-        p_payment_method: params.payment_method,
+        p_address_id: params.delivery_address_id,
+        p_product_id: params.items[0].product_id,
+        p_quantity: params.items[0].quantity,
+        
       });
 
     if (error) throw error;

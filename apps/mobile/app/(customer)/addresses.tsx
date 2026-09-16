@@ -257,7 +257,7 @@ export default function AddressesScreen() {
                     <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
                   )}
                   <Badge 
-                    label={item.label} 
+                    label={item.label || "Other"} 
                     variant={item.label === 'Home' ? 'success' : item.label === 'Office' ? 'info' : 'neutral'} 
                   />
                 </View>

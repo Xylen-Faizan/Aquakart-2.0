@@ -120,8 +120,8 @@ export default function JarsScreen() {
         <Button 
           title="Buy Stock" 
           variant="outline" 
-          size="small" 
-          icon={<Ionicons name="add" size={16} color={theme.colors.primary} />}
+          size="sm" 
+          
           onPress={() => setPurchaseModalVisible(true)} 
         />
       </View>
@@ -138,7 +138,7 @@ export default function JarsScreen() {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: theme.colors.warning }]}>{stats?.with_customers || 0}</Text>
+              <Text style={[styles.statValue, { color: theme.colors.warning as string }]}>{stats?.with_customers || 0}</Text>
               <Text style={styles.statLabel}>Out with Customers</Text>
             </View>
           </View>
@@ -219,7 +219,7 @@ export default function JarsScreen() {
               
               let title = '';
               let icon = 'swap-horizontal';
-              let color = theme.colors.primary;
+              let color: string = theme.colors.primary;
 
               if (isDispatch) {
                 title = `Dispatched ${act.jars_delivered} Jars`;
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   statLabel: {
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 8,
   },
   input: {
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   pickerContainer: {
     flexDirection: 'row',
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   counterValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     minWidth: 40,
     textAlign: 'center',
   },
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 2,
   },
   activitySubtitle: {
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   modalActions: {

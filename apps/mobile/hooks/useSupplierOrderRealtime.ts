@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase/client';
 
 export function useSupplierOrderRealtime(supplierId: string | undefined, onRefetch: () => void) {
   const [status, setStatus] = useState<'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR'>('CLOSED');
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!supplierId) return;
