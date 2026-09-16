@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const [metrics, setMetrics] = useState({
     customers: 0,
@@ -80,10 +80,7 @@ export default function DashboardPage() {
     checkAuth();
   }, [router, supabase]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
+
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -95,27 +92,6 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.logoWrapper}>
-            <Image 
-              src="/logo.png" 
-              alt="AquaKart Logo" 
-              width={40} 
-              height={40} 
-              className={styles.headerLogo}
-            />
-            <h1 className={styles.logo}>AquaKart Admin</h1>
-          </div>
-          <nav className={styles.nav}>
-            <Link href="/dashboard/suppliers" className={styles.navLink}>Suppliers</Link>
-            <Link href="/dashboard/customers" className={styles.navLink}>Customers</Link>
-            <Link href="/dashboard/orders" className={styles.navLink}>Orders</Link>
-            <button onClick={handleSignOut} className={styles.signOutBtn}>Sign out</button>
-          </nav>
-        </div>
-      </header>
-
       <main className={styles.main}>
         <h2 className={styles.pageTitle}>Dashboard Overview</h2>
         
