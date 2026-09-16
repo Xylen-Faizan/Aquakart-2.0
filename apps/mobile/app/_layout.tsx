@@ -31,10 +31,14 @@ function ProtectedLayout() {
         if (!inSupplierGroup) {
           router.replace('/(supplier)/dashboard');
         }
-      } else {
-        // Customer or undefined role (defaults to customer layout)
+      } else if (role === 'customer') {
         if (!inCustomerGroup) {
           router.replace('/(customer)/home');
+        }
+      } else {
+        // Unknown or missing role
+        if (segments[0] !== '(auth)' || (segments[1] as string) !== 'setup') {
+          router.replace('/(auth)/setup' as any);
         }
       }
     }

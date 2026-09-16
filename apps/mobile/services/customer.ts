@@ -15,6 +15,9 @@ export interface SupplierCustomer {
   next_due_date: string | null;
   outstanding_balance: number;
   last_delivery_at: string | null;
+  schedule_active?: boolean;
+  schedule_quantity?: number;
+  schedule_interval?: number;
 }
 
 export const CustomerService = {
@@ -87,6 +90,20 @@ export const CustomerService = {
       p_quantity: params.quantity,
       p_interval_days: params.intervalDays,
       p_first_delivery_date: params.firstDeliveryDate,
+    });
+
+    if (error) throw error;
+  },
+
+  async setCustomerScheduleStatus(params: {
+    customerId: string;
+    productId: string;
+    isActive: boolean;
+  }): Promise<void> {
+    const { error } = await supabase.rpc('set_delivery_schedule_status', {
+      p_customer_id: params.customerId,
+      p_supplier_product_id: params.productId,
+      p_is_active: params.isActive,
     });
 
     if (error) throw error;

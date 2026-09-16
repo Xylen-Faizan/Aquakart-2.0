@@ -182,6 +182,26 @@ export default function CustomersScreen() {
     }
   };
 
+  
+  const toggleScheduleStatus = async () => {
+    if (!selectedCustomer) return;
+    try {
+      setIsUpdatingSchedule(true);
+      const isActive = !selectedCustomer.schedule_active;
+      await CustomerService.setCustomerScheduleStatus({
+        customerId: selectedCustomer.id,
+        productId: '00000000-0000-0000-0000-000000000001', // 20L Jar
+        isActive
+      });
+      await fetchCustomers();
+      setScheduleModalVisible(false);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update schedule status');
+    } finally {
+      setIsUpdatingSchedule(false);
+    }
+  };
+
   const saveSchedule = async () => {
     if (!selectedCustomer) return;
     const qty = parseInt(scheduleQuantity, 10);
