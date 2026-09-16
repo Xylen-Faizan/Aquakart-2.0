@@ -1,0 +1,1 @@
+external_customer_id,name,phone,address,customer_type,product,price,interval_days,quantity_per_delivery,initial_jars,payment_mode,outstanding_amount,last_delivery_date,next_due_date,notes

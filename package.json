@@ -12,7 +12,11 @@
     "admin": "npm run dev --workspace=apps/admin",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "pilot:amrit-dhara:dry-run": "npx tsx scripts/onboard-amrit-dhara.ts --dry-run",
+    "pilot:amrit-dhara": "npx tsx scripts/onboard-amrit-dhara.ts",
+    "pilot:amrit-dhara:reconcile": "npx tsx scripts/reconcile.ts --supplier=\"Amrit Dhara\"",
+    "test:onboarding": "npx tsx scripts/onboard-amrit-dhara.ts --fixture"
   },
   "engines": {
     "node": ">=18.18.0"
@@ -20,6 +24,7 @@
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
+    "csv-parse": "^7.0.2",
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3"
   }

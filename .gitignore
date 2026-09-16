@@ -53,3 +53,7 @@ coverage/
 
 # Supabase
 supabase/.temp/
+
+# Pilot Data
+data/pilot/**
+!data/pilot/amrit_dhara_pilot_cohort.template.csv
