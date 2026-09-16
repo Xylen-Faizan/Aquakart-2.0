@@ -10,31 +10,43 @@ export default function SupplierLayout() {
       tabBarInactiveTintColor: theme.colors.textTertiary,
     }}>
       <Tabs.Screen 
-        name="dashboard" 
+        name="today" 
         options={{ 
-          title: 'Dashboard',
+          title: 'Today',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />
         }} 
       />
       <Tabs.Screen 
-        name="orders" 
+        name="customers" 
         options={{ 
-          title: 'Orders',
-          tabBarIcon: ({ color }) => <Ionicons name="list-outline" size={24} color={color} />
+          title: 'Customers',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="people-outline" size={24} color={color} />
         }} 
       />
       <Tabs.Screen 
-        name="capacity" 
+        name="deliveries" 
         options={{ 
-          title: 'Capacity',
+          title: 'Deliveries',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="car-outline" size={24} color={color} />
+        }} 
+      />
+      <Tabs.Screen 
+        name="jars" 
+        options={{ 
+          title: 'Jars',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Ionicons name="water-outline" size={24} color={color} />
         }} 
       />
       <Tabs.Screen 
-        name="profile" 
+        name="more" 
         options={{ 
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />
+          title: 'More',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="menu-outline" size={24} color={color} />
         }} 
       />
       <Tabs.Screen

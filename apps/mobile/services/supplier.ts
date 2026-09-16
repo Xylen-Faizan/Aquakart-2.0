@@ -124,5 +124,11 @@ export const SupplierService = {
     const { data, error } = await supabase.from('products').select('*');
     if (error) throw error;
     return data;
+  },
+
+  async getTodayOverview() {
+    const { data, error } = await supabase.rpc('get_supplier_today');
+    if (error) throw error;
+    return data;
   }
 };
