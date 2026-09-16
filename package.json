@@ -18,6 +18,9 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3"
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3"
   }
 }

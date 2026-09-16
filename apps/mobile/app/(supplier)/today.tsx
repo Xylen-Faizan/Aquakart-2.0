@@ -1,197 +1,145 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
 import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
-import { SupplierService } from '../../services/supplier';
-import { useAuth } from '../../features/auth/AuthProvider';
+import { DashboardService, TodayStats, TodayManifestItem } from '../../services/dashboard';
+import { useFocusEffect } from 'expo-router';
 
-export default function TodayScreen() {
-  const { profile } = useAuth();
+export default function SupplierTodayScreen() {
+  const [stats, setStats] = useState<TodayStats | null>(null);
+  const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [overview, setOverview] = useState<any>({
-    deliveries_due: 0,
-    deliveries_done: 0,
-    jars_with_customers: 0,
-    revenue_today: 0,
-    collected_today: 0,
-    outstanding_today: 0
-  });
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchOverview = useCallback(async () => {
+  const fetchDashboardData = async () => {
     try {
-      setLoading(true);
-      const data = await SupplierService.getTodayOverview();
-      if (data) {
-        setOverview(data);
-      }
-    } catch (err) {
-      console.error("Error fetching overview", err);
+      const [statsData, manifestData] = await Promise.all([
+        DashboardService.getTodayStats(),
+        DashboardService.getTodayManifest()
+      ]);
+      setStats(statsData);
+      setManifest(manifestData);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, []);
+  };
 
   useFocusEffect(
     useCallback(() => {
-      fetchOverview();
-    }, [fetchOverview])
+      setLoading(true);
+      fetchDashboardData();
+    }, [])
   );
 
-  const pending = Math.max(0, overview.deliveries_due - overview.deliveries_done);
-  const completionPercent = overview.deliveries_due > 0 
-    ? Math.round((overview.deliveries_done / overview.deliveries_due) * 100) 
-    : 100;
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData();
+  };
+
+  if (loading && !stats) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  // Format the date header
+  const today = new Date();
+  const dateString = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerBrand}>AQUAKART PARTNER</Text>
-          <Text style={styles.headerSub}>{profile?.name || 'Water Supplier'}</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <Badge variant="success" text="Online" />
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerSubtitle}>Supplier Operations</Text>
+        <Text style={styles.headerTitle}>{dateString}</Text>
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+      >
         
-        {/* TODAY SUMMARY */}
+        {/* TODAY'S METRICS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TODAY OVERVIEW</Text>
-          <View style={styles.summaryRow}>
-            <Card style={styles.summaryCard}>
-              <Text style={styles.summaryValue}>{overview.deliveries_due}</Text>
-              <Text style={styles.summaryLabel}>Due</Text>
+          <Text style={styles.sectionTitle}>TODAY</Text>
+          <View style={styles.statsGrid}>
+            <Card style={[styles.statCard, { backgroundColor: theme.colors.primary + '10' }]}>
+              <Text style={styles.statValue}>{stats?.deliveries_due || 0}</Text>
+              <Text style={styles.statLabel}>Deliveries Due</Text>
             </Card>
-            <Card style={[styles.summaryCard, { backgroundColor: theme.colors.success + '10' }]}>
-              <Text style={[styles.summaryValue, { color: theme.colors.success }]}>{overview.deliveries_done}</Text>
-              <Text style={styles.summaryLabel}>Done</Text>
+            <Card style={[styles.statCard, { backgroundColor: theme.colors.warning + '10' }]}>
+              <Text style={styles.statValue}>{stats?.jars_required || 0}</Text>
+              <Text style={styles.statLabel}>Jars Required</Text>
             </Card>
-            <Card style={[styles.summaryCard, { backgroundColor: theme.colors.warning + '10' }]}>
-              <Text style={[styles.summaryValue, { color: theme.colors.warning }]}>{pending}</Text>
-              <Text style={styles.summaryLabel}>Pending</Text>
+            <Card style={[styles.statCard, { backgroundColor: theme.colors.success + '10' }]}>
+              <Text style={styles.statValue}>₹{stats?.expected_revenue || 0}</Text>
+              <Text style={styles.statLabel}>Expected Revenue</Text>
+            </Card>
+            <Card style={[styles.statCard, { backgroundColor: theme.colors.error + '10' }]}>
+              <Text style={styles.statValue}>₹{stats?.outstanding_total || 0}</Text>
+              <Text style={styles.statLabel}>Total Outstanding</Text>
             </Card>
           </View>
-          <View style={styles.progressBarContainer}>
-            <View style={[styles.progressBar, { width: `${completionPercent}%` }]} />
+
+          <View style={styles.progressRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.progressLabel}>Deliveries Completed</Text>
+              <Text style={styles.progressValue}>{stats?.deliveries_done || 0} / {(stats?.deliveries_due || 0) + (stats?.deliveries_done || 0)}</Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              <Text style={styles.progressLabel}>Cash Collected</Text>
+              <Text style={styles.progressValue}>₹{stats?.collected_today || 0}</Text>
+            </View>
           </View>
-          <Text style={styles.progressText}>{completionPercent}% Completed</Text>
         </View>
 
-        {/* DELIVERIES */}
+        {/* TODAY'S MANIFEST */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today's Deliveries</Text>
-            <TouchableOpacity>
-              <Text style={styles.linkText}>View All</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.sectionTitle}>TODAY'S WORK</Text>
           
-          <Card style={styles.deliveryCard}>
-            <View style={styles.deliveryRow}>
-              <View style={styles.deliveryInfo}>
-                <Text style={styles.customerName}>Raj Kumar</Text>
-                <Text style={styles.deliveryDetails}>1× 20L Standard RO Jar</Text>
-                <Text style={styles.deliveryAddress}>Flat 302, Green Glen</Text>
-                <Badge variant="warning" text="Cash on Delivery" style={styles.paymentBadge} />
-              </View>
-              <View style={styles.deliveryActions}>
-                <Text style={styles.amount}>₹25</Text>
-                <TouchableOpacity style={styles.actionIcon}>
-                  <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <Button title="Mark Delivered" size="small" style={styles.deliverButton} />
-          </Card>
-
-          <Card style={styles.deliveryCard}>
-            <View style={styles.deliveryRow}>
-              <View style={styles.deliveryInfo}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={styles.customerName}>ABC Office</Text>
-                  <Badge variant="error" text="Priority" />
+          {manifest.length === 0 ? (
+            <Card style={{ padding: 24, alignItems: 'center' }}>
+              <Ionicons name="checkmark-circle-outline" size={48} color={theme.colors.success} style={{ marginBottom: 12 }} />
+              <Text style={{ fontSize: 16, color: theme.colors.text, fontWeight: '600' }}>All Caught Up!</Text>
+              <Text style={{ textAlign: 'center', color: theme.colors.textSecondary, marginTop: 4 }}>
+                No pending deliveries remaining for today.
+              </Text>
+            </Card>
+          ) : (
+            manifest.map((item, index) => (
+              <Card key={`${item.customer_id}-${index}`} style={styles.manifestCard}>
+                <View style={styles.manifestHeader}>
+                  <View>
+                    <Text style={styles.customerName}>{item.customer_name}</Text>
+                    <Text style={styles.customerLocation}>
+                      {item.sector ? `${item.sector}` : 'No Area'} {item.address ? `• ${item.address}` : ''}
+                    </Text>
+                  </View>
+                  <Badge label="Pending" variant="warning" />
                 </View>
-                <Text style={styles.deliveryDetails}>4× 20L Mineral Cans</Text>
-                <Text style={styles.deliveryAddress}>2nd Floor Tech Park</Text>
-                <Badge variant="default" text="Corporate Account" style={styles.paymentBadge} />
-              </View>
-              <View style={styles.deliveryActions}>
-                <Text style={styles.amount}>₹100</Text>
-                <TouchableOpacity style={styles.actionIcon}>
-                  <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <Button title="Mark Delivered" size="small" style={styles.deliverButton} />
-          </Card>
-
-          <Card style={styles.deliveryCard}>
-            <View style={styles.deliveryRow}>
-              <View style={styles.deliveryInfo}>
-                <Text style={styles.customerName}>Sharma</Text>
-                <Text style={styles.deliveryDetails}>2× 20L Purified Jars</Text>
-                <Text style={styles.deliveryAddress}>House 14, 5th Main</Text>
-                <Badge variant="success" text="UPI on Delivery" style={styles.paymentBadge} />
-              </View>
-              <View style={styles.deliveryActions}>
-                <Text style={styles.amount}>₹50</Text>
-                <TouchableOpacity style={styles.actionIcon}>
-                  <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <Button title="Mark Delivered" size="small" style={styles.deliverButton} />
-          </Card>
-        </View>
-
-        {/* JARS */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Jars Inventory</Text>
-          <Card style={styles.jarsCard}>
-            <View style={styles.jarsRow}>
-              <View style={styles.jarStat}>
-                <Ionicons name="water" size={32} color={theme.colors.primary} />
-                <Text style={styles.jarValue}>180</Text>
-                <Text style={styles.jarLabel}>Available</Text>
-              </View>
-              <View style={styles.jarDivider} />
-              <View style={styles.jarStat}>
-                <Ionicons name="people" size={32} color={theme.colors.warning} />
-                <Text style={styles.jarValue}>{overview.jars_with_customers}</Text>
-                <Text style={styles.jarLabel}>With Customers</Text>
-              </View>
-            </View>
-            <View style={styles.jarProgressContainer}>
-              <View style={[styles.jarProgressBar, { width: '40%', backgroundColor: theme.colors.primary }]} />
-              <View style={[styles.jarProgressBar, { width: '60%', backgroundColor: theme.colors.warning }]} />
-            </View>
-            <Button title="Record Jar Return" variant="outline" style={{ marginTop: 16 }} />
-          </Card>
-        </View>
-
-        {/* REVENUE */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Revenue</Text>
-          <Card style={styles.revenueCard}>
-            <View style={styles.revenueRow}>
-              <View>
-                <Text style={styles.revenueLabel}>Today's Collection</Text>
-                <Text style={styles.revenueValue}>₹{overview.collected_today}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.revenueLabel}>Outstanding</Text>
-                <Text style={[styles.revenueValue, { color: theme.colors.error, fontSize: 20 }]}>₹{overview.outstanding_today}</Text>
-              </View>
-            </View>
-            <Button title="Settle Accounts" variant="primary" style={{ marginTop: 16 }} />
-          </Card>
+                
+                <View style={styles.manifestDetails}>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="water-outline" size={16} color={theme.colors.primary} />
+                    <Text style={styles.detailText}>{item.quantity} × 20L</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="pricetag-outline" size={16} color={theme.colors.success} />
+                    <Text style={styles.detailText}>@ ₹{item.effective_unit_price} (Total: ₹{item.expected_amount})</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="call-outline" size={16} color={theme.colors.textSecondary} />
+                    <Text style={styles.detailText}>{item.phone}</Text>
+                  </View>
+                </View>
+              </Card>
+            ))
+          )}
         </View>
         
         <View style={{ height: 40 }} />
@@ -206,200 +154,113 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    paddingTop: theme.spacing.xl,
+    backgroundColor: theme.colors.primary,
   },
-  headerBrand: {
-    fontSize: 18,
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  headerSub: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  iconButton: {
-    padding: 4,
+    color: '#FFF',
+    marginTop: 4,
   },
   container: {
     flex: 1,
   },
-  content: {
-    padding: theme.spacing.lg,
-  },
   section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    padding: theme.spacing.lg,
+    paddingBottom: 0,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  linkText: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-    marginBottom: theme.spacing.md,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 12,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: theme.colors.textSecondary,
     marginBottom: 16,
+    letterSpacing: 1,
   },
-  summaryCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 12,
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  summaryValue: {
+  statCard: {
+    width: '48%',
+    padding: 16,
+    marginBottom: 0,
+    borderWidth: 0,
+  },
+  statValue: {
     fontSize: 24,
     fontWeight: 'bold',
     color: theme.colors.text,
+    marginBottom: 4,
   },
-  summaryLabel: {
+  statLabel: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    marginTop: 4,
+    fontWeight: '500',
   },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: theme.colors.border,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: theme.colors.success,
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    textAlign: 'right',
-  },
-  deliveryCard: {
-    marginBottom: 12,
-    padding: 16,
-  },
-  deliveryRow: {
+  progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
-  deliveryInfo: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  customerName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  deliveryDetails: {
-    fontSize: 14,
+  progressLabel: {
+    fontSize: 12,
     color: theme.colors.textSecondary,
     marginBottom: 4,
   },
-  deliveryAddress: {
-    fontSize: 13,
-    color: theme.colors.textTertiary,
-    marginBottom: 8,
-  },
-  paymentBadge: {
-    alignSelf: 'flex-start',
-  },
-  deliveryActions: {
-    alignItems: 'flex-end',
-  },
-  amount: {
+  progressValue: {
     fontSize: 18,
     fontWeight: 'bold',
     color: theme.colors.text,
+  },
+  manifestCard: {
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.warning,
+  },
+  manifestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
-  actionIcon: {
-    padding: 8,
-    backgroundColor: theme.colors.primary + '10',
-    borderRadius: 20,
-  },
-  deliverButton: {
-    width: '100%',
-  },
-  jarsCard: {
-    padding: 20,
-  },
-  jarsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  jarStat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  jarDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: theme.colors.border,
-  },
-  jarValue: {
-    fontSize: 28,
+  customerName: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: theme.colors.text,
-    marginTop: 8,
+    marginBottom: 2,
   },
-  jarLabel: {
+  customerLocation: {
     fontSize: 13,
     color: theme.colors.textSecondary,
-    marginTop: 4,
   },
-  jarProgressContainer: {
+  manifestDetails: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  detailRow: {
     flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  jarProgressBar: {
-    height: '100%',
-  },
-  revenueCard: {
-    padding: 20,
-  },
-  revenueRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
-  revenueLabel: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    marginBottom: 4,
-  },
-  revenueValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  detailText: {
+    fontSize: 14,
     color: theme.colors.text,
+    fontWeight: '500',
   }
 });
