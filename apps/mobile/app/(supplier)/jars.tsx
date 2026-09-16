@@ -1,15 +1,129 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
+import { InventoryService, InventoryStats, JarActivity } from '../../services/inventory';
+import { CustomerService, SupplierCustomer } from '../../services/customer';
+import { useFocusEffect } from 'expo-router';
 
 export default function JarsScreen() {
+  const [stats, setStats] = useState<InventoryStats | null>(null);
+  const [activity, setActivity] = useState<JarActivity[]>([]);
+  const [customers, setCustomers] = useState<SupplierCustomer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Manual Adjustment State
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [returnCount, setReturnCount] = useState(0);
+  const [dispatchCount, setDispatchCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Purchase State
+  const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
+  const [purchaseCount, setPurchaseCount] = useState('10');
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const [statsData, activityData, customersData] = await Promise.all([
+        InventoryService.getStats(),
+        InventoryService.getActivity(20),
+        CustomerService.getCustomers()
+      ]);
+      setStats(statsData);
+      setActivity(activityData);
+      setCustomers(customersData);
+    } catch (error) {
+      console.error('Failed to fetch inventory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInventory();
+    }, [])
+  );
+
+  const handleConfirmAdjustment = async () => {
+    if (!selectedCustomerId) {
+      Alert.alert('Validation Error', 'Please select a customer first.');
+      return;
+    }
+    if (returnCount === 0 && dispatchCount === 0) {
+      Alert.alert('Validation Error', 'Please adjust at least one jar.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await InventoryService.recordManualAdjustment({
+        customerId: selectedCustomerId,
+        jarsDelivered: dispatchCount,
+        jarsReturned: returnCount,
+      });
+      
+      Alert.alert('Success', 'Jar adjustment recorded.');
+      setReturnCount(0);
+      setDispatchCount(0);
+      setSelectedCustomerId('');
+      fetchInventory();
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to record adjustment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePurchase = async () => {
+    const qty = parseInt(purchaseCount, 10);
+    if (isNaN(qty) || qty <= 0) {
+      Alert.alert('Invalid Quantity', 'Please enter a valid positive number.');
+      return;
+    }
+    
+    try {
+      setIsPurchasing(true);
+      await InventoryService.recordPurchase(qty);
+      setPurchaseModalVisible(false);
+      Alert.alert('Success', `Added ${qty} jars to warehouse stock.`);
+      fetchInventory();
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to record purchase');
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (loading && !stats) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const total = stats?.owned || 0;
+  const availablePerc = total > 0 ? (stats!.available / total) * 100 : 0;
+  const withCustPerc = total > 0 ? (stats!.with_customers / total) * 100 : 0;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Jars Inventory</Text>
-        <Text style={styles.headerSubtitle}>Manage your 20L can circulation</Text>
+        <View>
+          <Text style={styles.headerTitle}>Jars Inventory</Text>
+          <Text style={styles.headerSubtitle}>Manage your 20L can circulation</Text>
+        </View>
+        <Button 
+          title="Buy Stock" 
+          variant="outline" 
+          size="small" 
+          icon={<Ionicons name="add" size={16} color={theme.colors.primary} />}
+          onPress={() => setPurchaseModalVisible(true)} 
+        />
       </View>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -19,48 +133,75 @@ export default function JarsScreen() {
           <Text style={styles.sectionTitle}>Current Status</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>180</Text>
+              <Text style={styles.statValue}>{stats?.available || 0}</Text>
               <Text style={styles.statLabel}>Available (Warehouse)</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: theme.colors.warning }]}>270</Text>
+              <Text style={[styles.statValue, { color: theme.colors.warning }]}>{stats?.with_customers || 0}</Text>
               <Text style={styles.statLabel}>Out with Customers</Text>
             </View>
           </View>
           <View style={styles.progressContainer}>
-            <View style={[styles.progressBar, { width: '40%', backgroundColor: theme.colors.primary }]} />
-            <View style={[styles.progressBar, { width: '60%', backgroundColor: theme.colors.warning }]} />
+            <View style={[styles.progressBar, { width: `${availablePerc}%`, backgroundColor: theme.colors.primary }]} />
+            <View style={[styles.progressBar, { width: `${withCustPerc}%`, backgroundColor: theme.colors.warning }]} />
           </View>
-          <Text style={styles.totalText}>Total Inventory: 450 Jars</Text>
+          <Text style={styles.totalText}>Total Owned Inventory: {total} Jars</Text>
         </Card>
 
-        {/* Record Return */}
+        {/* Record Manual Return/Dispatch */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Record Empty Returns</Text>
+          <Text style={styles.sectionTitle}>Manual Adjustments</Text>
           <Card style={styles.actionCard}>
+            
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Customer</Text>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerText}>Select Customer...</Text>
-                <Ionicons name="chevron-down" size={20} color={theme.colors.textSecondary} />
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginTop: 8 }}>
+                {customers.map(c => (
+                  <TouchableOpacity 
+                    key={c.id} 
+                    style={[
+                      styles.chip, 
+                      selectedCustomerId === c.id && styles.chipActive
+                    ]}
+                    onPress={() => setSelectedCustomerId(c.id)}
+                  >
+                    <Text style={[
+                      styles.chipText,
+                      selectedCustomerId === c.id && styles.chipTextActive
+                    ]}>{c.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Number of Empty Jars Returned</Text>
+              <Text style={styles.inputLabel}>Empty Jars Returned</Text>
               <View style={styles.counterRow}>
-                <TouchableOpacity style={styles.counterBtn}>
+                <TouchableOpacity style={styles.counterBtn} onPress={() => setReturnCount(Math.max(0, returnCount - 1))}>
                   <Ionicons name="remove" size={24} color={theme.colors.primary} />
                 </TouchableOpacity>
-                <Text style={styles.counterValue}>0</Text>
-                <TouchableOpacity style={styles.counterBtn}>
+                <Text style={styles.counterValue}>{returnCount}</Text>
+                <TouchableOpacity style={styles.counterBtn} onPress={() => setReturnCount(returnCount + 1)}>
                   <Ionicons name="add" size={24} color={theme.colors.primary} />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <Button title="Confirm Return" variant="primary" style={{ marginTop: 8 }} />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Filled Jars Dispatched (Manual)</Text>
+              <View style={styles.counterRow}>
+                <TouchableOpacity style={styles.counterBtn} onPress={() => setDispatchCount(Math.max(0, dispatchCount - 1))}>
+                  <Ionicons name="remove" size={24} color={theme.colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterValue}>{dispatchCount}</Text>
+                <TouchableOpacity style={styles.counterBtn} onPress={() => setDispatchCount(dispatchCount + 1)}>
+                  <Ionicons name="add" size={24} color={theme.colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Button title="Confirm Adjustment" variant="primary" style={{ marginTop: 8 }} onPress={handleConfirmAdjustment} loading={isSubmitting} />
           </Card>
         </View>
 
@@ -68,46 +209,77 @@ export default function JarsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Jar Activity</Text>
           
-          <Card style={styles.activityCard}>
-            <View style={styles.activityRow}>
-              <View style={styles.activityIconWrapper}>
-                <Ionicons name="arrow-down-circle" size={24} color={theme.colors.success} />
-              </View>
-              <View style={styles.activityDetails}>
-                <Text style={styles.activityTitle}>Returned 2 Jars</Text>
-                <Text style={styles.activitySubtitle}>Raj Kumar • Today, 10:30 AM</Text>
-              </View>
-            </View>
-          </Card>
+          {activity.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: theme.colors.textSecondary, marginTop: 20 }}>No recent jar activity.</Text>
+          ) : (
+            activity.map((act) => {
+              const isDispatch = act.jars_delivered > 0 && act.jars_returned === 0;
+              const isReturn = act.jars_returned > 0 && act.jars_delivered === 0;
+              const isBoth = act.jars_delivered > 0 && act.jars_returned > 0;
+              
+              let title = '';
+              let icon = 'swap-horizontal';
+              let color = theme.colors.primary;
 
-          <Card style={styles.activityCard}>
-            <View style={styles.activityRow}>
-              <View style={[styles.activityIconWrapper, { backgroundColor: theme.colors.warning + '10' }]}>
-                <Ionicons name="arrow-up-circle" size={24} color={theme.colors.warning} />
-              </View>
-              <View style={styles.activityDetails}>
-                <Text style={styles.activityTitle}>Dispatched 4 Jars</Text>
-                <Text style={styles.activitySubtitle}>Sharma • Today, 09:15 AM</Text>
-              </View>
-            </View>
-          </Card>
-          
-          <Card style={styles.activityCard}>
-            <View style={styles.activityRow}>
-              <View style={styles.activityIconWrapper}>
-                <Ionicons name="arrow-down-circle" size={24} color={theme.colors.success} />
-              </View>
-              <View style={styles.activityDetails}>
-                <Text style={styles.activityTitle}>Returned 12 Jars</Text>
-                <Text style={styles.activitySubtitle}>ABC Office • Yesterday, 4:00 PM</Text>
-              </View>
-            </View>
-          </Card>
+              if (isDispatch) {
+                title = `Dispatched ${act.jars_delivered} Jars`;
+                icon = 'arrow-up-circle';
+                color = theme.colors.warning;
+              } else if (isReturn) {
+                title = `Returned ${act.jars_returned} Jars`;
+                icon = 'arrow-down-circle';
+                color = theme.colors.success;
+              } else if (isBoth) {
+                title = `Dispatched ${act.jars_delivered}, Returned ${act.jars_returned}`;
+                icon = 'swap-horizontal';
+                color = theme.colors.primary;
+              }
+
+              return (
+                <Card key={act.id} style={styles.activityCard}>
+                  <View style={styles.activityRow}>
+                    <View style={[styles.activityIconWrapper, { backgroundColor: color + '10' }]}>
+                      <Ionicons name={icon as any} size={24} color={color} />
+                    </View>
+                    <View style={styles.activityDetails}>
+                      <Text style={styles.activityTitle}>{title}</Text>
+                      <Text style={styles.activitySubtitle}>{act.customer_name} • {new Date(act.created_at).toLocaleString()}</Text>
+                    </View>
+                  </View>
+                </Card>
+              );
+            })
+          )}
 
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Purchase Modal */}
+      <Modal visible={purchaseModalVisible} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { marginTop: 'auto' }]}>
+            <Text style={styles.modalTitle}>Purchase New Jars</Text>
+            <Text style={{ color: theme.colors.textSecondary, marginBottom: 16 }}>
+              Add newly purchased empty jars to your warehouse inventory.
+            </Text>
+            
+            <Text style={styles.inputLabel}>Quantity</Text>
+            <TextInput 
+              style={styles.input} 
+              keyboardType="numeric"
+              value={purchaseCount} 
+              onChangeText={setPurchaseCount} 
+            />
+
+            <View style={styles.modalActions}>
+              <Button title="Cancel" variant="outline" onPress={() => setPurchaseModalVisible(false)} style={{ flex: 1 }} />
+              <Button title="Add to Stock" variant="primary" onPress={handlePurchase} loading={isPurchasing} style={{ flex: 1, marginLeft: 12 }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -122,6 +294,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,
@@ -205,6 +380,15 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 8,
   },
+  input: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: theme.colors.text,
+  },
   pickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -263,5 +447,46 @@ const styles = StyleSheet.create({
   activitySubtitle: {
     fontSize: 13,
     color: theme.colors.textSecondary,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginRight: 8,
+  },
+  chipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  chipText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  chipTextActive: {
+    color: theme.colors.surface,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    padding: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    marginTop: 24,
+    paddingBottom: 24,
   }
 });
