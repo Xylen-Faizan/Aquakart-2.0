@@ -15,7 +15,7 @@ export default function SetupScreen() {
     if (role === 'customer') {
       router.replace('/(customer)/home');
     } else if (role === 'supplier') {
-      router.replace('/(supplier)/dashboard');
+      router.replace('/(supplier)/today');
     }
   }, [role]);
 

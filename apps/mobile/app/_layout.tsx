@@ -29,7 +29,7 @@ function ProtectedLayout() {
       // User is logged in
       if (role === 'supplier') {
         if (!inSupplierGroup) {
-          router.replace('/(supplier)/dashboard');
+          router.replace('/(supplier)/today');
         }
       } else if (role === 'customer') {
         if (!inCustomerGroup) {

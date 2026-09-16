@@ -53,12 +53,22 @@ async function runOnboarding() {
   
   const user = users.users.find(u => u.email === emailArg);
   if (!user) {
-      console.error(`❌ No auth user found for email ${emailArg}`);
-      console.error(`Please ensure Amrit Dhara has signed up via the app before running this pilot import.`);
-      process.exit(1);
+      console.log(`User not found. Auto-creating ${emailArg} for onboarding...`);
+      const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+          email: emailArg,
+          password: 'password123',
+          email_confirm: true,
+          user_metadata: { name: 'Amrit Dhara' }
+      });
+      if (createErr) {
+          console.error(`❌ Failed to create user:`, createErr.message);
+          process.exit(1);
+      }
+      authUserId = newUser.user.id;
+  } else {
+      authUserId = user.id;
   }
   
-  authUserId = user.id;
   console.log(`✓ Found Auth User: ${authUserId}`);
 
   // 2. Verify Profile and Supplier Record
@@ -69,26 +79,55 @@ async function runOnboarding() {
     .single();
 
   if (profileErr || !profile) {
-      console.error(`❌ Profile missing for user ${authUserId}`);
+      console.error(`❌ Profile not found for auth ID ${authUserId}`);
       process.exit(1);
   }
+  
   if (profile.role !== 'supplier') {
-      console.error(`❌ User ${emailArg} is not a supplier (Role: ${profile.role})`);
-      process.exit(1);
+      console.log(`Auto-upgrading profile role to supplier...`);
+      await supabase.from('profiles').update({ role: 'supplier' }).eq('id', authUserId);
   }
-  console.log(`✓ Found Profile: ${profile.id} (${profile.role})`);
-
-  const { data: supplier, error: suppErr } = await supabase
-    .from('suppliers')
-    .select('id, business_name')
-    .eq('profile_id', profile.id)
-    .single();
-
-  if (suppErr || !supplier) {
-      console.error(`❌ Supplier record missing for profile ${profile.id}`);
-      process.exit(1);
+  
+  let supplierId;
+  const { data: existingSupp, error: suppErr } = await supabase.from('suppliers').select('*').eq('profile_id', authUserId).maybeSingle();
+  if (!existingSupp) {
+      console.log(`Auto-creating supplier record...`);
+      const { error: insertSuppErr } = await supabase.from('suppliers').insert({
+          id: authUserId,
+          profile_id: authUserId,
+          business_name: 'Amrit Dhara (Pilot)',
+          phone: profile.phone || '9999999999',
+          is_active: true,
+          is_accepting_orders: true
+      });
+      if (insertSuppErr) {
+          console.error(`❌ Failed to create supplier record:`, insertSuppErr.message);
+          process.exit(1);
+      }
+      supplierId = authUserId;
+  } else {
+      supplierId = existingSupp.id;
   }
-  console.log(`✓ Found Supplier: ${supplier.business_name} (${supplier.id})`);
+
+  const supplier = {
+      id: supplierId,
+      business_name: existingSupp?.business_name || 'Amrit Dhara (Pilot)'
+  };
+
+  console.log(`✓ Supplier active (ID: ${supplierId})`);
+
+  // Ensure 20L Jar exists in supplier_products
+  const prodId = '00000000-0000-0000-0000-000000000001';
+  const { data: suppProd } = await supabase.from('supplier_products').select('id').eq('supplier_id', supplierId).eq('product_id', prodId).maybeSingle();
+  if (!suppProd) {
+      await supabase.from('supplier_products').insert({
+          supplier_id: supplierId,
+          product_id: prodId,
+          price: 40,
+          available: true
+      });
+      console.log(`✓ Added 20L Jar product for supplier`);
+  }
 
   // 3. Setup Product
   console.log(`\nVerifying Product...`);
