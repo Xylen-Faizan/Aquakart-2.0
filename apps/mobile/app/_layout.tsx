@@ -6,7 +6,32 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingState } from '../components/feedback';
 
+import * as Network from 'expo-network';
+import { View, Text } from 'react-native';
+
 export { ErrorBoundary };
+
+function OfflineBanner() {
+  const [isConnected, setIsConnected] = React.useState(true);
+
+  React.useEffect(() => {
+    const checkNetwork = async () => {
+      const networkState = await Network.getNetworkStateAsync();
+      setIsConnected(networkState.isConnected ?? true);
+    };
+    checkNetwork();
+    const interval = setInterval(checkNetwork, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isConnected) return null;
+
+  return (
+    <View style={{ backgroundColor: '#ef4444', padding: 10, paddingTop: 40, alignItems: 'center', zIndex: 999 }}>
+      <Text style={{ color: '#fff', fontWeight: 'bold' }}>No Internet Connection</Text>
+    </View>
+  );
+}
 
 function ProtectedLayout() {
   const { user, role, loading } = useAuth();
@@ -61,6 +86,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <OfflineBanner />
         <AuthProvider>
           <StatusBar style="dark" />
           <ProtectedLayout />

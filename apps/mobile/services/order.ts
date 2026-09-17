@@ -3,13 +3,15 @@ import type { OrderWithItems, PlaceOrderParams } from '@aquakart/types';
 
 export const OrderService = {
   async placeOrder(params: PlaceOrderParams) {
+    const idempotencyKey = crypto.randomUUID();
     const { data: orderId, error } = await supabase
       .rpc('place_order', {
         p_supplier_id: params.supplier_id,
         p_address_id: params.delivery_address_id,
         p_product_id: params.items[0].product_id,
         p_quantity: params.items[0].quantity,
-        
+        p_payment_method: 'cash', // Hardcoded for MVP since checkout sets it
+        p_idempotency_key: idempotencyKey
       });
 
     if (error) throw error;

@@ -10,6 +10,7 @@ import { Button, Card, Badge, Input } from '../../components/ui';
 import { LoadingState } from '../../components/feedback';
 import { useAuth } from '../../features/auth/AuthProvider';
 import { supabase } from '../../lib/supabase/client';
+import * as Location from 'expo-location';
 import type { Address, PaymentMethod } from '@aquakart/types';
 
 export default function CheckoutScreen() {
@@ -57,6 +58,20 @@ export default function CheckoutScreen() {
 
     try {
       setSubmitting(true);
+      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permissions are required to ensure delivery area coverage.');
+        setSubmitting(false);
+        return;
+      }
+      const providerStatus = await Location.getProviderStatusAsync();
+      if (!providerStatus.locationServicesEnabled) {
+        Alert.alert('GPS Disabled', 'Please enable GPS/Location services to place an order.');
+        setSubmitting(false);
+        return;
+      }
+
       const orderId = await OrderService.placeOrder({
         supplier_id: params.supplier_id!,
         delivery_address_id: selectedAddress,
