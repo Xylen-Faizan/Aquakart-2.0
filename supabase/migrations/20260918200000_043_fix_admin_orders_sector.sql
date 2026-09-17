@@ -1,5 +1,5 @@
--- 042_fix_admin_orders.sql
--- Fixes column p.full_name does not exist
+-- 043_fix_admin_orders_sector.sql
+-- Fixes missing sector column on addresses table
 
 CREATE OR REPLACE FUNCTION public.get_admin_orders(
     p_date DATE DEFAULT current_date,
