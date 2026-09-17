@@ -5,13 +5,19 @@ import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
 import { DashboardService, TodayStats, TodayManifestItem, SupplierForecast } from '../../services/dashboard';
 import { useFocusEffect } from 'expo-router';
+import { supabase } from '../../lib/supabase/client';
+import { Alert, TextInput, Modal } from 'react-native';
 
 export default function SupplierTodayScreen() {
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [forecast, setForecast] = useState<SupplierForecast | null>(null);
+  const [capacity, setCapacity] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [capacityModalVisible, setCapacityModalVisible] = useState(false);
+  const [newCapacity, setNewCapacity] = useState('');
+  const [isUpdatingCapacity, setIsUpdatingCapacity] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -23,6 +29,27 @@ export default function SupplierTodayScreen() {
       setStats(statsData);
       setManifest(manifestData);
       setForecast(forecastData);
+
+      // Fetch capacity
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        const { data: supplierData } = await supabase
+          .from('suppliers')
+          .select('id')
+          .eq('profile_id', userData.user.id)
+          .single();
+          
+        if (supplierData) {
+          const dateStr = new Date().toISOString().split('T')[0];
+          const { data: capData } = await supabase
+            .from('supplier_capacity')
+            .select('max_capacity')
+            .eq('supplier_id', supplierData.id)
+            .eq('date', dateStr)
+            .single();
+          setCapacity(capData?.max_capacity || 0);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -41,6 +68,67 @@ export default function SupplierTodayScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchDashboardData();
+  };
+
+  const handleUpdateCapacity = async () => {
+    const qty = parseInt(newCapacity, 10);
+    if (isNaN(qty) || qty < 0) {
+      Alert.alert('Invalid', 'Please enter a valid number.');
+      return;
+    }
+    
+    setIsUpdatingCapacity(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('Not authenticated');
+      
+      const { data: supplierData } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('profile_id', userData.user.id)
+        .single();
+        
+      if (!supplierData) {
+        Alert.alert('Error', 'Please complete your Business Profile first.');
+        setCapacityModalVisible(false);
+        return;
+      }
+      
+      const dateStr = new Date().toISOString().split('T')[0];
+      
+      const { data: existing } = await supabase
+        .from('supplier_capacity')
+        .select('id')
+        .eq('supplier_id', supplierData.id)
+        .eq('date', dateStr)
+        .single();
+        
+      if (existing) {
+        await supabase
+          .from('supplier_capacity')
+          .update({ max_capacity: qty })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('supplier_capacity')
+          .insert({
+            supplier_id: supplierData.id,
+            date: dateStr,
+            max_capacity: qty,
+            reserved_quantity: 0,
+            fulfilled_quantity: 0
+          });
+      }
+      
+      setCapacity(qty);
+      Alert.alert('Success', `Today's marketplace capacity set to ${qty} jars.`);
+      setCapacityModalVisible(false);
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to update capacity.');
+    } finally {
+      setIsUpdatingCapacity(false);
+    }
   };
 
   if (loading && !stats) {
@@ -95,6 +183,32 @@ export default function SupplierTodayScreen() {
             )}
           </View>
         )}
+
+        {/* TODAY's MARKETPLACE CAPACITY */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>MARKETPLACE AVAILABILITY</Text>
+          <Card style={{ padding: 16, backgroundColor: capacity > 0 ? theme.colors.success + '10' : theme.colors.error + '10', borderColor: capacity > 0 ? theme.colors.success : theme.colors.error, borderWidth: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: capacity > 0 ? theme.colors.success : theme.colors.error }}>
+                  {capacity > 0 ? `${capacity} Jars Available` : 'Offline / No Capacity'}
+                </Text>
+                <Text style={{ color: theme.colors.textSecondary, marginTop: 4, fontSize: 12 }}>
+                  Your capacity for marketplace orders today.
+                </Text>
+              </View>
+              <Button 
+                title="Update" 
+                variant="primary" 
+                size="sm" 
+                onPress={() => {
+                  setNewCapacity(capacity.toString());
+                  setCapacityModalVisible(true);
+                }} 
+              />
+            </View>
+          </Card>
+        </View>
 
         {/* TODAY'S METRICS */}
         <View style={styles.section}>
@@ -176,6 +290,31 @@ export default function SupplierTodayScreen() {
         
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Capacity Modal */}
+      <Modal visible={capacityModalVisible} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { marginTop: 'auto' }]}>
+            <Text style={styles.modalTitle}>Update Daily Capacity</Text>
+            <Text style={{ color: theme.colors.textSecondary, marginBottom: 16 }}>
+              How many jars can you fulfill for new marketplace orders today?
+            </Text>
+            
+            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.colors.textPrimary, marginBottom: 8 }}>Quantity</Text>
+            <TextInput 
+              style={styles.input} 
+              keyboardType="numeric"
+              value={newCapacity} 
+              onChangeText={setNewCapacity} 
+            />
+
+            <View style={styles.modalActions}>
+              <Button title="Cancel" variant="outline" onPress={() => setCapacityModalVisible(false)} style={{ flex: 1 }} />
+              <Button title="Set Capacity" variant="primary" onPress={handleUpdateCapacity} loading={isUpdatingCapacity} style={{ flex: 1, marginLeft: 12 }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -294,5 +433,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.textPrimary,
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    padding: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    marginTop: 24,
+    paddingBottom: 24,
+  },
+  input: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: theme.colors.textPrimary,
   }
 });

@@ -1,20 +1,30 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Button } from '../../components/ui';
 import { useAuth } from '../../features/auth/AuthProvider';
+import { useRouter } from 'expo-router';
 
 export default function MoreScreen() {
   const { profile, signOut } = useAuth();
+  const router = useRouter();
 
   const menuItems = [
-    { icon: 'business-outline', title: 'Business Profile', subtitle: 'Manage details & coverage' },
-    { icon: 'pricetag-outline', title: 'Pricing & Catalog', subtitle: 'Update default product rates' },
-    { icon: 'document-text-outline', title: 'Ledger Reports', subtitle: 'Download monthly statements' },
-    { icon: 'settings-outline', title: 'App Settings', subtitle: 'Notifications & preferences' },
-    { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Contact AquaKart ops team' },
+    { icon: 'business-outline', title: 'Business Profile', subtitle: 'Manage details & coverage', route: '/(supplier)/business' },
+    { icon: 'pricetag-outline', title: 'Pricing & Catalog', subtitle: 'Update default product rates', route: '/(supplier)/pricing' },
+    { icon: 'document-text-outline', title: 'Ledger Reports', subtitle: 'Download monthly statements', route: '/(supplier)/ledger' },
+    { icon: 'settings-outline', title: 'App Settings', subtitle: 'Notifications & preferences', route: '/(supplier)/settings' },
+    { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Contact AquaKart ops team', route: 'support' },
   ];
+
+  const handlePress = (route: string) => {
+    if (route === 'support') {
+      Linking.openURL('tel:+919999999999');
+    } else {
+      router.push(route as any);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -41,7 +51,7 @@ export default function MoreScreen() {
         {/* Menu Items */}
         <View style={styles.menuContainer}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
+            <TouchableOpacity key={index} style={styles.menuItem} onPress={() => handlePress(item.route)}>
               <View style={styles.menuIconWrapper}>
                 <Ionicons name={item.icon as any} size={24} color={theme.colors.primary} />
               </View>
