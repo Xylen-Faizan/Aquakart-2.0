@@ -78,11 +78,18 @@ export default function DashboardPage() {
     );
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning, Admin';
+    if (hour < 17) return 'Good afternoon, Admin';
+    return 'Good evening, Admin';
+  };
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
         <div className={styles.header}>
-          <p className={styles.greeting}>Good morning, Admin</p>
+          <p className={styles.greeting}>{getGreeting()}</p>
           <h2 className={styles.pageTitle}>Bokaro Water Network</h2>
         </div>
         
