@@ -168,12 +168,14 @@ BEGIN
     v_order_date := timezone('Asia/Kolkata', v_order.created_at)::date;
 
     IF p_new_status = 'cancelled' AND v_order.status IN ('accepted', 'preparing', 'out_for_delivery') THEN
-        UPDATE public.supplier_capacity SET reserved_quantity = reserved_quantity - v_total_quantity 
+        UPDATE public.supplier_capacity SET reserved_quantity = GREATEST(0, reserved_quantity - v_total_quantity) 
         WHERE supplier_id = v_order.supplier_id AND date = v_order_date;
         
     ELSIF p_new_status = 'delivered' AND v_order.status = 'out_for_delivery' THEN
         -- Standard order capacity logic
-        UPDATE public.supplier_capacity SET reserved_quantity = reserved_quantity - v_total_quantity, fulfilled_quantity = fulfilled_quantity + v_total_quantity 
+        UPDATE public.supplier_capacity SET 
+            reserved_quantity = GREATEST(0, reserved_quantity - v_total_quantity), 
+            fulfilled_quantity = fulfilled_quantity + v_total_quantity 
         WHERE supplier_id = v_order.supplier_id AND date = v_order_date;
         
         -- Get the CRM mapping
