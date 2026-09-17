@@ -1,9 +1,10 @@
 import { supabase } from '../lib/supabase/client';
 import type { OrderWithItems, PlaceOrderParams } from '@aquakart/types';
+import * as Crypto from 'expo-crypto';
 
 export const OrderService = {
   async placeOrder(params: PlaceOrderParams) {
-    const idempotencyKey = crypto.randomUUID();
+    const idempotencyKey = Crypto.randomUUID();
     const { data: orderId, error } = await supabase
       .rpc('place_order', {
         p_supplier_id: params.supplier_id,

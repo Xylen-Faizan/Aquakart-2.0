@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase/client';
+import * as Crypto from 'expo-crypto';
 
 export interface TodayStats {
   deliveries_due: number;
@@ -64,7 +65,7 @@ export const DashboardService = {
     amountCollected: number;
     paymentMethod: string;
   }): Promise<string> {
-    const idempotencyKey = crypto.randomUUID();
+    const idempotencyKey = Crypto.randomUUID();
     const { data, error } = await supabase.rpc('complete_delivery', {
       p_customer_id: params.customerId,
       p_supplier_product_id: params.supplierProductId,
