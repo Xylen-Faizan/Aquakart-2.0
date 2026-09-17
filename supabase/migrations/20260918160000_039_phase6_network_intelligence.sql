@@ -93,7 +93,7 @@ BEGIN
     WITH tomorrow_schedules AS (
         SELECT COALESCE(SUM(quantity), 0)::INT AS demand
         FROM public.customer_delivery_schedules
-        WHERE supplier_customer_id IN (SELECT id FROM public.supplier_customers WHERE supplier_id = v_supplier_id)
+        WHERE supplier_customer_id IN (SELECT sc.id FROM public.supplier_customers sc WHERE sc.supplier_id = v_supplier_id)
         AND is_active = true
         AND next_delivery_date = v_tomorrow
     ),
