@@ -206,7 +206,7 @@ BEGIN
     SELECT 
         o.id AS order_id,
         o.display_id,
-        p.full_name AS customer_name,
+        p.name AS customer_name,
         s.business_name AS supplier_name,
         COALESCE(a.sector, 'Unassigned') AS sector,
         o.status,
@@ -215,7 +215,7 @@ BEGIN
     FROM public.orders o
     JOIN public.profiles p ON p.id = o.customer_id
     JOIN public.suppliers s ON s.id = o.supplier_id
-    JOIN public.addresses a ON a.id = o.address_id
+    LEFT JOIN public.addresses a ON a.id = o.address_id
     WHERE DATE(o.created_at AT TIME ZONE 'UTC') = p_date
       AND (p_supplier_id IS NULL OR o.supplier_id = p_supplier_id)
       AND (p_status IS NULL OR o.status = p_status)
