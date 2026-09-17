@@ -1,7 +1,8 @@
 -- 039_phase6_network_intelligence.sql
 -- Predictive balancing and intelligent routing
 
--- 1. Intelligent Customer Routing (Add capacity penalty)
+-- 1. Modified get_available_suppliers (Phase 6 Intelligence)
+DROP FUNCTION IF EXISTS public.get_available_suppliers(DOUBLE PRECISION, DOUBLE PRECISION);
 CREATE OR REPLACE FUNCTION public.get_available_suppliers(p_lat DOUBLE PRECISION, p_lng DOUBLE PRECISION)
 RETURNS TABLE (
     id UUID,

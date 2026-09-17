@@ -206,6 +206,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
 -- 4. Converged Manifest (Scheduled CRM + Live Marketplace)
+DROP FUNCTION IF EXISTS public.get_today_manifest();
 CREATE OR REPLACE FUNCTION public.get_today_manifest()
 RETURNS TABLE (
     customer_id UUID,
