@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<any>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [capacities, setCapacities] = useState<any[]>([]);
+  const [risks, setRisks] = useState<any[]>([]);
   
   const loadDashboard = async () => {
     setIsLoading(true);
@@ -36,11 +37,15 @@ export default function DashboardPage() {
       const { data: capacityData, error: capacityError } = await supabase.rpc('get_admin_network_capacity');
       if (capacityError) throw capacityError;
 
+      const { data: risksData, error: risksError } = await supabase.rpc('get_network_health_risks');
+      if (risksError) throw risksError;
+
       if (overviewData && overviewData.length > 0) {
         setMetrics(overviewData[0]);
       }
       setAlerts(alertsData || []);
       setCapacities((capacityData || []).slice(0, 5)); // Show top 5
+      setRisks(risksData || []);
 
     } catch (err: any) {
       console.error('Error loading dashboard:', err);
@@ -162,6 +167,29 @@ export default function DashboardPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Network Health & Risk</h3>
+            {risks.length === 0 ? (
+              <div className={styles.emptyState}>All suppliers have healthy inventory forecasts.</div>
+            ) : (
+              <div className={styles.alertsList}>
+                {risks.map((risk: any) => (
+                  <div key={risk.supplier_id} className={`${styles.alertCard} ${styles.high}`}>
+                    <div className={styles.alertContent}>
+                      <span className={styles.alertMessage}>
+                        🚨 Shortfall: Needs {risk.total_forecast} jars tomorrow, but only has {risk.current_inventory} (Shortfall: {risk.shortfall})
+                      </span>
+                      <span className={styles.alertEntity}>{risk.business_name}</span>
+                    </div>
+                    <Link href={`/dashboard/suppliers?id=${risk.supplier_id}`} className={styles.alertAction}>
+                      [Reassign]
+                    </Link>
+                  </div>
+                ))}
               </div>
             )}
           </div>

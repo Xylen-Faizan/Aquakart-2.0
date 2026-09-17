@@ -25,13 +25,30 @@ export interface TodayManifestItem {
   next_delivery_date: string;
 }
 
+export interface SupplierForecast {
+  supplier_id: string;
+  business_name: string;
+  scheduled_demand: number;
+  avg_marketplace_demand: number;
+  total_forecast: number;
+  current_inventory: number;
+  shortfall: number;
+  is_at_risk: boolean;
+}
+
 export const DashboardService = {
+  async getForecast(): Promise<SupplierForecast> {
+    const { data, error } = await supabase.rpc('get_supplier_forecast');
+    if (error) throw error;
+    // Assuming it returns an array of 1 since we query for current supplier
+    return data[0] as unknown as SupplierForecast;
+  },
+
   async getTodayStats(): Promise<TodayStats> {
     const { data, error } = await supabase.rpc('get_supplier_today');
     if (error) throw error;
     return data as unknown as TodayStats;
   },
-
   async getTodayManifest(): Promise<TodayManifestItem[]> {
     const { data, error } = await supabase.rpc('get_today_manifest');
     if (error) throw error;

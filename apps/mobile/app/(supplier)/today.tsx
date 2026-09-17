@@ -3,23 +3,26 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, To
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
-import { DashboardService, TodayStats, TodayManifestItem } from '../../services/dashboard';
+import { DashboardService, TodayStats, TodayManifestItem, SupplierForecast } from '../../services/dashboard';
 import { useFocusEffect } from 'expo-router';
 
 export default function SupplierTodayScreen() {
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
+  const [forecast, setForecast] = useState<SupplierForecast | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
-      const [statsData, manifestData] = await Promise.all([
+      const [statsData, manifestData, forecastData] = await Promise.all([
         DashboardService.getTodayStats(),
-        DashboardService.getTodayManifest()
+        DashboardService.getTodayManifest(),
+        DashboardService.getForecast()
       ]);
       setStats(statsData);
       setManifest(manifestData);
+      setForecast(forecastData);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -64,6 +67,35 @@ export default function SupplierTodayScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
         
+        {/* FORECAST */}
+        {forecast && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>TOMORROW'S FORECAST</Text>
+            {forecast.is_at_risk ? (
+              <Card style={{ padding: 16, backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error, borderWidth: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Ionicons name="warning" size={24} color={theme.colors.error} style={{ marginRight: 8 }} />
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.error }}>Shortfall Risk</Text>
+                </View>
+                <Text style={{ color: theme.colors.textPrimary, marginBottom: 8 }}>
+                  Warning: You have only {forecast.current_inventory} jars available but expect {forecast.total_forecast} demand tomorrow.
+                </Text>
+                <Button title="Request Stock" variant="primary" size="sm" style={{ alignSelf: 'flex-start' }} />
+              </Card>
+            ) : (
+              <Card style={{ padding: 16, backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success, borderWidth: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} style={{ marginRight: 8 }} />
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.success }}>Healthy Stock</Text>
+                </View>
+                <Text style={{ color: theme.colors.textPrimary }}>
+                  You have {forecast.current_inventory} jars available. Expected demand tomorrow is {forecast.total_forecast} jars.
+                </Text>
+              </Card>
+            )}
+          </View>
+        )}
+
         {/* TODAY'S METRICS */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>TODAY</Text>
