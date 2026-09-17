@@ -52,8 +52,8 @@ BEGIN
           AND d.status = 'delivered'
     ),
     total_outstanding AS (
-        SELECT COALESCE(SUM(balance), 0) AS amt
-        FROM public.customer_ledger
+        SELECT COALESCE(SUM(CASE WHEN entry_type = 'debit' THEN amount ELSE -amount END), 0) AS amt
+        FROM public.customer_ledger_entries
         WHERE supplier_customer_id IN (SELECT id FROM public.supplier_customers WHERE supplier_id = v_supplier_id)
     )
     SELECT 
@@ -125,7 +125,7 @@ BEGIN
         c.name AS customer_name,
         c.customer_type,
         c.phone,
-        COALESCE(c.address, addr.full_address) AS address,
+        COALESCE(c.address, addr.address) AS address,
         c.sector,
         sp.id AS supplier_product_id,
         oi.quantity,

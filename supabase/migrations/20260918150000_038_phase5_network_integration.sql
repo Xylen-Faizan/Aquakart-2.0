@@ -162,7 +162,7 @@ BEGIN
     END IF;
 
     SELECT * INTO v_order FROM public.orders WHERE id = p_order_id FOR UPDATE;
-    SELECT SUM(quantity), MAX(unit_price), MAX(product_id) INTO v_total_quantity, v_unit_price, v_supplier_product_id 
+    SELECT SUM(quantity), MAX(unit_price), (array_agg(product_id))[1] INTO v_total_quantity, v_unit_price, v_supplier_product_id 
     FROM public.order_items WHERE order_id = p_order_id;
     
     v_order_date := timezone('Asia/Kolkata', v_order.created_at)::date;
