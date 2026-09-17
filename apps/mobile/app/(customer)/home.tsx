@@ -220,6 +220,16 @@ export default function HomeScreen() {
               <Text style={styles.productName}>1L Bottles</Text>
               <Text style={styles.productPrice}>View prices</Text>
             </Pressable>
+            <Pressable 
+              style={styles.productCard}
+              onPress={() => router.push('/(customer)/suppliers')}
+            >
+              <View style={styles.productIconWrapper}>
+                <Image source={require('../../assets/images/cool_jar.jpg')} style={styles.productImage} resizeMode="contain" />
+              </View>
+              <Text style={styles.productName}>20L Cool Jar</Text>
+              <Text style={styles.productPrice}>View prices</Text>
+            </Pressable>
           </View>
         </View>
         
