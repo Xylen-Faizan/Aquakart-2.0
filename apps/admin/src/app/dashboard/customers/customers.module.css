@@ -1,0 +1,159 @@
+.container {
+  min-height: 100vh;
+  color: #f8fafc;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.pageTitle {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.pageSubtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin: 0 0 2rem 0;
+}
+
+/* Loading & Error States */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  color: #94a3b8;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #38bdf8;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorState, .emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #94a3b8;
+  text-align: center;
+  gap: 1rem;
+}
+
+.errorState {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-style: solid;
+}
+
+.retryBtn {
+  padding: 0.75rem 1.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retryBtn:hover {
+  background: #dc2626;
+}
+
+/* Density Visualization */
+.densitySection {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.densityHeader {
+  margin: 0 0 2rem 0;
+  font-size: 1.25rem;
+  color: #f1f5f9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+}
+
+.densityList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.densityRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.densityInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.sectorName {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.customerCount {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.densityBarContainer {
+  height: 24px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.densityBar {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.densityBlocks {
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: -1px;
+  font-family: monospace;
+  overflow: hidden;
+  white-space: nowrap;
+}
