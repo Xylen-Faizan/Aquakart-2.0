@@ -1,5 +1,5 @@
--- 047_fix_place_order_typo.sql
--- Fixes full_name typo in place_order RPC
+-- 048_fix_enum.sql
+-- Fix customer_type_enum in place_order
 
 CREATE OR REPLACE FUNCTION public.place_order(
     p_supplier_id UUID,
