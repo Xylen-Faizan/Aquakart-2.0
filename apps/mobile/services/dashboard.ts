@@ -24,6 +24,8 @@ export interface TodayManifestItem {
   expected_amount: number;
   jar_balance_before: number;
   next_delivery_date: string;
+  order_id: string;
+  status: string;
 }
 
 export interface SupplierForecast {
@@ -79,5 +81,19 @@ export const DashboardService = {
 
     if (error) throw error;
     return data as unknown as string;
+  },
+
+  async acceptOrder(orderId: string): Promise<void> {
+    const { error } = await supabase.rpc('accept_order', {
+      p_order_id: orderId
+    });
+    if (error) throw error;
+  },
+
+  async rejectOrder(orderId: string): Promise<void> {
+    const { error } = await supabase.from('orders')
+      .update({ status: 'cancelled' })
+      .eq('id', orderId);
+    if (error) throw error;
   }
 };

@@ -56,34 +56,6 @@ export default function SupplierLayout() {
           title: 'Order Details'
         }}
       />
-      <Tabs.Screen
-        name="business"
-        options={{
-          href: null,
-          title: 'Business Profile'
-        }}
-      />
-      <Tabs.Screen
-        name="pricing"
-        options={{
-          href: null,
-          title: 'Pricing & Catalog'
-        }}
-      />
-      <Tabs.Screen
-        name="ledger"
-        options={{
-          href: null,
-          title: 'Ledger Reports'
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          href: null,
-          title: 'Settings'
-        }}
-      />
     </Tabs>
   );
 }

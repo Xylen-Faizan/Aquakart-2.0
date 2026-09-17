@@ -40,7 +40,10 @@ export default function SupplierTodayScreen() {
           .single();
           
         if (supplierData) {
-          const dateStr = new Date().toISOString().split('T')[0];
+          const d = new Date();
+          const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+          const nd = new Date(utc + (3600000 * 5.5)); // IST is UTC+5.5
+          const dateStr = nd.toISOString().split('T')[0];
           const { data: capData } = await supabase
             .from('supplier_capacity')
             .select('max_capacity')
@@ -94,31 +97,17 @@ export default function SupplierTodayScreen() {
         return;
       }
       
-      const dateStr = new Date().toISOString().split('T')[0];
+      const d = new Date();
+      const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+      const nd = new Date(utc + (3600000 * 5.5)); // IST is UTC+5.5
+      const dateStr = nd.toISOString().split('T')[0];
       
-      const { data: existing } = await supabase
-        .from('supplier_capacity')
-        .select('id')
-        .eq('supplier_id', supplierData.id)
-        .eq('date', dateStr)
-        .single();
-        
-      if (existing) {
-        await supabase
-          .from('supplier_capacity')
-          .update({ max_capacity: qty })
-          .eq('id', existing.id);
-      } else {
-        await supabase
-          .from('supplier_capacity')
-          .insert({
-            supplier_id: supplierData.id,
-            date: dateStr,
-            max_capacity: qty,
-            reserved_quantity: 0,
-            fulfilled_quantity: 0
-          });
-      }
+      const { error: rpcError } = await supabase.rpc('set_supplier_capacity', {
+        p_date: dateStr,
+        p_max_capacity: qty
+      });
+
+      if (rpcError) throw rpcError;
       
       setCapacity(qty);
       Alert.alert('Success', `Today's marketplace capacity set to ${qty} jars.`);
@@ -266,7 +255,10 @@ export default function SupplierTodayScreen() {
                       {item.sector ? `${item.sector}` : 'No Area'} {item.address ? `• ${item.address}` : ''}
                     </Text>
                   </View>
-                  <Badge label="Pending" variant="warning" />
+                  <Badge 
+                    label={item.status === 'placed' ? 'New Request' : item.status === 'scheduled' ? 'Scheduled' : 'Pending'} 
+                    variant={item.status === 'placed' ? 'error' : item.status === 'scheduled' ? 'neutral' : 'warning'} 
+                  />
                 </View>
                 
                 <View style={styles.manifestDetails}>
@@ -283,6 +275,38 @@ export default function SupplierTodayScreen() {
                     <Text style={styles.detailText}>{item.phone}</Text>
                   </View>
                 </View>
+                
+                {item.status === 'placed' && (
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}>
+                    <Button 
+                      title="Decline" 
+                      variant="outline" 
+                      style={{ flex: 1, borderColor: theme.colors.error }} 
+                      textStyle={{ color: theme.colors.error }}
+                      onPress={async () => {
+                        try {
+                          await DashboardService.rejectOrder(item.order_id);
+                          onRefresh();
+                        } catch(e) {
+                          Alert.alert('Error', 'Failed to decline order.');
+                        }
+                      }}
+                    />
+                    <Button 
+                      title="Accept Order" 
+                      variant="primary" 
+                      style={{ flex: 1 }}
+                      onPress={async () => {
+                        try {
+                          await DashboardService.acceptOrder(item.order_id);
+                          onRefresh();
+                        } catch(e) {
+                          Alert.alert('Error', 'Failed to accept order.');
+                        }
+                      }}
+                    />
+                  </View>
+                )}
               </Card>
             ))
           )}

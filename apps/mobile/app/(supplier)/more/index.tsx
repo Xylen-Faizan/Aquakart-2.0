@@ -3,26 +3,80 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Lin
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Button } from '../../components/ui';
-import { useAuth } from '../../features/auth/AuthProvider';
+import { useAuth } from '../../../features/auth/AuthProvider';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../../../lib/supabase/client';
+import { Image } from 'expo-image';
+import { Alert } from 'react-native';
 
 export default function MoreScreen() {
   const { profile, signOut } = useAuth();
   const router = useRouter();
 
   const menuItems = [
-    { icon: 'business-outline', title: 'Business Profile', subtitle: 'Manage details & coverage', route: '/(supplier)/business' },
-    { icon: 'pricetag-outline', title: 'Pricing & Catalog', subtitle: 'Update default product rates', route: '/(supplier)/pricing' },
-    { icon: 'document-text-outline', title: 'Ledger Reports', subtitle: 'Download monthly statements', route: '/(supplier)/ledger' },
-    { icon: 'settings-outline', title: 'App Settings', subtitle: 'Notifications & preferences', route: '/(supplier)/settings' },
+    { icon: 'business-outline', title: 'Business Profile', subtitle: 'Manage details & coverage', route: '/(supplier)/more/business' },
+    { icon: 'pricetag-outline', title: 'Pricing & Catalog', subtitle: 'Update default product rates', route: '/(supplier)/more/pricing' },
+    { icon: 'document-text-outline', title: 'Ledger Reports', subtitle: 'Download monthly statements', route: '/(supplier)/more/ledger' },
+    { icon: 'settings-outline', title: 'App Settings', subtitle: 'Notifications & preferences', route: '/(supplier)/more/settings' },
     { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Contact AquaKart ops team', route: 'support' },
   ];
 
   const handlePress = (route: string) => {
     if (route === 'support') {
-      Linking.openURL('tel:+919999999999');
+      Linking.openURL('tel:+917488830394');
     } else {
       router.push(route as any);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0 && profile) {
+        const uri = result.assets[0].uri;
+        
+        // Use standard RN fetch + FormData for Supabase Storage
+        const fileExt = uri.split('.').pop() || 'jpg';
+        const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+        const formData = new FormData();
+        
+        formData.append('file', {
+          uri,
+          name: fileName,
+          type: `image/${fileExt}`
+        } as any);
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, formData, {
+             upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', profile.id);
+
+        if (updateError) throw updateError;
+        
+        Alert.alert('Success', 'Business logo updated successfully! Please refresh to see changes.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to upload logo.');
     }
   };
 
@@ -37,9 +91,17 @@ export default function MoreScreen() {
         {/* Profile Summary */}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{profile?.name?.charAt(0) || 'S'}</Text>
-            </View>
+            <TouchableOpacity style={styles.avatar} onPress={handlePickAvatar}>
+              {profile?.avatar_url ? (
+                <Image 
+                  source={{ uri: profile.avatar_url }} 
+                  style={{ width: '100%', height: '100%', borderRadius: 30 }} 
+                  contentFit="cover" 
+                />
+              ) : (
+                <Text style={styles.avatarText}>{profile?.name?.charAt(0) || 'S'}</Text>
+              )}
+            </TouchableOpacity>
             <View style={styles.profileInfo}>
               <Text style={styles.businessName}>{profile?.name || 'Water Supplier'}</Text>
               <Text style={styles.phoneText}>{profile?.phone}</Text>
