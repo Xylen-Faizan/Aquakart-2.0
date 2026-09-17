@@ -62,6 +62,17 @@ export const SupplierService = {
     };
   },
 
+  async getSupplierDetailForCustomer(supplierId: string) {
+    const { data, error } = await supabase
+      .rpc('get_supplier_details_for_customer', {
+        p_supplier_id: supplierId,
+      })
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async getOwnProfile() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;

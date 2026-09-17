@@ -15,11 +15,8 @@ export type SupplierProduct = Database['public']['Tables']['supplier_products'][
   products: Database['public']['Tables']['products']['Row'];
 };
 
-export type AvailableSupplier = Supplier & {
-  distance?: number;
-  capacity?: { available: number };
-  products?: SupplierProduct[];
-};
+export type AvailableSupplier = Database['public']['Functions']['get_available_suppliers']['Returns'][0];
+export type SupplierDetailForCustomer = Database['public']['Functions']['get_supplier_details_for_customer']['Returns'][0];
 
 export type PlaceOrderParams = {
   supplier_id: string;

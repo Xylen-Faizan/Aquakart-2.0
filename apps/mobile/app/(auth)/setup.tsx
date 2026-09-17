@@ -13,9 +13,9 @@ export default function SetupScreen() {
 
   useEffect(() => {
     if (role === 'customer') {
-      router.replace('/(customer)/home');
+      router.replace('/(customer)/home' as any);
     } else if (role === 'supplier') {
-      router.replace('/(supplier)/today');
+      router.replace('/(supplier)/today' as any);
     }
   }, [role]);
 

@@ -24,7 +24,7 @@ export default function SupplierDetailScreen() {
     try {
       setLoading(true);
       setError(null);
-      const details = await SupplierService.getSupplierDetails(id!);
+      const details = await SupplierService.getSupplierDetailForCustomer(id!);
       setData(details);
     } catch (err: any) {
       setError(err.message || 'Failed to load supplier details');
@@ -42,16 +42,15 @@ export default function SupplierDetailScreen() {
   };
 
   const handleCheckout = () => {
-    if (!data?.products?.length) return;
-    const mainProduct = data.products[0];
+    if (!data) return;
     
     router.push({
-      pathname: '/checkout',
+      pathname: '/(customer)/checkout',
       params: {
-        supplier_id: data.supplier.id,
-        product_id: mainProduct.product_id,
-        price: mainProduct.price,
-        business_name: data.supplier.business_name,
+        supplier_id: data.id,
+        product_id: data.product_id,
+        price: data.price,
+        business_name: data.business_name,
         quantity: quantity.toString(),
       }
     });
@@ -61,8 +60,8 @@ export default function SupplierDetailScreen() {
   if (error) return <ErrorState title="Error" message={error} onRetry={fetchSupplierDetails} />;
   if (!data) return <ErrorState title="Not Found" message="Supplier not found." />;
 
-  const { supplier, products } = data;
-  const mainProduct = products[0]; // Assuming primarily 1 main product for now
+  const supplier = data;
+  const mainProduct = data; // since the row includes both supplier and main product info
 
   return (
     <View style={styles.container}>
@@ -90,7 +89,7 @@ export default function SupplierDetailScreen() {
               <Text style={styles.ratingText}>4.8</Text>
             </View>
             <Badge 
-              label={supplier.is_accepting_orders ? "Open until 8 PM" : "Closed"} 
+              label={supplier.is_accepting_orders ? "Accepting Orders" : "Closed"} 
               variant={supplier.is_accepting_orders ? "success" : "error"} 
             />
           </View>
@@ -102,17 +101,12 @@ export default function SupplierDetailScreen() {
           <View style={styles.deliveryInfoBox}>
             <View style={styles.deliveryInfoItem}>
               <Ionicons name="location-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.deliveryInfoText}>2.5 km</Text>
+              <Text style={styles.deliveryInfoText}>{supplier.address}</Text>
             </View>
             <View style={styles.deliveryInfoDivider} />
             <View style={styles.deliveryInfoItem}>
               <Ionicons name="bicycle-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.deliveryInfoText}>Free Delivery</Text>
-            </View>
-            <View style={styles.deliveryInfoDivider} />
-            <View style={styles.deliveryInfoItem}>
-              <Ionicons name="time-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.deliveryInfoText}>20-30 mins</Text>
+              <Text style={styles.deliveryInfoText}>Delivery Available</Text>
             </View>
           </View>
         </View>
@@ -129,7 +123,7 @@ export default function SupplierDetailScreen() {
                   <Text style={styles.productIcon}>🚰</Text>
                 </View>
                 <View style={styles.productDetails}>
-                  <Text style={styles.productName}>{mainProduct.products?.name || '20L RO Water Can'}</Text>
+                  <Text style={styles.productName}>{mainProduct.product_name || '20L RO Water Can'}</Text>
                   <Text style={styles.productPrice}>₹{mainProduct.price}/can</Text>
                 </View>
               </View>
@@ -165,7 +159,7 @@ export default function SupplierDetailScreen() {
           <Button 
             title="Checkout" 
             onPress={handleCheckout} 
-            disabled={!supplier.is_accepting_orders}
+            disabled={!supplier.is_accepting_orders || supplier.available_quantity < quantity}
             style={styles.checkoutButton}
           />
         </View>

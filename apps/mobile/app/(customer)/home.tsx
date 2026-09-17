@@ -174,7 +174,7 @@ export default function HomeScreen() {
                 </View>
                 
                 <View style={styles.supplierProductRow}>
-                  <Text style={styles.supplierProductText}>20L Jar • {(supplier.products?.[0]?.price || 0) ? `₹${(supplier.products?.[0]?.price || 0)}` : 'Price varies'}</Text>
+                  <Text style={styles.supplierProductText}>20L Jar • {supplier.price ? `₹${supplier.price}` : 'Price varies'}</Text>
                 </View>
                 
                 <View style={styles.supplierStatusRow}>
