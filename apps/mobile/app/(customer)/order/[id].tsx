@@ -225,6 +225,12 @@ export default function OrderDetailScreen() {
             onPress={handleCancelOrder}
             style={styles.actionButton}
           />
+        ) : isFailed ? (
+          <Button 
+            title="Find Alternate Supplier" 
+            onPress={() => router.push('/(customer)/suppliers')}
+            style={styles.actionButton}
+          />
         ) : (
           <Button 
             title="Reorder" 
