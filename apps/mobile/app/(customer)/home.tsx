@@ -136,6 +136,42 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Popular Brands */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Popular Brands</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+            {[
+              { name: 'Bisleri', image: require('../../assets/images/bisleri_20l.png') },
+              { name: 'Aquacia', image: require('../../assets/images/aquacia_1l.png') },
+              { name: 'Aquafina', image: require('../../assets/images/aquafina_20l.png') },
+              { name: 'Kinley', image: require('../../assets/images/kinley_1l.png') }
+            ].map((brand, i) => (
+              <Pressable 
+                key={i} 
+                style={styles.brandCard}
+                onPress={() => router.push({ pathname: '/(customer)/suppliers', params: { search: brand.name } })}
+              >
+                <View style={[styles.brandIconPlaceholder, { backgroundColor: 'transparent', padding: 0 }]}>
+                  <Image source={brand.image} style={{ width: 64, height: 64, borderRadius: 32 }} resizeMode="contain" />
+                </View>
+                <Text style={styles.brandName}>{brand.name}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Bulk Orders Banner */}
+        <Pressable 
+          style={styles.bulkBanner}
+          onPress={() => router.push('/(customer)/bulk-orders' as any)}
+        >
+          <View style={styles.bulkBannerContent}>
+            <Text style={styles.bulkBannerTitle}>🎉 Party & Bulk Orders</Text>
+            <Text style={styles.bulkBannerSubtitle}>Get 10% off on orders of 100+ jars!</Text>
+          </View>
+          <Ionicons name="arrow-forward" size={20} color="#fff" />
+        </Pressable>
+
         {/* Nearby Suppliers */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -518,5 +554,51 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold as any,
     color: theme.colors.primary,
+  },
+  brandCard: {
+    alignItems: 'center',
+    marginRight: theme.spacing.lg,
+  },
+  brandIconPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  brandIconText: {
+    fontSize: 24,
+    color: theme.colors.primary,
+    fontWeight: 'bold',
+  },
+  brandName: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.medium as any,
+    color: theme.colors.textPrimary,
+  },
+  bulkBanner: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+    padding: theme.spacing.lg,
+    backgroundColor: '#ff6b6b',
+    borderRadius: theme.borderRadius.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bulkBannerContent: {
+    flex: 1,
+  },
+  bulkBannerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  bulkBannerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
   }
 });

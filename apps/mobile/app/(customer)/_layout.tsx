@@ -89,6 +89,21 @@ export default function CustomerLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="arrival-alert"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="bulk-orders"
+        options={{
+          href: null,
+          headerShown: false,
+          tabBarStyle: { display: 'none' }
+        }}
+      />
     </Tabs>
   );
 }

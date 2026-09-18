@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { theme } from '../../constants/theme';
-import { Card } from '../../components/ui';
+import { theme } from '../../../constants/theme';
+import { Card } from '../../../components/ui';
 
 export default function LedgerScreen() {
   const router = useRouter();

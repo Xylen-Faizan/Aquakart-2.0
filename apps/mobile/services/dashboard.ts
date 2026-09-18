@@ -58,6 +58,12 @@ export const DashboardService = {
     return (data || []) as unknown as TodayManifestItem[];
   },
 
+  async getCapacity(): Promise<number> {
+    const { data, error } = await supabase.rpc('get_supplier_current_capacity');
+    if (error) throw error;
+    return data as number;
+  },
+
   async completeDelivery(params: {
     customerId: string;
     supplierProductId: string;
@@ -91,9 +97,17 @@ export const DashboardService = {
   },
 
   async rejectOrder(orderId: string): Promise<void> {
-    const { error } = await supabase.from('orders')
+    const { error } = await supabase
+      .from('orders')
       .update({ status: 'cancelled' })
       .eq('id', orderId);
+    if (error) throw error;
+  },
+
+  async notifyArrival(orderId: string): Promise<void> {
+    const { error } = await supabase.rpc('notify_customer_arrival_by_order', {
+      p_order_id: orderId
+    });
     if (error) throw error;
   }
 };

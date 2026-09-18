@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
-import { Card, Button } from '../../components/ui';
+import { theme } from '../../../constants/theme';
+import { Card, Button } from '../../../components/ui';
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';

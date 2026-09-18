@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, Platform, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { theme } from '../../constants/theme';
 import { WaterRipple } from '../../components/ui';
@@ -98,9 +98,7 @@ export default function CustomerAuthScreen() {
   };
 
   const handlePhoneLogin = () => {
-    // For V1, if phone auth isn't fully set up with OTP, we can just route to a fallback or traditional register.
-    // Given the prompt, we are keeping standard email/phone signup fallback for customers.
-    router.push('/(auth)/register');
+    router.push('/(auth)/phone-auth' as any);
   };
 
   if (loading) {
@@ -115,7 +113,7 @@ export default function CustomerAuthScreen() {
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/welcome')} style={styles.backButton}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/welcome' as any)} style={styles.backButton}>
             <Text style={styles.backText}>← Back</Text>
           </Pressable>
         </View>
@@ -142,8 +140,12 @@ export default function CustomerAuthScreen() {
 
           <Pressable style={styles.phoneButton} onPress={handlePhoneLogin}>
             <Text style={styles.phoneIcon}>📱</Text>
-            <Text style={styles.phoneButtonText}>Continue with Email / Phone</Text>
+            <Text style={styles.phoneButtonText}>Continue with Phone Number</Text>
           </Pressable>
+          
+          <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)} style={{ alignItems: 'center', marginBottom: 16 }}>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>Login with Email</Text>
+          </TouchableOpacity>
           
           <Text style={styles.termsText}>
             By continuing, you agree to our Terms & Privacy Policy

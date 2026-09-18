@@ -8,7 +8,7 @@ export default function MoreStackLayout() {
         backgroundColor: theme.colors.surface,
       },
       headerTintColor: theme.colors.textPrimary,
-      headerBackTitleVisible: false,
+      headerBackTitle: '',
     }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="business" options={{ title: 'Business Profile' }} />

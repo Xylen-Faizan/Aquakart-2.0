@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, ActivityIndicator, TouchableOpacity, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { theme } from '../../constants/theme';
-import { Card, Button } from '../../components/ui';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { supabase } from '../../lib/supabase/client';
+import { theme } from '../../../constants/theme';
+import { Card, Button } from '../../../components/ui';
+import { useAuth } from '../../../features/auth/AuthProvider';
+import { supabase } from '../../../lib/supabase/client';
 
 export default function PricingCatalogScreen() {
   const { user } = useAuth();
@@ -52,8 +52,8 @@ export default function PricingCatalogScreen() {
 
       // 4. Merge
       if (products) {
-        const merged = products.map(p => {
-          const sp = supplierProducts?.find(sp => sp.product_id === p.id);
+        const merged = products.map((p: any) => {
+          const sp = supplierProducts?.find((sp: any) => sp.product_id === p.id);
           return {
             product_id: p.id,
             name: p.name,

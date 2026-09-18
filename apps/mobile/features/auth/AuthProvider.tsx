@@ -13,6 +13,9 @@ type AuthContextType = {
   signUp: (name: string, email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ data: any, error: any }>;
+  signInWithPhone: (phone: string) => Promise<{ data: any, error: any }>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<{ data: any, error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -142,8 +145,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'aquakart://auth/callback',
+      },
+    });
+  };
+
+  const signInWithPhone = async (phone: string) => {
+    return supabase.auth.signInWithOtp({
+      phone,
+    });
+  };
+
+  const verifyPhoneOtp = async (phone: string, token: string) => {
+    return supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: 'sms',
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, role, loading, signIn, signUp, signOut, refreshProfile, signInWithGoogle, signInWithPhone, verifyPhoneOtp }}>
       {children}
     </AuthContext.Provider>
   );

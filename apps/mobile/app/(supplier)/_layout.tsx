@@ -56,6 +56,13 @@ export default function SupplierLayout() {
           title: 'Order Details'
         }}
       />
+      <Tabs.Screen
+        name="routes"
+        options={{
+          href: null,
+          title: 'Routes'
+        }}
+      />
     </Tabs>
   );
 }

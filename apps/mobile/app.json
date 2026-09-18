@@ -17,10 +17,22 @@
         "foregroundImage": "./assets/images/app_icon.jpg",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.aquakart.app"
+      "package": "com.aquakart.app",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow AquaKart to use your location to track deliveries in real-time."
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
@@ -28,8 +40,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5201edad-f694-4374-872a-b27872ff3085"
+        "projectId": "a3dea1bc-3811-4121-b45a-2521d0901777"
       }
-    }
+    },
+    "owner": "faizan-02"
   }
 }

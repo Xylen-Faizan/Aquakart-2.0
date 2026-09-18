@@ -4,11 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Badge, Button } from '../../components/ui';
 import { DashboardService, TodayStats, TodayManifestItem, SupplierForecast } from '../../services/dashboard';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase/client';
 import { Alert, TextInput, Modal } from 'react-native';
 
 export default function SupplierTodayScreen() {
+  const router = useRouter();
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [forecast, setForecast] = useState<SupplierForecast | null>(null);
@@ -30,29 +31,9 @@ export default function SupplierTodayScreen() {
       setManifest(manifestData);
       setForecast(forecastData);
 
-      // Fetch capacity
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user) {
-        const { data: supplierData } = await supabase
-          .from('suppliers')
-          .select('id')
-          .eq('profile_id', userData.user.id)
-          .single();
-          
-        if (supplierData) {
-          const d = new Date();
-          const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-          const nd = new Date(utc + (3600000 * 5.5)); // IST is UTC+5.5
-          const dateStr = nd.toISOString().split('T')[0];
-          const { data: capData } = await supabase
-            .from('supplier_capacity')
-            .select('max_capacity')
-            .eq('supplier_id', supplierData.id)
-            .eq('date', dateStr)
-            .single();
-          setCapacity(capData?.max_capacity || 0);
-        }
-      }
+      // Fetch capacity via DashboardService so it uses the same fallback logic as customer app
+      const cap = await DashboardService.getCapacity();
+      setCapacity(cap);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -135,8 +116,16 @@ export default function SupplierTodayScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerSubtitle}>Supplier Operations</Text>
-        <Text style={styles.headerTitle}>{dateString}</Text>
+        <View>
+          <Text style={styles.headerSubtitle}>Supplier Operations</Text>
+          <Text style={styles.headerTitle}>{dateString}</Text>
+        </View>
+        <Button 
+          title="Fleet & Routes" 
+          variant="outline" 
+          size="sm" 
+          onPress={() => router.push('/(supplier)/routes' as any)} 
+        />
       </View>
 
       <ScrollView 
@@ -276,7 +265,7 @@ export default function SupplierTodayScreen() {
                   </View>
                 </View>
                 
-                {item.status === 'placed' && (
+                {item.status === 'placed' ? (
                   <View style={{ flexDirection: 'row', gap: 12, marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}>
                     <Button 
                       title="Decline" 
@@ -302,6 +291,23 @@ export default function SupplierTodayScreen() {
                           onRefresh();
                         } catch(e) {
                           Alert.alert('Error', 'Failed to accept order.');
+                        }
+                      }}
+                    />
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}>
+                    <Button 
+                      title="🔔 Send Arrival Alert" 
+                      variant="outline" 
+                      style={{ flex: 1, borderColor: theme.colors.primary }} 
+                      textStyle={{ color: theme.colors.primary }}
+                      onPress={async () => {
+                        try {
+                          await DashboardService.notifyArrival(item.order_id);
+                          Alert.alert('Success', 'Arrival alert sent to customer!');
+                        } catch(e: any) {
+                          Alert.alert('Error', e.message || 'Failed to send alert.');
                         }
                       }}
                     />

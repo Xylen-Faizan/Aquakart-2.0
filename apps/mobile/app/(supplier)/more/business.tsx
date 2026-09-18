@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { theme } from '../../constants/theme';
-import { Card, Button } from '../../components/ui';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { supabase } from '../../lib/supabase/client';
+import { theme } from '../../../constants/theme';
+import { Card, Button } from '../../../components/ui';
+import { useAuth } from '../../../features/auth/AuthProvider';
+import { supabase } from '../../../lib/supabase/client';
 import * as Location from 'expo-location';
 
 export default function BusinessProfileScreen() {
@@ -198,7 +198,7 @@ export default function BusinessProfileScreen() {
             <Button 
                 title="Update GPS" 
                 variant="outline" 
-                size="small" 
+                size="sm" 
                 onPress={handleUpdateLocation} 
             />
           </View>

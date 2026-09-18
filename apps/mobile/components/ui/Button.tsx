@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, TouchableOpacityProps } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, TouchableOpacityProps, TextStyle, StyleProp } from 'react-native';
 import { theme } from '../../constants/theme';
 
 interface ButtonProps extends TouchableOpacityProps {
@@ -7,9 +7,12 @@ interface ButtonProps extends TouchableOpacityProps {
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   title: string;
+  textStyle?: StyleProp<TextStyle>;
+  leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
-export const Button = ({ variant = 'primary', size = 'md', loading, title, disabled, style, ...props }: ButtonProps) => {
+export const Button = ({ variant = 'primary', size = 'md', loading, title, disabled, style, textStyle, leftElement, rightElement, ...props }: ButtonProps) => {
   const isPrimary = variant === 'primary';
   const isSecondary = variant === 'secondary';
   const isOutline = variant === 'outline';
@@ -35,20 +38,25 @@ export const Button = ({ variant = 'primary', size = 'md', loading, title, disab
       {loading ? (
         <ActivityIndicator color={isOutline ? theme.colors.primary : theme.colors.white} />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            size === 'sm' && styles.textSm,
-            size === 'md' && styles.textMd,
-            size === 'lg' && styles.textLg,
-            isPrimary && styles.textWhite,
-            isSecondary && styles.textPrimary,
-            isOutline && styles.textPrimary,
-            isDanger && styles.textWhite,
-          ]}
-        >
-          {title}
-        </Text>
+        <>
+          {leftElement}
+          <Text
+            style={[
+              styles.text,
+              size === 'sm' && styles.textSm,
+              size === 'md' && styles.textMd,
+              size === 'lg' && styles.textLg,
+              isPrimary && styles.textWhite,
+              isSecondary && styles.textPrimary,
+              isOutline && styles.textPrimary,
+              isDanger && styles.textWhite,
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+          {rightElement}
+        </>
       )}
     </TouchableOpacity>
   );
