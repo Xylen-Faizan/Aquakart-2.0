@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { dispatchService } from '../../services/dispatch';
 import { supabase } from '../../lib/supabase/client';
+import MapView, { Marker } from 'react-native-maps';
 
 export default function TrackOrderScreen() {
   const { order_id } = useLocalSearchParams<{ order_id: string }>();
@@ -33,27 +34,12 @@ export default function TrackOrderScreen() {
   useEffect(() => {
     if (!tracking?.run_id) return;
 
-    // Find the run_id from the stop
-    const loadRunId = async () => {
-      try {
-        const { data } = await supabase
-          .from('delivery_run_stops')
-          .select('run_id')
-          .eq('order_id', order_id)
-          .single();
-
-        if (data?.run_id) {
-          const channel = dispatchService.subscribeToLiveState(data.run_id, () => {
-            loadTracking();
-          });
-          return () => { supabase.removeChannel(channel); };
-        }
-      } catch (err) {
-        console.error('Error subscribing:', err);
-      }
-    };
-    loadRunId();
-  }, [order_id, loadTracking]);
+    const channel = dispatchService.subscribeToLiveState(tracking.run_id, () => {
+      loadTracking();
+    });
+    
+    return () => { supabase.removeChannel(channel); };
+  }, [tracking?.run_id, loadTracking]);
 
   // Auto-refresh every 15 seconds
   useEffect(() => {
@@ -153,6 +139,38 @@ export default function TrackOrderScreen() {
             <Text style={styles.doneBtnText}>Back to Home</Text>
           </TouchableOpacity>
         )}
+
+        {/* Map Visualization */}
+        {!isDelivered && tracking?.vehicle_lat && tracking?.vehicle_lng && (
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: tracking.vehicle_lat,
+                longitude: tracking.vehicle_lng,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+              region={{
+                latitude: tracking.vehicle_lat,
+                longitude: tracking.vehicle_lng,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+            >
+              <Marker
+                coordinate={{ latitude: tracking.vehicle_lat, longitude: tracking.vehicle_lng }}
+                title={tracking.vehicle_number || "Delivery Vehicle"}
+                description={tracking.eta_minutes ? `ETA: ${tracking.eta_minutes} min` : undefined}
+              >
+                <View style={styles.markerContainer}>
+                  <Ionicons name="car" size={24} color="#0EA5E9" />
+                </View>
+              </Marker>
+            </MapView>
+          </View>
+        )}
+
       </View>
     </SafeAreaView>
   );
@@ -172,9 +190,17 @@ const styles = StyleSheet.create({
   etaRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   etaValue: { fontSize: 28, fontWeight: '800', color: '#F8FAFC' },
   etaLabel: { fontSize: 12, color: '#64748B' },
-  freshnessCard: { backgroundColor: '#1E293B', borderRadius: 12, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderLeftWidth: 3 },
-  freshnessText: { fontSize: 13, color: '#CBD5E1', flex: 1 },
-  lastUpdated: { fontSize: 10, color: '#64748B' },
+  freshnessCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    marginBottom: 16,
+  },
+  freshnessText: { color: '#F8FAFC', fontSize: 14, marginLeft: 8, fontWeight: '500', flex: 1 },
+  lastUpdated: { color: '#94A3B8', fontSize: 12 },
   stopStatusCard: { backgroundColor: '#1E293B', borderRadius: 14, padding: 16 },
   stopStatusLabel: { fontSize: 13, fontWeight: '700', color: '#94A3B8', marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
   timeline: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -188,4 +214,7 @@ const styles = StyleSheet.create({
   timelineLineActive: { backgroundColor: '#0EA5E9' },
   doneBtn: { backgroundColor: '#0EA5E9', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   doneBtnText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
+  mapContainer: { height: 200, width: '100%', borderRadius: 12, overflow: 'hidden', marginTop: 16, borderWidth: 1, borderColor: '#334155' },
+  map: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
+  markerContainer: { backgroundColor: '#1E293B', padding: 6, borderRadius: 20, borderWidth: 2, borderColor: '#0EA5E9' },
 });

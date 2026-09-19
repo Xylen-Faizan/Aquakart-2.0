@@ -35,7 +35,8 @@ export default function CheckoutScreen() {
   const [assignedOrderId, setAssignedOrderId] = useState<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const price = parseFloat(params.price || '0');
+  // Fix for on-demand pricing: fallback to 80 if no supplier provided
+  const price = parseFloat(params.price || (params.supplier_id ? '0' : '80'));
   const quantity = parseInt(params.quantity || '1', 10);
   const deliveryFee = 0; // Configured to 0 in this app version
   const subtotal = price * quantity;
@@ -97,17 +98,20 @@ export default function CheckoutScreen() {
     try {
       setSubmitting(true);
       
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permissions are required to ensure delivery area coverage.');
-        setSubmitting(false);
-        return;
-      }
-      const providerStatus = await Location.getProviderStatusAsync();
-      if (!providerStatus.locationServicesEnabled) {
-        Alert.alert('GPS Disabled', 'Please enable GPS/Location services to place an order.');
-        setSubmitting(false);
-        return;
+      const selectedAddr = addresses.find(a => a.id === selectedAddress);
+      if (!selectedAddr?.lat || !selectedAddr?.lng) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'Location permissions are required since the selected address lacks coordinates.');
+          setSubmitting(false);
+          return;
+        }
+        const providerStatus = await Location.getProviderStatusAsync();
+        if (!providerStatus.locationServicesEnabled) {
+          Alert.alert('GPS Disabled', 'Please enable GPS/Location services.');
+          setSubmitting(false);
+          return;
+        }
       }
 
       if (params.supplier_id) {
@@ -125,9 +129,8 @@ export default function CheckoutScreen() {
         setRequestId(reqId);
         
         const offerCount = await dispatchService.searchVehicles(reqId);
-        if (offerCount === 0) {
-          setDispatchState('failed');
-        }
+        // Do not immediately fail. The search function returns quickly, but the request remains in 'searching' state.
+        // It will either timeout or succeed via realtime updates.
       }
     } catch (err: any) {
       Alert.alert('Order Failed', err.message || 'Something went wrong while placing your order.');

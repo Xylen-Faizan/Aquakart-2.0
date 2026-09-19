@@ -29,7 +29,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow AquaKart to use your location to track deliveries in real-time."
+          "locationAlwaysAndWhenInUsePermission": "Allow AquaKart to use your location to track deliveries in real-time.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       "expo-notifications"
