@@ -54,13 +54,14 @@ export const routeOpsService = {
   },
 
   // Route Planning
-  async generateDailyRun(supplierId: string, runDate: string, vehicleId: string, driverId: string, scheduleIds: string[]) {
+  async generateDailyRun(supplierId: string, runDate: string, vehicleId: string, driverId: string, scheduleIds: string[], helperId?: string) {
     const { data, error } = await supabase.rpc('generate_daily_run', {
       p_supplier_id: supplierId,
       p_run_date: runDate,
       p_vehicle_id: vehicleId,
       p_driver_id: driverId,
       p_schedule_ids: scheduleIds,
+      p_helper_id: helperId || null,
     });
     if (error) throw error;
     return data; // Returns the generated run_id

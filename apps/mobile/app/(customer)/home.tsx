@@ -110,6 +110,29 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
+        {/* On-Demand Delivery CTA */}
+        <Pressable
+          style={styles.onDemandCard}
+          onPress={() => {
+            if (!activeAddress) {
+              router.push('/(customer)/addresses');
+            } else {
+              router.push('/(customer)/on-demand' as any);
+            }
+          }}
+        >
+          <View style={styles.onDemandLeft}>
+            <View style={styles.onDemandIconCircle}>
+              <Ionicons name="flash" size={22} color="#F59E0B" />
+            </View>
+            <View>
+              <Text style={styles.onDemandTitle}>Deliver Now ⚡</Text>
+              <Text style={styles.onDemandSubtitle}>Get water from nearby active vehicles</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+        </Pressable>
+
         {/* Main CTA Card */}
         <View style={styles.mainCardWrapper}>
           <View style={styles.mainCard}>
@@ -600,5 +623,40 @@ const styles = StyleSheet.create({
   bulkBannerSubtitle: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.9)',
-  }
+  },
+  onDemandCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1A1A2E',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F59E0B30',
+  },
+  onDemandLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  onDemandIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F59E0B15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  onDemandTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F8FAFC',
+  },
+  onDemandSubtitle: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 1,
+  },
 });

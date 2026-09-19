@@ -36,12 +36,16 @@ export default function DriverRouteScreen() {
   const handleStartRoute = async () => {
     if (!run) return;
     try {
-      await routeOpsService.startRun(run.id);
+      const { supabase } = require('../../lib/supabase/client');
+      const { error } = await supabase.rpc('start_delivery_run', {
+        p_run_id: run.id,
+      });
+      if (error) throw error;
       await locationService.startTracking(run.id);
       setRun({ ...run, status: 'in_progress' });
       Alert.alert('Route Started', 'Background location tracking is active.');
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert('Error', err.message || 'Cannot start run. Ensure load is confirmed.');
     }
   };
 
@@ -80,7 +84,7 @@ export default function DriverRouteScreen() {
         <Text style={styles.title}>Vehicle: {run.vehicles?.vehicle_number}</Text>
         <Text style={styles.subtitle}>{stops.length} Deliveries</Text>
         
-        {run.status === 'planned' && (
+        {(run.status === 'planned' || run.status === 'loading') && (
           <TouchableOpacity style={styles.primaryBtn} onPress={handleStartRoute}>
             <Text style={styles.btnText}>START ROUTE</Text>
           </TouchableOpacity>
@@ -102,6 +106,9 @@ export default function DriverRouteScreen() {
               <View style={styles.stopHeader}>
                 <Text style={styles.stopSequence}>{index + 1}</Text>
                 <Text style={styles.stopName}>{stop.profiles?.full_name}</Text>
+                {stop.stop_type === 'opportunistic' && (
+                  <Text style={styles.oppBadge}>ON-DEMAND</Text>
+                )}
                 <Text style={styles.stopStatus}>{stop.status.toUpperCase()}</Text>
               </View>
               
@@ -157,5 +164,6 @@ const styles = StyleSheet.create({
   qty: { color: '#1f2937', fontWeight: '600', marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 10 },
   actionBtn: { flex: 1, backgroundColor: '#10b981', padding: 12, borderRadius: 6, alignItems: 'center' },
-  skipBtn: { backgroundColor: '#ef4444' }
+  skipBtn: { backgroundColor: '#ef4444' },
+  oppBadge: { fontSize: 9, fontWeight: '800', color: '#f59e0b', backgroundColor: '#f59e0b15', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4, letterSpacing: 0.5 }
 });

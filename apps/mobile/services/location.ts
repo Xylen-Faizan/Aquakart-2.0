@@ -1,9 +1,16 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase/client';
 
 const LOCATION_TASK_NAME = 'background-location-task';
+const ACTIVE_RUN_STORAGE_KEY = 'aquakart_active_run_id';
 let activeRunId: string | null = null;
+
+// Recover persisted run ID on module load
+AsyncStorage.getItem(ACTIVE_RUN_STORAGE_KEY).then((id) => {
+  if (id) activeRunId = id;
+});
 
 // Define the background task
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
@@ -16,6 +23,10 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     const loc = locations[0];
     
     try {
+      // Recover from AsyncStorage if in-memory state was lost
+      if (!activeRunId) {
+        activeRunId = await AsyncStorage.getItem(ACTIVE_RUN_STORAGE_KEY);
+      }
       if (!activeRunId) return;
 
       // Call the RPC to process the location and evaluate ETA
@@ -52,6 +63,7 @@ export const locationService = {
     await this.requestPermissions();
     
     activeRunId = runId;
+    await AsyncStorage.setItem(ACTIVE_RUN_STORAGE_KEY, runId);
 
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
       accuracy: Location.Accuracy.Balanced,
@@ -67,9 +79,11 @@ export const locationService = {
 
   async stopTracking() {
     activeRunId = null;
+    await AsyncStorage.removeItem(ACTIVE_RUN_STORAGE_KEY);
     const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
     if (isRegistered) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
   }
 };
+

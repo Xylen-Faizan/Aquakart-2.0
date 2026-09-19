@@ -52,6 +52,9 @@ function ProtectedLayout() {
       }
     } else {
       // User is logged in
+      const inDriverGroup = segments[0] === '(driver)';
+      const inHelperGroup = segments[0] === '(helper)';
+
       if (role === 'supplier') {
         if (!inSupplierGroup) {
           router.replace('/(supplier)/today' as any);
@@ -59,6 +62,14 @@ function ProtectedLayout() {
       } else if (role === 'customer') {
         if (!inCustomerGroup) {
           router.replace('/(customer)/home');
+        }
+      } else if (role === 'driver') {
+        if (!inDriverGroup) {
+          router.replace('/(driver)/route' as any);
+        }
+      } else if (role === 'helper') {
+        if (!inHelperGroup) {
+          router.replace('/(helper)/dashboard' as any);
         }
       } else {
         // Unknown or missing role
@@ -78,6 +89,8 @@ function ProtectedLayout() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(customer)" />
       <Stack.Screen name="(supplier)" />
+      <Stack.Screen name="(driver)" />
+      <Stack.Screen name="(helper)" />
     </Stack>
   );
 }
