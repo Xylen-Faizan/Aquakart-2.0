@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Platform, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AddressService } from '../../services/address';
 import { OrderService } from '../../services/order';
+import { dispatchService } from '../../services/dispatch';
 import { theme } from '../../constants/theme';
 import { Button, Card, Badge, Input } from '../../components/ui';
 import { LoadingState } from '../../components/feedback';
@@ -13,8 +14,10 @@ import { supabase } from '../../lib/supabase/client';
 import * as Location from 'expo-location';
 import type { Address, PaymentMethod } from '@aquakart/types';
 
+type DispatchState = 'none' | 'searching' | 'assigned' | 'failed';
+
 export default function CheckoutScreen() {
-  const params = useLocalSearchParams<{ supplier_id: string, product_id: string, price: string, business_name: string, quantity?: string }>();
+  const params = useLocalSearchParams<{ supplier_id?: string, product_id: string, price: string, business_name?: string, quantity?: string }>();
   const router = useRouter();
   
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -25,6 +28,12 @@ export default function CheckoutScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [submittingPhone, setSubmittingPhone] = useState(false);
+
+  // Dispatch state
+  const [dispatchState, setDispatchState] = useState<DispatchState>('none');
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [assignedOrderId, setAssignedOrderId] = useState<string | null>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const price = parseFloat(params.price || '0');
   const quantity = parseInt(params.quantity || '1', 10);
@@ -48,7 +57,36 @@ export default function CheckoutScreen() {
       }
     };
     fetchAddresses();
-  }, []);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (dispatchState === 'searching') {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, easing: Easing.ease, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, easing: Easing.ease, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [dispatchState]);
+
+  useEffect(() => {
+    if (!requestId) return;
+
+    const channel = dispatchService.subscribeToDispatchRequest(requestId, (payload: any) => {
+      const newStatus = payload.new?.status;
+      if (newStatus === 'assigned') {
+        setAssignedOrderId(payload.new.assigned_order_id);
+        setDispatchState('assigned');
+      } else if (newStatus === 'failed' || newStatus === 'expired') {
+        setDispatchState('failed');
+      }
+    });
+
+    return () => { supabase.removeChannel(channel); };
+  }, [requestId]);
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
@@ -72,17 +110,55 @@ export default function CheckoutScreen() {
         return;
       }
 
-      const orderId = await OrderService.placeOrder({
-        supplier_id: params.supplier_id!,
-        delivery_address_id: selectedAddress,
-        items: [{ product_id: params.product_id!, quantity }]
-      });
-      
-      router.replace(`/(customer)/order/${orderId}`);
+      if (params.supplier_id) {
+        // Explicit Supplier - Standard Order
+        const orderId = await OrderService.placeOrder({
+          supplier_id: params.supplier_id,
+          delivery_address_id: selectedAddress,
+          items: [{ product_id: params.product_id, quantity }]
+        });
+        router.replace(`/(customer)/order/${orderId}`);
+      } else {
+        // No explicit supplier - Dispatch engine mode
+        setDispatchState('searching');
+        const reqId = await dispatchService.createDispatchRequest(selectedAddress, params.product_id, quantity);
+        setRequestId(reqId);
+        
+        const offerCount = await dispatchService.searchVehicles(reqId);
+        if (offerCount === 0) {
+          setDispatchState('failed');
+        }
+      }
     } catch (err: any) {
       Alert.alert('Order Failed', err.message || 'Something went wrong while placing your order.');
       setSubmitting(false);
+      setDispatchState('none');
     }
+  };
+
+  const handleCancelDispatch = async () => {
+    if (requestId) {
+      try {
+        await dispatchService.cancelDispatchRequest(requestId);
+      } catch (err) {
+        console.error('Cancel error:', err);
+      }
+    }
+    setDispatchState('none');
+    setRequestId(null);
+    setSubmitting(false);
+  };
+
+  const handleTrackOrder = () => {
+    if (assignedOrderId) {
+      router.push({ pathname: '/(customer)/track-order', params: { order_id: assignedOrderId } } as any);
+    }
+  };
+
+  const handleRetryDispatch = () => {
+    setDispatchState('none');
+    setRequestId(null);
+    setSubmitting(false);
   };
 
   const selectedAddrObj = addresses.find(a => a.id === selectedAddress);
@@ -140,6 +216,52 @@ export default function CheckoutScreen() {
     );
   }
 
+  // Active Dispatch Screens (Searching, Assigned, Failed)
+  if (dispatchState !== 'none') {
+    return (
+      <SafeAreaView style={styles.safeDark}>
+        {dispatchState === 'searching' && (
+          <View style={styles.centered}>
+            <Animated.View style={[styles.searchCircle, { transform: [{ scale: pulseAnim }] }]}>
+              <Ionicons name="water" size={48} color="#0EA5E9" />
+            </Animated.View>
+            <Text style={styles.searchTitle}>Finding a delivery vehicle...</Text>
+            <Text style={styles.searchSubtitle}>Looking for available vehicles near you</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelDispatch}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {dispatchState === 'assigned' && (
+          <View style={styles.centered}>
+            <View style={styles.successCircle}>
+              <Ionicons name="checkmark-circle" size={64} color="#22C55E" />
+            </View>
+            <Text style={styles.successTitle}>Supplier Found!</Text>
+            <Text style={styles.successSubtitle}>Your water delivery is on its way.</Text>
+            <TouchableOpacity style={styles.trackBtn} onPress={handleTrackOrder}>
+              <Ionicons name="navigate" size={20} color="#FFF" />
+              <Text style={styles.trackBtnText}>Track Delivery</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {dispatchState === 'failed' && (
+          <View style={styles.centered}>
+            <Ionicons name="sad-outline" size={64} color="#64748B" />
+            <Text style={styles.failTitle}>No Vehicles Available</Text>
+            <Text style={styles.failSubtitle}>No delivery vehicles with capacity are currently near you. Please try again later.</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={handleRetryDispatch}>
+              <Text style={styles.retryBtnText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  // Normal Checkout View
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.header}>
@@ -193,8 +315,8 @@ export default function CheckoutScreen() {
                   <Text style={styles.productIcon}>🚰</Text>
                 </View>
                 <View>
-                  <Text style={styles.summaryItemName}>20L RO Water Can x {quantity}</Text>
-                  <Text style={styles.summaryItemSupplier}>{params.business_name}</Text>
+                  <Text style={styles.summaryItemName}>AquaKart Product x {quantity}</Text>
+                  <Text style={styles.summaryItemSupplier}>{params.business_name || 'Express Dispatch'}</Text>
                 </View>
               </View>
               <Text style={styles.summaryItemPrice}>₹{subtotal}</Text>
@@ -275,10 +397,8 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { 
-    flex: 1, 
-    backgroundColor: theme.colors.background 
-  },
+  safe: { flex: 1, backgroundColor: theme.colors.background },
+  safeDark: { flex: 1, backgroundColor: '#0F172A' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,9 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold as any,
     color: theme.colors.textPrimary,
   },
-  container: { 
-    flex: 1 
-  },
+  container: { flex: 1 },
   section: { 
     padding: theme.spacing.lg,
     paddingBottom: 0,
@@ -331,196 +449,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: theme.spacing.md,
   },
-  addressContent: {
-    flex: 1,
-  },
-  addressLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  addressLabel: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.textPrimary,
-  },
-  addressText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    paddingRight: theme.spacing.md,
-  },
-  changeBtnText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.primary,
-  },
-  noAddressContainer: {
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-  },
-  noAddressText: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-  },
-  summaryCard: { 
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryItemInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  productIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  productIcon: {
-    fontSize: 20,
-  },
-  summaryItemName: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.textPrimary,
-    marginBottom: 2,
-  },
-  summaryItemSupplier: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  summaryItemPrice: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginVertical: theme.spacing.md,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  priceLabel: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  priceValue: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.medium as any,
-    color: theme.colors.textPrimary,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.textPrimary,
-  },
-  totalValue: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.primary,
-  },
-  paymentMethodsGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  paymentMethodCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  paymentMethodCardActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: 'rgba(26, 86, 219, 0.02)',
-  },
-  paymentIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  paymentIconContainerActive: {
-    backgroundColor: theme.colors.primaryLight,
-  },
-  paymentMethodName: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.medium as any,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  paymentMethodNameActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeight.bold as any,
-  },
-  checkmarkBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-  },
-  footerBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.colors.surface,
-    flexDirection: 'row',
-    padding: theme.spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 34 : theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 8,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  footerTotalContainer: {
-    flex: 1,
-  },
-  footerTotalLabel: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  footerTotalPrice: {
-    fontSize: 22,
-    fontWeight: theme.fontWeight.bold as any,
-    color: theme.colors.textPrimary,
-  },
-  checkoutButton: {
-    flex: 1.2,
-    marginLeft: theme.spacing.lg,
-  },
+  addressContent: { flex: 1 },
+  addressLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  addressLabel: { fontSize: theme.fontSize.md, fontWeight: theme.fontWeight.bold as any, color: theme.colors.textPrimary },
+  addressText: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary, paddingRight: theme.spacing.md, lineHeight: 20 },
+  changeBtnText: { color: theme.colors.primary, fontWeight: theme.fontWeight.bold as any, padding: theme.spacing.sm },
+  noAddressContainer: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.lg },
+  noAddressText: { fontSize: theme.fontSize.md, color: theme.colors.textSecondary, marginBottom: theme.spacing.md },
+  summaryCard: { padding: theme.spacing.lg, borderWidth: 1, borderColor: theme.colors.border },
+  summaryItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md },
+  summaryItemInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  productIconContainer: { width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center', marginRight: theme.spacing.md },
+  productIcon: { fontSize: 24 },
+  summaryItemName: { fontSize: theme.fontSize.md, fontWeight: theme.fontWeight.medium as any, color: theme.colors.textPrimary, marginBottom: 4 },
+  summaryItemSupplier: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary },
+  summaryItemPrice: { fontSize: theme.fontSize.md, fontWeight: theme.fontWeight.bold as any, color: theme.colors.textPrimary },
+  divider: { height: 1, backgroundColor: theme.colors.border, marginVertical: theme.spacing.md },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm },
+  priceLabel: { fontSize: theme.fontSize.md, color: theme.colors.textSecondary },
+  priceValue: { fontSize: theme.fontSize.md, color: theme.colors.textPrimary, fontWeight: theme.fontWeight.medium as any },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: theme.spacing.xs },
+  totalLabel: { fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.bold as any, color: theme.colors.textPrimary },
+  totalValue: { fontSize: theme.fontSize.xl, fontWeight: theme.fontWeight.bold as any, color: theme.colors.primary },
+  paymentMethodsGrid: { flexDirection: 'row', gap: theme.spacing.md },
+  paymentMethodCard: { flex: 1, backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, padding: theme.spacing.md, alignItems: 'center', borderWidth: 2, borderColor: theme.colors.border, position: 'relative' },
+  paymentMethodCardActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight + '10' },
+  paymentIconContainer: { width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center', marginBottom: theme.spacing.sm },
+  paymentIconContainerActive: { backgroundColor: theme.colors.primaryLight },
+  paymentMethodName: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary, fontWeight: theme.fontWeight.medium as any, textAlign: 'center' },
+  paymentMethodNameActive: { color: theme.colors.primary, fontWeight: theme.fontWeight.bold as any },
+  checkmarkBadge: { position: 'absolute', top: theme.spacing.sm, right: theme.spacing.sm, backgroundColor: theme.colors.surface, borderRadius: 10 },
+  footerBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', padding: theme.spacing.lg, paddingBottom: Platform.OS === 'ios' ? 34 : theme.spacing.lg, borderTopWidth: 1, borderTopColor: theme.colors.border, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  footerTotalContainer: { flex: 1 },
+  footerTotalLabel: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary, marginBottom: 2 },
+  footerTotalPrice: { fontSize: theme.fontSize.xl, fontWeight: theme.fontWeight.bold as any, color: theme.colors.textPrimary },
+  checkoutButton: { flex: 1.5, marginLeft: theme.spacing.md },
+  
+  // Dispatch Styles
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  searchCircle: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#0EA5E915', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  searchTitle: { fontSize: 20, fontWeight: '800', color: '#F8FAFC', marginBottom: 8 },
+  searchSubtitle: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+  cancelBtn: { marginTop: 24, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8, backgroundColor: '#334155' },
+  cancelBtnText: { color: '#94A3B8', fontWeight: '700' },
+  successCircle: { marginBottom: 24 },
+  successTitle: { fontSize: 24, fontWeight: '800', color: '#22C55E', marginBottom: 8 },
+  successSubtitle: { fontSize: 14, color: '#94A3B8', textAlign: 'center', marginBottom: 24 },
+  trackBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0EA5E9', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12 },
+  trackBtnText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
+  failTitle: { fontSize: 20, fontWeight: '800', color: '#F8FAFC', marginTop: 16, marginBottom: 8 },
+  failSubtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24 },
+  retryBtn: { backgroundColor: '#0EA5E9', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12 },
+  retryBtnText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
 });

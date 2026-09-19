@@ -68,40 +68,25 @@ export default function BrandScreen() {
   const totalQty = Object.values(quantities).reduce((a, b) => a + b, 0);
   const totalAmount = products.reduce((acc, p) => acc + (quantities[p.product_id] || 0) * p.price, 0);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (totalQty === 0) {
       Alert.alert('Empty Order', 'Please select at least one product.');
       return;
     }
-    if (!supplier || !addressId) {
-      Alert.alert('Error', 'Please setup an address in your profile first.');
-      return;
-    }
     
-    try {
-      setProcessing(true);
-      
-      const selected = products.filter(p => (quantities[p.product_id] || 0) > 0);
-      
-      for (const p of selected) {
-        const { error } = await supabase.rpc('place_order', {
-          p_supplier_id: supplier.id,
-          p_address_id: addressId,
-          p_product_id: p.product_id,
-          p_quantity: quantities[p.product_id],
-          p_payment_method: 'cash'
-        });
-        if (error) throw error;
+    // We only support single-product opportunistic dispatches for now
+    const selected = products.filter(p => (quantities[p.product_id] || 0) > 0);
+    const primaryProduct = selected[0];
+    
+    router.push({
+      pathname: '/(customer)/checkout',
+      params: {
+        product_id: primaryProduct.product_id,
+        quantity: quantities[primaryProduct.product_id].toString(),
+        price: primaryProduct.price.toString(),
+        business_name: 'Express Dispatch'
       }
-      
-      Alert.alert('Success', 'Order placed successfully!', [
-        { text: 'OK', onPress: () => router.push('/(customer)/orders') }
-      ]);
-    } catch (error: any) {
-      Alert.alert('Order Failed', error.message);
-    } finally {
-      setProcessing(false);
-    }
+    });
   };
 
   if (loading) return <LoadingState />;

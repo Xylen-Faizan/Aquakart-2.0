@@ -97,6 +97,14 @@ export default function CustomerLayout() {
         }}
       />
       <Tabs.Screen
+        name="track-order"
+        options={{
+          href: null,
+          title: 'Track Order',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="bulk-orders"
         options={{
           href: null,
