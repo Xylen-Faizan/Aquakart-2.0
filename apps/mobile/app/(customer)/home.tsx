@@ -129,7 +129,7 @@ export default function HomeScreen() {
                 if (!activeAddress) {
                   router.push('/(customer)/addresses');
                 } else {
-                  router.push('/(customer)/search' as any);
+                  router.push({ pathname: '/(customer)/checkout', params: { product_id: '00000000-0000-0000-0000-000000000001', quantity: '1', price: '80' } } as any);
                 }
               }}
             >
