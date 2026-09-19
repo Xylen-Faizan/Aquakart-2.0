@@ -99,15 +99,15 @@ export default function HomeScreen() {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
+          <Pressable 
+            style={styles.searchBar}
+            onPress={() => router.push('/(customer)/search')}
+          >
             <Ionicons name="search" size={20} color={theme.colors.textTertiary} style={styles.searchIcon} />
-            <TextInput 
-              placeholder="Search water, jars, suppliers..." 
-              style={styles.searchInput}
-              placeholderTextColor={theme.colors.textTertiary}
-              editable={false}
-            />
-          </View>
+            <Text style={[styles.searchInput, { color: theme.colors.textTertiary, paddingVertical: 12 }]}>
+              Search water, jars, suppliers...
+            </Text>
+          </Pressable>
         </View>
 
         {/* Main CTA Card */}
@@ -149,7 +149,7 @@ export default function HomeScreen() {
               <Pressable 
                 key={i} 
                 style={styles.brandCard}
-                onPress={() => router.push({ pathname: '/(customer)/suppliers', params: { search: brand.name } })}
+                onPress={() => router.push(`/(customer)/brand/${brand.name}`)}
               >
                 <View style={[styles.brandIconPlaceholder, { backgroundColor: 'transparent', padding: 0 }]}>
                   <Image source={brand.image} style={{ width: 64, height: 64, borderRadius: 32 }} resizeMode="contain" />

@@ -11,6 +11,7 @@ import { theme } from '../../constants/theme';
 import { Card, Button, Badge } from '../../components/ui';
 import { EmptyState, ErrorState, LoadingState } from '../../components/feedback';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
 const BOKARO_SECTORS = [
   { label: 'Sector 1', lat: 23.6693, lng: 86.1511 },
@@ -140,7 +141,38 @@ export default function AddressesScreen() {
     ]);
   };
 
-  if (loading) return <LoadingState message="Loading addresses..." />;
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLoading(true);
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Allow location access to use this feature.');
+        setLoading(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      let reverseGeo = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      });
+
+      if (reverseGeo && reverseGeo.length > 0) {
+        const place = reverseGeo[0];
+        const formattedAddress = [place.name, place.street, place.subregion, place.city].filter(Boolean).join(', ');
+        setFormHouse(formattedAddress);
+        setFormLandmark(place.district || '');
+      } else {
+        Alert.alert('Error', 'Could not find address for your location.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to fetch location');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <LoadingState message="Loading..." />;
   if (error) return <ErrorState title="Error" message={error} onRetry={fetchAddresses} />;
 
   if (isAdding) {
@@ -155,6 +187,11 @@ export default function AddressesScreen() {
           </View>
           
           <ScrollView style={styles.formContainer} contentContainerStyle={{ paddingBottom: 40 }}>
+            <Pressable style={styles.gpsButton} onPress={handleUseCurrentLocation}>
+              <Ionicons name="navigate" size={20} color={theme.colors.primary} />
+              <Text style={styles.gpsButtonText}>Use Current Location</Text>
+            </Pressable>
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>House/Flat Number & Building *</Text>
               <TextInput 
@@ -343,6 +380,23 @@ const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
     padding: theme.spacing.lg,
+  },
+  gpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primaryLight + '30',
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primaryLight,
+  },
+  gpsButtonText: {
+    marginLeft: theme.spacing.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.bold as any,
+    fontSize: theme.fontSize.md,
   },
   inputGroup: {
     marginBottom: theme.spacing.xl,
