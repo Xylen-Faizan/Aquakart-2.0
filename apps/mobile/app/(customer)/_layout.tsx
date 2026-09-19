@@ -104,6 +104,22 @@ export default function CustomerLayout() {
           tabBarStyle: { display: 'none' }
         }}
       />
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
+          title: 'Search',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="brand/[name]"
+        options={{
+          href: null,
+          title: 'Brand Products',
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

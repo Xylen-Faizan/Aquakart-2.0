@@ -7,6 +7,7 @@ import { SupplierService } from '../../services/supplier';
 import { supabase } from '../../lib/supabase/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoadingState } from '../../components/feedback';
+import { getProductImage } from '../../utils/images';
 
 export default function BulkOrdersScreen() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function BulkOrdersScreen() {
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const addrId = await AsyncStorage.getItem('selectedAddressId');
       setAddressId(addrId);
       
@@ -37,7 +39,8 @@ export default function BulkOrdersScreen() {
           .eq('available', true);
           
         if (prods) {
-          setProducts(prods);
+          const validProds = prods.filter(p => p.products !== null);
+          setProducts(validProds);
         }
       }
     } catch (e) {
@@ -56,13 +59,17 @@ export default function BulkOrdersScreen() {
   };
 
   const totalQty = Object.values(quantities).reduce((a, b) => a + b, 0);
-  const subtotal = products.reduce((acc, p) => acc + (quantities[p.product_id] || 0) * p.price, 0);
-  const discount = totalQty >= 100 ? subtotal * 0.1 : 0;
-  const totalAmount = subtotal - discount;
+  const baseAmount = products.reduce((acc, p) => acc + (quantities[p.product_id] || 0) * p.price, 0);
+  const subtotal = baseAmount;
+  
+  // 10% discount on 100+ items
+  const discount = totalQty >= 100 ? baseAmount * 0.1 : 0;
+  const finalAmount = baseAmount - discount;
+  const totalAmount = finalAmount;
 
   const handlePlaceOrder = async () => {
     if (totalQty < 100) {
-      Alert.alert('Invalid Quantity', 'Bulk orders require a minimum of 100 items total.');
+      Alert.alert('Bulk Order Minimum', 'Please select at least 100 items to place a bulk order.');
       return;
     }
     if (!supplier || !addressId) {
@@ -72,10 +79,6 @@ export default function BulkOrdersScreen() {
     
     try {
       setProcessing(true);
-      
-      // For simplicity in the demo, we create multiple orders or one order with multiple items.
-      // Our `place_order` RPC currently only supports 1 product_id.
-      // We will loop and place them sequentially. Since it's a demo, this is fine.
       
       const selected = products.filter(p => (quantities[p.product_id] || 0) > 0);
       
@@ -90,7 +93,7 @@ export default function BulkOrdersScreen() {
         if (error) throw error;
       }
       
-      Alert.alert('Success', 'Bulk Order placed successfully with 10% discount!', [
+      Alert.alert('Success', 'Bulk Order placed successfully!', [
         { text: 'OK', onPress: () => router.push('/(customer)/orders') }
       ]);
     } catch (error: any) {
@@ -120,11 +123,13 @@ export default function BulkOrdersScreen() {
         
         {products.map(p => {
           const qty = quantities[p.product_id] || 0;
+          const imageSource = getProductImage(p.products.image_url);
+          
           return (
             <View key={p.product_id} style={styles.productCard}>
               <View style={styles.imageContainer}>
-                {p.products.image_url ? (
-                  <Image source={{ uri: p.products.image_url }} style={styles.productImage} resizeMode="contain" />
+                {imageSource ? (
+                  <Image source={imageSource} style={styles.productImage} resizeMode="contain" />
                 ) : (
                   <View style={styles.imagePlaceholder}>
                     <Text style={{fontSize: 24}}>💧</Text>

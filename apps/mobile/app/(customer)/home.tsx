@@ -101,7 +101,7 @@ export default function HomeScreen() {
         <View style={styles.searchContainer}>
           <Pressable 
             style={styles.searchBar}
-            onPress={() => router.push('/(customer)/search')}
+            onPress={() => router.push('/(customer)/search' as any)}
           >
             <Ionicons name="search" size={20} color={theme.colors.textTertiary} style={styles.searchIcon} />
             <Text style={[styles.searchInput, { color: theme.colors.textTertiary, paddingVertical: 12 }]}>
@@ -149,7 +149,7 @@ export default function HomeScreen() {
               <Pressable 
                 key={i} 
                 style={styles.brandCard}
-                onPress={() => router.push(`/(customer)/brand/${brand.name}`)}
+                onPress={() => router.push(`/(customer)/brand/${brand.name}` as any)}
               >
                 <View style={[styles.brandIconPlaceholder, { backgroundColor: 'transparent', padding: 0 }]}>
                   <Image source={brand.image} style={{ width: 64, height: 64, borderRadius: 32 }} resizeMode="contain" />

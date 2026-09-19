@@ -67,10 +67,10 @@ export default function SearchScreen() {
 
   const handleSelect = (item: any) => {
     if (item.type === 'supplier') {
-      router.push(`/(customer)/supplier/${item.id}`);
+      router.push(`/(customer)/supplier/${item.id}` as any);
     } else {
       // For products, usually we route to supplier list filtered by product, but here we can route to suppliers page with search param
-      router.push({ pathname: '/(customer)/suppliers', params: { search: item.name } });
+      router.push({ pathname: '/(customer)/suppliers', params: { search: item.name } } as any);
     }
   };
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { AppState } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase/client';
+import { notificationService } from '../../services/notifications';
 
 type AuthContextType = {
   user: User | null;
@@ -94,6 +95,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(currentSession?.user ?? null);
           if (currentSession?.user) {
             await fetchProfile(currentSession.user.id);
+            // Sync push token when user signs in
+            notificationService.syncPushToken(currentSession.user.id);
           }
         } else if (event === 'SIGNED_OUT') {
           setSession(null);

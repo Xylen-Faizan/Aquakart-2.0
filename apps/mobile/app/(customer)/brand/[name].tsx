@@ -8,6 +8,8 @@ import { LoadingState } from '../../../components/feedback';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SupplierService } from '../../../services/supplier';
 
+import { getProductImage } from '../../../utils/images';
+
 export default function BrandScreen() {
   const router = useRouter();
   const { name } = useLocalSearchParams();
@@ -118,11 +120,13 @@ export default function BrandScreen() {
         
         {products.map(p => {
           const qty = quantities[p.product_id] || 0;
+          const imageSource = getProductImage(p.products.image_url);
+          
           return (
             <View key={p.product_id} style={styles.productCard}>
               <View style={styles.imageContainer}>
-                {p.products.image_url ? (
-                  <Image source={{ uri: p.products.image_url }} style={styles.productImage} resizeMode="contain" />
+                {imageSource ? (
+                  <Image source={imageSource} style={styles.productImage} resizeMode="contain" />
                 ) : (
                   <View style={styles.imagePlaceholder}>
                     <Text style={{fontSize: 24}}>💧</Text>

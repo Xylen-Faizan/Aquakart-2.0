@@ -162,6 +162,7 @@ export default function AddressesScreen() {
         const formattedAddress = [place.name, place.street, place.subregion, place.city].filter(Boolean).join(', ');
         setFormHouse(formattedAddress);
         setFormLandmark(place.district || '');
+        setIsAdding(true);
       } else {
         Alert.alert('Error', 'Could not find address for your location.');
       }
@@ -278,7 +279,22 @@ export default function AddressesScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
-        <Text style={styles.title}>My Addresses</Text>
+        <Text style={styles.title}>Select a Location</Text>
+      </View>
+      
+      <View style={styles.currentLocationWrapper}>
+        <Pressable style={styles.currentLocationBtn} onPress={handleUseCurrentLocation}>
+          <Ionicons name="locate" size={22} color={theme.colors.primary} />
+          <View style={styles.currentLocationTextWrapper}>
+            <Text style={styles.currentLocationTitle}>Use current location</Text>
+            <Text style={styles.currentLocationSub}>Using GPS</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+        </Pressable>
+      </View>
+      
+      <View style={styles.savedAddressesHeader}>
+        <Text style={styles.savedAddressesTitle}>Saved Addresses</Text>
       </View>
 
       <FlatList
@@ -347,6 +363,42 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.bold as any,
     color: theme.colors.textPrimary,
+  },
+  currentLocationWrapper: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  currentLocationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currentLocationTextWrapper: {
+    flex: 1,
+    marginLeft: theme.spacing.md,
+  },
+  currentLocationTitle: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold as any,
+    color: theme.colors.primary,
+  },
+  currentLocationSub: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  savedAddressesHeader: {
+    padding: theme.spacing.md,
+    paddingBottom: 0,
+    marginTop: theme.spacing.sm,
+  },
+  savedAddressesTitle: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: 'bold',
+    color: theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   list: {
     padding: theme.spacing.md,
