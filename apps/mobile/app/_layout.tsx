@@ -52,8 +52,8 @@ function ProtectedLayout() {
       }
     } else {
       // User is logged in
-      const inDriverGroup = segments[0] === '(driver)';
-      const inHelperGroup = segments[0] === '(helper)';
+      const inDriverGroup = (segments[0] as string) === '(driver)';
+      const inHelperGroup = (segments[0] as string) === '(helper)';
 
       if (role === 'supplier') {
         if (!inSupplierGroup) {
