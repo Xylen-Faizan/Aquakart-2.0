@@ -21,6 +21,7 @@ export const ProductImages: Record<string, any> = {
   
   // generic fallbacks
   'jar_20l.png': require('../assets/images/jar_20l.png'),
+  'cool_jar.jpg': require('../assets/images/cool_jar.jpg'),
   'bottle_1l.png': require('../assets/images/bottle_1l.png'),
 };
 
