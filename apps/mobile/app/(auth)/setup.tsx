@@ -55,6 +55,18 @@ export default function SetupScreen() {
             variant="outline" 
           />
         </View>
+
+        {!role && (
+          <View style={styles.inviteContainer}>
+            <Text style={styles.helpText}>Joining a supplier's team?</Text>
+            <Button 
+              title="Enter Invite Code" 
+              onPress={() => router.push('/(auth)/join' as any)} 
+              variant="outline"
+              style={{ marginTop: 8 }}
+            />
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -101,4 +113,11 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.sm,
   },
+  inviteContainer: {
+    alignItems: 'center',
+    paddingTop: theme.spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    marginTop: theme.spacing.lg,
+  }
 });

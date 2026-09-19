@@ -17,6 +17,7 @@ export default function MoreScreen() {
   const menuItems = [
     { icon: 'business-outline', title: 'Business Profile', subtitle: 'Manage details & coverage', route: '/(supplier)/more/business' },
     { icon: 'pricetag-outline', title: 'Pricing & Catalog', subtitle: 'Update default product rates', route: '/(supplier)/more/pricing' },
+    { icon: 'people-outline', title: 'Team & Crew', subtitle: 'Manage drivers and helpers', route: '/(supplier)/more/team' },
     { icon: 'document-text-outline', title: 'Ledger Reports', subtitle: 'Download monthly statements', route: '/(supplier)/more/ledger' },
     { icon: 'settings-outline', title: 'App Settings', subtitle: 'Notifications & preferences', route: '/(supplier)/more/settings' },
     { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Contact AquaKart ops team', route: 'support' },

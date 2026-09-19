@@ -45,6 +45,8 @@ END;
 $$;
 
 -- 2. Authorized client-facing capacity function
+DROP FUNCTION IF EXISTS get_vehicle_capacity_state(UUID);
+
 CREATE OR REPLACE FUNCTION get_vehicle_capacity_state(p_run_id UUID)
 RETURNS TABLE (
     run_id UUID,

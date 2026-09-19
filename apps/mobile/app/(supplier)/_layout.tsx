@@ -63,6 +63,13 @@ export default function SupplierLayout() {
           title: 'Routes'
         }}
       />
+      <Tabs.Screen
+        name="more/team"
+        options={{
+          href: null,
+          title: 'Team & Crew'
+        }}
+      />
     </Tabs>
   );
 }
