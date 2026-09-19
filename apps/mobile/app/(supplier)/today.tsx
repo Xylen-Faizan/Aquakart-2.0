@@ -30,12 +30,17 @@ export default function SupplierTodayScreen() {
       setStats(statsData);
       setManifest(manifestData);
       setForecast(forecastData);
+    } catch (error) {
+      console.error('Failed to fetch dashboard main data:', error);
+    }
 
+    try {
       // Fetch capacity via DashboardService so it uses the same fallback logic as customer app
       const cap = await DashboardService.getCapacity();
       setCapacity(cap);
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error('Failed to fetch capacity:', error);
+      setCapacity(0); // Safely fallback if the capacity read fails
     } finally {
       setLoading(false);
       setRefreshing(false);
