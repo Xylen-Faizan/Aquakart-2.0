@@ -129,7 +129,7 @@ export default function HomeScreen() {
                 if (!activeAddress) {
                   router.push('/(customer)/addresses');
                 } else {
-                  router.push({ pathname: '/(customer)/checkout', params: { product_id: '00000000-0000-0000-0000-000000000001', quantity: '1', price: '80' } } as any);
+                  router.push('/(customer)/catalog' as any);
                 }
               }}
             >
@@ -240,33 +240,33 @@ export default function HomeScreen() {
           <View style={styles.productsGrid}>
             <Pressable 
               style={styles.productCard}
-              onPress={() => router.push('/(customer)/suppliers')}
+              onPress={() => router.push('/(customer)/catalog' as any)}
             >
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/jar_20l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>20L Jar</Text>
-              <Text style={styles.productPrice}>View prices</Text>
+              <Text style={styles.productPrice}>Order now</Text>
             </Pressable>
             <Pressable 
               style={styles.productCard}
-              onPress={() => router.push('/(customer)/suppliers')}
+              onPress={() => router.push('/(customer)/catalog' as any)}
             >
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/bottle_1l.png')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>1L Bottles</Text>
-              <Text style={styles.productPrice}>View prices</Text>
+              <Text style={styles.productPrice}>Order now</Text>
             </Pressable>
             <Pressable 
               style={styles.productCard}
-              onPress={() => router.push('/(customer)/suppliers')}
+              onPress={() => router.push('/(customer)/catalog' as any)}
             >
               <View style={styles.productIconWrapper}>
                 <Image source={require('../../assets/images/cool_jar.jpg')} style={styles.productImage} resizeMode="contain" />
               </View>
               <Text style={styles.productName}>20L Cool Jar</Text>
-              <Text style={styles.productPrice}>View prices</Text>
+              <Text style={styles.productPrice}>Order now</Text>
             </Pressable>
           </View>
         </View>
