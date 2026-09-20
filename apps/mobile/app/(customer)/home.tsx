@@ -9,6 +9,8 @@ import { theme } from '../../constants/theme';
 import { SupplierService } from '../../services/supplier';
 import { AddressService } from '../../services/address';
 import type { AvailableSupplier, Address } from '@aquakart/types';
+import { supabase } from '../../lib/supabase/client';
+import SubscribedHome from './components/SubscribedHome';
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
@@ -16,6 +18,7 @@ export default function HomeScreen() {
   const [suppliers, setSuppliers] = useState<AvailableSupplier[]>([]);
   const [activeAddress, setActiveAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<any>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,6 +30,15 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       if (!user?.id) return;
+      
+      // Check subscription status
+      const { data: subData } = await supabase.rpc('get_customer_subscription_status');
+      if (subData) {
+        setSubscription(subData);
+      } else {
+        setSubscription(null);
+      }
+
       const addresses = await AddressService.getAddresses(user.id);
       if (addresses && addresses.length > 0) {
         const storedId = await AsyncStorage.getItem('selectedAddressId');
@@ -57,6 +69,10 @@ export default function HomeScreen() {
       console.error(e);
     }
   };
+
+  if (subscription) {
+    return <SubscribedHome subscription={subscription} />;
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
