@@ -46,32 +46,7 @@ export default function DeliveriesScreen() {
     setCompletionModalVisible(true);
   };
 
-  const handleNotifyArrival = async (item: DeliveryManifestItem) => {
-    try {
-      // Insert into delivery_notifications to trigger the edge function
-      const { error } = await supabase.from('delivery_notifications').insert({
-        user_id: item.customer_id,
-        title: 'Supplier is Arriving!',
-        body: `Your water delivery will arrive in approx 10 minutes.`,
-        payload: {
-          route: '/(customer)/arrival-alert',
-          params: {
-            stop_id: item.schedule_id,
-            eta_minutes: '10',
-            supplier_name: 'AquaKart Supplier',
-            quantity: item.quantity,
-            product_name: item.product_name,
-          }
-        },
-        status: 'pending'
-      });
 
-      if (error) throw error;
-      Alert.alert('Success', 'Customer has been notified of your arrival.');
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to send notification');
-    }
-  };
 
   const handleComplete = async () => {
     if (!selectedDelivery) return;
@@ -173,8 +148,7 @@ export default function DeliveriesScreen() {
                   </View>
 
                   <View style={styles.actionRow}>
-                    <Button title="Notify Arrival" variant="outline" size="sm" style={{ flex: 1.5 }} onPress={() => handleNotifyArrival(item)} />
-                    <Button title="Call" variant="outline" size="sm" style={{ flex: 1 }}  />
+                    <Button title="Call" variant="outline" size="sm" style={{ flex: 1, marginRight: 8 }}  />
                     <Button title="Mark Delivered" variant="primary" size="sm" style={{ flex: 2 }} onPress={() => openCompletionModal(item)} />
                   </View>
                 </Card>
