@@ -280,7 +280,7 @@ export default function CustomersScreen() {
           <Button title="+ Add Customer" size="sm" style={styles.addButton} onPress={() => setAddModalVisible(true)} />
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           <View style={styles.filterContainer}>
             {filters.map(f => (
               <TouchableOpacity 
