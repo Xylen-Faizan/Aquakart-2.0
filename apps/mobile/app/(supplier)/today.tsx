@@ -130,18 +130,18 @@ export default function SupplierTodayScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <View style={{ marginBottom: 16 }}>
+      <View style={[styles.header, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }]}>
+        <View style={{ flex: 1, marginRight: 12 }}>
           <Text style={styles.headerSubtitle}>Supplier Operations</Text>
           <Text style={styles.headerTitle}>{dateString}</Text>
           <Text style={styles.headerGreeting}>{greeting}, {supplierName}</Text>
         </View>
-        <Button 
-          title="Fleet & Routes" 
-          variant="outline" 
-          size="sm" 
-          onPress={() => router.push('/(supplier)/routes' as any)} 
-        />
+        <TouchableOpacity 
+          style={{ borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: 'rgba(255,255,255,0.1)' }}
+          onPress={() => router.push('/(supplier)/routes' as any)}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>Fleet & Routes</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
