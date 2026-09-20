@@ -10,7 +10,7 @@ import { SupplierService } from '../../services/supplier';
 import { AddressService } from '../../services/address';
 import type { AvailableSupplier, Address } from '@aquakart/types';
 import { supabase } from '../../lib/supabase/client';
-import SubscribedHome from './components/SubscribedHome';
+import SubscribedHome from '../../components/customer/SubscribedHome';
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();

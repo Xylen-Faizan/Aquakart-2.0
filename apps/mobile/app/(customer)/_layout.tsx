@@ -128,6 +128,14 @@ export default function CustomerLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="catalog"
+        options={{
+          href: null,
+          title: 'Catalog',
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

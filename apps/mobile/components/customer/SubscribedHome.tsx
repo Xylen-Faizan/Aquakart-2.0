@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../../constants/theme';
-import { Card, Button } from '../../../components/ui';
-import { supabase } from '../../../lib/supabase/client';
+import { theme } from '../../constants/theme';
+import { Card, Button } from '../ui';
+import { supabase } from '../../lib/supabase/client';
 import { useRouter } from 'expo-router';
 
 interface SubscriptionData {
