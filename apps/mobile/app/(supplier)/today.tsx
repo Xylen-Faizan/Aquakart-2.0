@@ -8,8 +8,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase/client';
 import { Alert, TextInput, Modal } from 'react-native';
 
+import { useAuth } from '../../features/auth/AuthProvider';
+
 export default function SupplierTodayScreen() {
   const router = useRouter();
+  const { profile } = useAuth();
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [forecast, setForecast] = useState<SupplierForecast | null>(null);
@@ -117,13 +120,21 @@ export default function SupplierTodayScreen() {
   // Format the date header
   const today = new Date();
   const dateString = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
+  
+  const currentHour = today.getHours();
+  let greeting = 'Good evening';
+  if (currentHour < 12) greeting = 'Good morning';
+  else if (currentHour < 17) greeting = 'Good afternoon';
+  
+  const supplierName = profile?.name || 'Partner';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <View>
+        <View style={{ marginBottom: 16 }}>
           <Text style={styles.headerSubtitle}>Supplier Operations</Text>
           <Text style={styles.headerTitle}>{dateString}</Text>
+          <Text style={styles.headerGreeting}>{greeting}, {supplierName}</Text>
         </View>
         <Button 
           title="Fleet & Routes" 
@@ -376,6 +387,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     marginTop: 4,
+  },
+  headerGreeting: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 6,
+    fontWeight: '500',
   },
   container: {
     flex: 1,
