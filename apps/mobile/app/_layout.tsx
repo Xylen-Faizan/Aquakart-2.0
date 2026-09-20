@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments, ErrorBoundary } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../features/auth/AuthProvider';
+import { LanguageProvider, useLanguage } from '../features/i18n/LanguageProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingState } from '../components/feedback';
@@ -34,12 +35,19 @@ function OfflineBanner() {
 }
 
 function ProtectedLayout() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
+  const { language, loading: langLoading } = useLanguage();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
+    if (authLoading || langLoading) return;
+
+    // Force language selection if not set
+    if (!language && segments[1] !== 'language') {
+      router.replace('/(auth)/language');
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
     const inCustomerGroup = segments[0] === '(customer)';
@@ -78,9 +86,9 @@ function ProtectedLayout() {
         }
       }
     }
-  }, [user, role, loading, segments]);
+  }, [user, role, authLoading, langLoading, language, segments]);
 
-  if (loading) {
+  if (authLoading || langLoading) {
     return <LoadingState message="Starting AquaKart..." />;
   }
 
@@ -100,10 +108,12 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <OfflineBanner />
-        <AuthProvider>
-          <StatusBar style="dark" />
-          <ProtectedLayout />
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <StatusBar style="dark" />
+            <ProtectedLayout />
+          </AuthProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

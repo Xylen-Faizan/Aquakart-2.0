@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, StatusBar } fro
 import { router } from 'expo-router';
 import { theme } from '../../constants/theme';
 import { InteractiveWaterBackground } from '../../components/ui/InteractiveWaterBackground';
+import { useLanguage } from '../../features/i18n/LanguageProvider';
 
 export default function WelcomeScreen() {
+  const { t } = useLanguage();
   return (
     <InteractiveWaterBackground>
       <SafeAreaView style={styles.safe}>
@@ -13,11 +15,11 @@ export default function WelcomeScreen() {
           <View style={styles.heroSection}>
             <Image source={require('../../assets/images/logo.png')} style={styles.logoImage} resizeMode="contain" />
             <Text style={styles.title}>AQUAKART</Text>
-            <Text style={styles.subtitle}>Pure Water.{'\n'}Better Life.</Text>
+            <Text style={styles.subtitle}>{t('welcome.subtitle')}</Text>
           </View>
 
           <View style={styles.actionsContainer}>
-            <Text style={styles.questionText}>How would you like{'\n'}to continue?</Text>
+            <Text style={styles.questionText}>{t('welcome.question')}</Text>
             
             <Pressable 
               style={({ pressed }) => [styles.roleCard, pressed && styles.roleCardPressed]}
@@ -25,8 +27,8 @@ export default function WelcomeScreen() {
             >
               <Text style={styles.cardIcon}>👤</Text>
               <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Order Water</Text>
-                <Text style={styles.cardDescription}>Find water suppliers near you</Text>
+                <Text style={styles.cardTitle}>{t('welcome.customer')}</Text>
+                <Text style={styles.cardDescription}>{t('welcome.customer_desc')}</Text>
               </View>
             </Pressable>
 
@@ -36,8 +38,8 @@ export default function WelcomeScreen() {
             >
               <Text style={styles.cardIcon}>🚰</Text>
               <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>I'm a Water Supplier</Text>
-                <Text style={styles.cardDescription}>Manage orders & grow your business</Text>
+                <Text style={styles.cardTitle}>{t('welcome.supplier')}</Text>
+                <Text style={styles.cardDescription}>{t('welcome.supplier_desc')}</Text>
               </View>
             </Pressable>
           </View>
