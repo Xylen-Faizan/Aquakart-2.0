@@ -1,17 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { SupplierService } from '../../services/supplier';
-import type { AvailableSupplier } from '@aquakart/types';
-import { theme } from '../../constants/theme';
-import { Card, Button, Badge, Input } from '../../components/ui';
-import { EmptyState, ErrorState, LoadingState } from '../../components/feedback';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { SupplierService } from "../../services/supplier";
+import type { AvailableSupplier } from "@aquakart/types";
+import { theme } from "../../constants/theme";
+import { Card, Button, Badge, Input } from "../../components/ui";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../../components/feedback";
 
 export default function SuppliersScreen() {
   const [suppliers, setSuppliers] = useState<AvailableSupplier[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -28,7 +40,7 @@ export default function SuppliersScreen() {
       const data = await SupplierService.getAvailableSuppliers();
       setSuppliers(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load suppliers');
+      setError(err.message || "Failed to load suppliers");
     } finally {
       setLoading(false);
     }
@@ -38,16 +50,23 @@ export default function SuppliersScreen() {
     router.push(`/(customer)/supplier/${id}`);
   };
 
-  const filteredSuppliers = suppliers.filter(s => 
-    s.business_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSuppliers = suppliers.filter((s) =>
+    s.business_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </TouchableOpacity>
         <Text style={styles.title}>Find Suppliers</Text>
         <View style={{ width: 40 }} /> {/* For centering balance */}
@@ -60,12 +79,22 @@ export default function SuppliersScreen() {
             placeholder="Search suppliers..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            leftElement={<Ionicons name="search" size={20} color={theme.colors.textTertiary} />}
+            leftElement={
+              <Ionicons
+                name="search"
+                size={20}
+                color={theme.colors.textTertiary}
+              />
+            }
             style={styles.searchInput}
           />
         </View>
         <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="options-outline" size={24} color={theme.colors.primary} />
+          <Ionicons
+            name="options-outline"
+            size={24}
+            color={theme.colors.primary}
+          />
         </TouchableOpacity>
       </View>
 
@@ -82,15 +111,26 @@ export default function SuppliersScreen() {
           renderItem={({ item }) => {
             const isLowCapacity = (item.available_quantity || 0) < 20;
             return (
-              <TouchableOpacity activeOpacity={0.9} onPress={() => handleSelectSupplier(item.id)}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => handleSelectSupplier(item.id)}
+              >
                 <Card elevated style={styles.card}>
                   <View style={styles.cardTopRow}>
                     <View style={styles.cardTitleContainer}>
-                      <Text style={styles.businessName} numberOfLines={1}>{item.business_name}</Text>
+                      <Text style={styles.businessName} numberOfLines={1}>
+                        {item.business_name}
+                      </Text>
                       <View style={styles.distanceContainer}>
-                        <Ionicons name="location" size={12} color={theme.colors.textSecondary} />
+                        <Ionicons
+                          name="location"
+                          size={12}
+                          color={theme.colors.textSecondary}
+                        />
                         <Text style={styles.distanceText}>
-                          {item.distance != null ? `${item.distance.toFixed(1)} km away` : 'Nearby'}
+                          {item.distance != null
+                            ? `${item.distance.toFixed(1)} km away`
+                            : "Nearby"}
                         </Text>
                       </View>
                     </View>
@@ -100,13 +140,13 @@ export default function SuppliersScreen() {
                       <Text style={styles.priceUnit}>/can</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.divider} />
-                  
+
                   <View style={styles.cardBottomRow}>
-                    <Badge 
-                      label={isLowCapacity ? "Low Capacity" : "Available"} 
-                      variant={isLowCapacity ? "warning" : "success"} 
+                    <Badge
+                      label={isLowCapacity ? "Low Capacity" : "Available"}
+                      variant={isLowCapacity ? "warning" : "success"}
                     />
                     <Text style={styles.capacityText}>
                       Capacity: {item.available_quantity || 0} cans
@@ -117,9 +157,13 @@ export default function SuppliersScreen() {
             );
           }}
           ListEmptyComponent={
-            <EmptyState 
-              title="No suppliers found" 
-              message={searchQuery ? "No suppliers match your search." : "There are no active suppliers accepting orders in your area right now."}
+            <EmptyState
+              title="No suppliers found"
+              message={
+                searchQuery
+                  ? "No suppliers match your search."
+                  : "There are no active suppliers accepting orders in your area right now."
+              }
               actionLabel="Refresh"
               onAction={fetchSuppliers}
             />
@@ -136,11 +180,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: theme.spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.lg,
+    paddingTop: Platform.OS === "ios" ? theme.spacing.xl : theme.spacing.lg,
     backgroundColor: theme.colors.surface,
   },
   backButton: {
@@ -148,8 +192,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: theme.fontSize.xl,
@@ -157,8 +201,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.md,
     backgroundColor: theme.colors.surface,
@@ -177,10 +221,10 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(26, 86, 219, 0.1)',
+    borderColor: "rgba(26, 86, 219, 0.1)",
   },
   list: {
     padding: theme.spacing.lg,
@@ -190,9 +234,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   cardTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: theme.spacing.md,
   },
   cardTitleContainer: {
@@ -206,8 +250,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   distanceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   distanceText: {
     fontSize: theme.fontSize.sm,
@@ -215,8 +259,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
   priceSymbol: {
     fontSize: theme.fontSize.sm,
@@ -241,9 +285,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   cardBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   capacityText: {
     fontSize: theme.fontSize.sm,

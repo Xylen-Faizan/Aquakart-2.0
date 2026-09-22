@@ -11,10 +11,41 @@ export const fleetOpsService = {
         profile_id,
         is_active,
         profiles:profile_id (
-          full_name,
+          name,
           phone
         )
       `)
+      .eq('supplier_id', supplierId)
+      .eq('is_active', true);
+    if (error) throw error;
+    return data;
+  },
+
+  // Driver Management
+  async getDrivers(supplierId: string) {
+    const { data, error } = await supabase
+      .from('drivers')
+      .select(`
+        id,
+        supplier_id,
+        profile_id,
+        is_active,
+        profiles:profile_id (
+          name,
+          phone
+        )
+      `)
+      .eq('supplier_id', supplierId)
+      .eq('is_active', true);
+    if (error) throw error;
+    return data;
+  },
+
+  // Vehicle Management
+  async getVehicles(supplierId: string) {
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select('*')
       .eq('supplier_id', supplierId)
       .eq('is_active', true);
     if (error) throw error;
@@ -62,6 +93,30 @@ export const fleetOpsService = {
     return data;
   },
 
+  // Create an empty delivery run for today
+  async createEmptyRun(
+    supplierId: string,
+    vehicleId: string,
+    driverId: string,
+    helperId: string
+  ) {
+    const runDate = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('delivery_runs')
+      .insert({
+        supplier_id: supplierId,
+        vehicle_id: vehicleId,
+        driver_id: driverId,
+        helper_id: helperId,
+        run_date: runDate,
+        status: 'planned',
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   // Get fleet live state (all active vehicles for a supplier)
   async getFleetLiveState(supplierId: string) {
     const { data, error } = await supabase
@@ -75,8 +130,8 @@ export const fleetOpsService = {
         status,
         started_at,
         vehicles (vehicle_number),
-        drivers (profiles (full_name)),
-        helpers (profiles (full_name)),
+        drivers (profiles (name)),
+        helpers (profiles (name)),
         delivery_run_live_state (
           latitude, longitude, speed, heading, accuracy_m,
           captured_at, current_stop_id, eta_minutes
@@ -110,7 +165,7 @@ export const fleetOpsService = {
           customer_id,
           product_id,
           quantity,
-          profiles:customer_id (full_name),
+          profiles:customer_id (name),
           products:product_id (name),
           addresses:address_id (street, city, sector)
         )

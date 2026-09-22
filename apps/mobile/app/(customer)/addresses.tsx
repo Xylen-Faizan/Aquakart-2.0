@@ -1,31 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert, TextInput, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCallback } from 'react';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { AddressService } from '../../services/address';
-import type { Address } from '@aquakart/types';
-import { theme } from '../../constants/theme';
-import { Card, Button, Badge } from '../../components/ui';
-import { EmptyState, ErrorState, LoadingState } from '../../components/feedback';
-import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Alert,
+  TextInput,
+  ScrollView,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback } from "react";
+import { useAuth } from "../../features/auth/AuthProvider";
+import { AddressService } from "../../services/address";
+import type { Address } from "@aquakart/types";
+import { theme } from "../../constants/theme";
+import { Card, Button, Badge } from "../../components/ui";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../../components/feedback";
+import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 const BOKARO_SECTORS = [
-  { label: 'Sector 1', lat: 23.6693, lng: 86.1511 },
-  { label: 'Sector 2', lat: 23.6743, lng: 86.1581 },
-  { label: 'Sector 3', lat: 23.6663, lng: 86.1621 },
-  { label: 'Sector 4', lat: 23.6613, lng: 86.1661 },
-  { label: 'Sector 5', lat: 23.6643, lng: 86.1711 },
-  { label: 'Sector 6', lat: 23.6703, lng: 86.1751 },
-  { label: 'Sector 8', lat: 23.6763, lng: 86.1801 },
-  { label: 'Sector 9', lat: 23.6823, lng: 86.1851 },
-  { label: 'Sector 11', lat: 23.6883, lng: 86.1901 },
-  { label: 'Sector 12', lat: 23.6943, lng: 86.1951 },
-  { label: 'Camp 2', lat: 23.6553, lng: 86.1451 },
-  { label: 'Cooperative Colony', lat: 23.6583, lng: 86.1501 },
+  { label: "Sector 1", lat: 23.6693, lng: 86.1511 },
+  { label: "Sector 2", lat: 23.6743, lng: 86.1581 },
+  { label: "Sector 3", lat: 23.6663, lng: 86.1621 },
+  { label: "Sector 4", lat: 23.6613, lng: 86.1661 },
+  { label: "Sector 5", lat: 23.6643, lng: 86.1711 },
+  { label: "Sector 6", lat: 23.6703, lng: 86.1751 },
+  { label: "Sector 8", lat: 23.6763, lng: 86.1801 },
+  { label: "Sector 9", lat: 23.6823, lng: 86.1851 },
+  { label: "Sector 11", lat: 23.6883, lng: 86.1901 },
+  { label: "Sector 12", lat: 23.6943, lng: 86.1951 },
+  { label: "Camp 2", lat: 23.6553, lng: 86.1451 },
+  { label: "Cooperative Colony", lat: 23.6583, lng: 86.1501 },
 ];
 
 export default function AddressesScreen() {
@@ -33,15 +48,17 @@ export default function AddressesScreen() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form State
   const [isAdding, setIsAdding] = useState(false);
-  const [formHouse, setFormHouse] = useState('');
+  const [formHouse, setFormHouse] = useState("");
   const [formSector, setFormSector] = useState(BOKARO_SECTORS[3]); // Default Sector 4
-  const [formLandmark, setFormLandmark] = useState('');
-  const [formLabel, setFormLabel] = useState<'Home' | 'Office' | 'Other'>('Home');
-  const [formInstructions, setFormInstructions] = useState('');
-  
+  const [formLandmark, setFormLandmark] = useState("");
+  const [formLabel, setFormLabel] = useState<"Home" | "Office" | "Other">(
+    "Home",
+  );
+  const [formInstructions, setFormInstructions] = useState("");
+
   const router = useRouter();
 
   const [activeAddressId, setActiveAddressId] = useState<string | null>(null);
@@ -50,12 +67,12 @@ export default function AddressesScreen() {
     useCallback(() => {
       loadActiveAddress();
       fetchAddresses();
-    }, [user?.id])
+    }, [user?.id]),
   );
 
   const loadActiveAddress = async () => {
     try {
-      const id = await AsyncStorage.getItem('selectedAddressId');
+      const id = await AsyncStorage.getItem("selectedAddressId");
       setActiveAddressId(id);
     } catch (e) {
       console.error(e);
@@ -64,7 +81,7 @@ export default function AddressesScreen() {
 
   const handleSelectAddress = async (id: string) => {
     try {
-      await AsyncStorage.setItem('selectedAddressId', id);
+      await AsyncStorage.setItem("selectedAddressId", id);
       setActiveAddressId(id);
       router.back();
     } catch (e) {
@@ -80,7 +97,7 @@ export default function AddressesScreen() {
       const data = await AddressService.getAddresses(user.id);
       setAddresses(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load addresses');
+      setError(err.message || "Failed to load addresses");
     } finally {
       setLoading(false);
     }
@@ -88,65 +105,70 @@ export default function AddressesScreen() {
 
   const handleSaveAddress = async () => {
     if (!formHouse.trim()) {
-      Alert.alert('Validation Error', 'Please enter your House/Flat Number');
+      Alert.alert("Validation Error", "Please enter your House/Flat Number");
       return;
     }
 
     try {
       setLoading(true);
       // Construct a human readable address from the fields to match existing DB schema
-      const parts = [
-        formHouse.trim(),
-        formSector.label + ', Bokaro'
-      ];
+      const parts = [formHouse.trim(), formSector.label + ", Bokaro"];
       if (formLandmark.trim()) parts.push(`Landmark: ${formLandmark.trim()}`);
-      if (formInstructions.trim()) parts.push(`Instr: ${formInstructions.trim()}`);
-      
-      const fullAddress = parts.join(' | ');
+      if (formInstructions.trim())
+        parts.push(`Instr: ${formInstructions.trim()}`);
+
+      const fullAddress = parts.join(" | ");
 
       if (!user?.id) return;
       await AddressService.addAddress(user.id, {
         label: formLabel,
         address: fullAddress,
         lat: formSector.lat,
-        lng: formSector.lng
+        lng: formSector.lng,
       });
-      
+
       setIsAdding(false);
-      setFormHouse('');
-      setFormLandmark('');
-      setFormInstructions('');
+      setFormHouse("");
+      setFormLandmark("");
+      setFormInstructions("");
       await fetchAddresses();
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to add address');
+      Alert.alert("Error", err.message || "Failed to add address");
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    Alert.alert('Delete Address', 'Are you sure you want to delete this address?', [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Delete', 
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await AddressService.deleteAddress(id);
-            setAddresses(prev => prev.filter(a => a.id !== id));
-          } catch (err: any) {
-            Alert.alert('Error', err.message || 'Failed to delete address');
-          }
-        }
-      }
-    ]);
+    Alert.alert(
+      "Delete Address",
+      "Are you sure you want to delete this address?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AddressService.deleteAddress(id);
+              setAddresses((prev) => prev.filter((a) => a.id !== id));
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete address");
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleUseCurrentLocation = async () => {
     try {
       setLoading(true);
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Allow location access to use this feature.');
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Allow location access to use this feature.",
+        );
         setLoading(false);
         return;
       }
@@ -154,48 +176,78 @@ export default function AddressesScreen() {
       let location = await Location.getCurrentPositionAsync({});
       let reverseGeo = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
-        longitude: location.coords.longitude
+        longitude: location.coords.longitude,
       });
 
       if (reverseGeo && reverseGeo.length > 0) {
         const place = reverseGeo[0];
-        const formattedAddress = [place.name, place.street, place.subregion, place.city].filter(Boolean).join(', ');
+        const formattedAddress = [
+          place.name,
+          place.street,
+          place.subregion,
+          place.city,
+        ]
+          .filter(Boolean)
+          .join(", ");
         setFormHouse(formattedAddress);
-        setFormLandmark(place.district || '');
+        setFormLandmark(place.district || "");
         setIsAdding(true);
       } else {
-        Alert.alert('Error', 'Could not find address for your location.');
+        Alert.alert("Error", "Could not find address for your location.");
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to fetch location');
+      Alert.alert("Error", e.message || "Failed to fetch location");
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <LoadingState message="Loading..." />;
-  if (error) return <ErrorState title="Error" message={error} onRetry={fetchAddresses} />;
+  if (error)
+    return (
+      <ErrorState title="Error" message={error} onRetry={fetchAddresses} />
+    );
 
   if (isAdding) {
     return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safe} edges={["bottom"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
           <View style={styles.header}>
-            <Pressable onPress={() => setIsAdding(false)} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+            <Pressable
+              onPress={() => setIsAdding(false)}
+              style={styles.backBtn}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={theme.colors.textPrimary}
+              />
             </Pressable>
             <Text style={styles.title}>Add Delivery Address</Text>
           </View>
-          
-          <ScrollView style={styles.formContainer} contentContainerStyle={{ paddingBottom: 40 }}>
-            <Pressable style={styles.gpsButton} onPress={handleUseCurrentLocation}>
-              <Ionicons name="navigate" size={20} color={theme.colors.primary} />
+
+          <ScrollView
+            style={styles.formContainer}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            <Pressable
+              style={styles.gpsButton}
+              onPress={handleUseCurrentLocation}
+            >
+              <Ionicons
+                name="navigate"
+                size={20}
+                color={theme.colors.primary}
+              />
               <Text style={styles.gpsButtonText}>Use Current Location</Text>
             </Pressable>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>House/Flat Number & Building *</Text>
-              <TextInput 
+              <TextInput
                 style={styles.input}
                 placeholder="e.g. Flat 302, Green Valley Apts"
                 value={formHouse}
@@ -208,12 +260,22 @@ export default function AddressesScreen() {
               <Text style={styles.label}>Bokaro Sector *</Text>
               <View style={styles.sectorsGrid}>
                 {BOKARO_SECTORS.map((sector) => (
-                  <Pressable 
+                  <Pressable
                     key={sector.label}
-                    style={[styles.sectorChip, formSector.label === sector.label && styles.sectorChipActive]}
+                    style={[
+                      styles.sectorChip,
+                      formSector.label === sector.label &&
+                        styles.sectorChipActive,
+                    ]}
                     onPress={() => setFormSector(sector)}
                   >
-                    <Text style={[styles.sectorChipText, formSector.label === sector.label && styles.sectorChipTextActive]}>
+                    <Text
+                      style={[
+                        styles.sectorChipText,
+                        formSector.label === sector.label &&
+                          styles.sectorChipTextActive,
+                      ]}
+                    >
                       {sector.label}
                     </Text>
                   </Pressable>
@@ -223,7 +285,7 @@ export default function AddressesScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Landmark (Optional)</Text>
-              <TextInput 
+              <TextInput
                 style={styles.input}
                 placeholder="e.g. Near City Center Mall"
                 value={formLandmark}
@@ -235,18 +297,38 @@ export default function AddressesScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Save As</Text>
               <View style={styles.labelSelectorRow}>
-                {(['Home', 'Office', 'Other'] as const).map(l => (
-                  <Pressable 
+                {(["Home", "Office", "Other"] as const).map((l) => (
+                  <Pressable
                     key={l}
-                    style={[styles.labelChip, formLabel === l && styles.labelChipActive]}
+                    style={[
+                      styles.labelChip,
+                      formLabel === l && styles.labelChipActive,
+                    ]}
                     onPress={() => setFormLabel(l)}
                   >
-                    <Ionicons 
-                      name={l === 'Home' ? 'home' : l === 'Office' ? 'business' : 'location'} 
-                      size={16} 
-                      color={formLabel === l ? theme.colors.white : theme.colors.textSecondary} 
+                    <Ionicons
+                      name={
+                        l === "Home"
+                          ? "home"
+                          : l === "Office"
+                            ? "business"
+                            : "location"
+                      }
+                      size={16}
+                      color={
+                        formLabel === l
+                          ? theme.colors.white
+                          : theme.colors.textSecondary
+                      }
                     />
-                    <Text style={[styles.labelChipText, formLabel === l && styles.labelChipTextActive]}>{l}</Text>
+                    <Text
+                      style={[
+                        styles.labelChipText,
+                        formLabel === l && styles.labelChipTextActive,
+                      ]}
+                    >
+                      {l}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
@@ -254,7 +336,7 @@ export default function AddressesScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Delivery Instructions (Optional)</Text>
-              <TextInput 
+              <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="e.g. Leave jars near the door, do not ring bell"
                 value={formInstructions}
@@ -264,7 +346,7 @@ export default function AddressesScreen() {
                 placeholderTextColor={theme.colors.textTertiary}
               />
             </View>
-            
+
             <View style={{ height: 20 }} />
             <Button title="Save Address" onPress={handleSaveAddress} />
           </ScrollView>
@@ -274,25 +356,38 @@ export default function AddressesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </Pressable>
         <Text style={styles.title}>Select a Location</Text>
       </View>
-      
+
       <View style={styles.currentLocationWrapper}>
-        <Pressable style={styles.currentLocationBtn} onPress={handleUseCurrentLocation}>
+        <Pressable
+          style={styles.currentLocationBtn}
+          onPress={handleUseCurrentLocation}
+        >
           <Ionicons name="locate" size={22} color={theme.colors.primary} />
           <View style={styles.currentLocationTextWrapper}>
-            <Text style={styles.currentLocationTitle}>Use current location</Text>
+            <Text style={styles.currentLocationTitle}>
+              Use current location
+            </Text>
             <Text style={styles.currentLocationSub}>Using GPS</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={theme.colors.textTertiary}
+          />
         </Pressable>
       </View>
-      
+
       <View style={styles.savedAddressesHeader}>
         <Text style={styles.savedAddressesTitle}>Saved Addresses</Text>
       </View>
@@ -303,22 +398,39 @@ export default function AddressesScreen() {
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <Pressable onPress={() => handleSelectAddress(item.id)}>
-            <Card style={[styles.card, activeAddressId === item.id && styles.activeCard]}>
+            <Card
+              style={[
+                styles.card,
+                activeAddressId === item.id && styles.activeCard,
+              ]}
+            >
               <View style={styles.cardHeader}>
-                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                >
                   {activeAddressId === item.id && (
-                    <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
                   )}
-                  <Badge 
-                    label={item.label || "Other"} 
-                    variant={item.label === 'Home' ? 'success' : item.label === 'Office' ? 'info' : 'neutral'} 
+                  <Badge
+                    label={item.label || "Other"}
+                    variant={
+                      item.label === "Home"
+                        ? "success"
+                        : item.label === "Office"
+                          ? "info"
+                          : "neutral"
+                    }
                   />
                 </View>
-                <Button 
-                  title="Delete" 
-                  variant="danger" 
-                  size="sm" 
-                  onPress={() => handleDelete(item.id)} 
+                <Button
+                  title="Delete"
+                  variant="danger"
+                  size="sm"
+                  onPress={() => handleDelete(item.id)}
                 />
               </View>
               <Text style={styles.addressText}>{item.address}</Text>
@@ -326,18 +438,15 @@ export default function AddressesScreen() {
           </Pressable>
         )}
         ListEmptyComponent={
-          <EmptyState 
-            title="No addresses saved" 
+          <EmptyState
+            title="No addresses saved"
             message="Add a delivery address to start ordering."
           />
         }
       />
-      
+
       <View style={styles.footer}>
-        <Button 
-          title="Add New Address" 
-          onPress={() => setIsAdding(true)} 
-        />
+        <Button title="Add New Address" onPress={() => setIsAdding(true)} />
       </View>
     </SafeAreaView>
   );
@@ -349,8 +458,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
@@ -371,8 +480,8 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   currentLocationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   currentLocationTextWrapper: {
     flex: 1,
@@ -395,9 +504,9 @@ const styles = StyleSheet.create({
   },
   savedAddressesTitle: {
     fontSize: theme.fontSize.sm,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   list: {
@@ -410,12 +519,12 @@ const styles = StyleSheet.create({
   activeCard: {
     borderColor: theme.colors.primary,
     borderWidth: 2,
-    backgroundColor: theme.colors.primaryLight + '20',
+    backgroundColor: theme.colors.primaryLight + "20",
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.sm,
   },
   addressText: {
@@ -434,10 +543,10 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   gpsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primaryLight + '30',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.primaryLight + "30",
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     marginBottom: theme.spacing.lg,
@@ -470,11 +579,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   sectorsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.spacing.sm,
   },
   sectorChip: {
@@ -499,14 +608,14 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold as any,
   },
   labelSelectorRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.md,
   },
   labelChip: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.md,

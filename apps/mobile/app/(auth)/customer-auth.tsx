@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, Image, Platform, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
-import { theme } from '../../constants/theme';
-import { WaterRipple } from '../../components/ui';
-import { supabase } from '../../lib/supabase/client';
-import { LoadingState } from '../../components/feedback';
-import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Linking from 'expo-linking';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Pressable,
+  Image,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
+import { router } from "expo-router";
+import { theme } from "../../constants/theme";
+import { WaterRipple } from "../../components/ui";
+import { supabase } from "../../lib/supabase/client";
+import { LoadingState } from "../../components/feedback";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
+import * as Linking from "expo-linking";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -22,71 +31,81 @@ export default function CustomerAuthScreen() {
 
       if (__DEV__) {
         // Mock seamless Google Login for local development to test DB flow without deep link headaches
-        const mockEmail = 'google_demo@gmail.com';
+        const mockEmail = "google_demo@gmail.com";
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: mockEmail,
-          password: 'password123'
+          password: "password123",
         });
-        
+
         if (signInError) {
           // User doesn't exist yet, simulate first-time Google signup
           const { error: signUpError } = await supabase.auth.signUp({
             email: mockEmail,
-            password: 'password123',
-            options: { data: { name: 'Google Demo User' } }
+            password: "password123",
+            options: { data: { name: "Google Demo User" } },
           });
           if (signUpError) throw signUpError;
         }
-        
-        router.replace('/');
+
+        router.replace("/");
         return;
       }
 
       // Production Supabase OAuth flow
       const redirectUrl = makeRedirectUri({
-        scheme: 'aquakart',
-        path: '(customer)/home',
+        scheme: "aquakart",
+        path: "(customer)/home",
       });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: redirectUrl,
           skipBrowserRedirect: true,
-        }
+        },
       });
       if (error) throw error;
 
       if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        if (result.type === 'success' && result.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl,
+        );
+        if (result.type === "success" && result.url) {
           // Parse URL to get session tokens or authorization code
           const parsedUrl = Linking.parse(result.url);
           const params = parsedUrl.queryParams || {};
-          
+
           // 1. Native PKCE flow (Recommended for mobile)
           const code = params.code as string;
           if (code) {
-            const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+            const { error: sessionError } =
+              await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
             return; // Success handled by AuthProvider listener
           }
-          
+
           // 2. Fallback Implicit flow (Legacy)
           // OAuth tokens can be in the hash or query string depending on provider config
           // Sometimes fragment is not parsed into queryParams depending on expo-linking version
-          const urlObj = new URL(result.url.replace('#', '?'));
-          const accessToken = params.access_token as string || urlObj.searchParams.get('access_token');
-          const refreshToken = params.refresh_token as string || urlObj.searchParams.get('refresh_token');
-          
+          const urlObj = new URL(result.url.replace("#", "?"));
+          const accessToken =
+            (params.access_token as string) ||
+            urlObj.searchParams.get("access_token");
+          const refreshToken =
+            (params.refresh_token as string) ||
+            urlObj.searchParams.get("refresh_token");
+
           if (accessToken && refreshToken) {
             const { error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
-              refresh_token: refreshToken
+              refresh_token: refreshToken,
             });
             if (sessionError) throw sessionError;
           } else {
-             throw new Error('Authentication failed: No valid session tokens returned from provider.');
+            throw new Error(
+              "Authentication failed: No valid session tokens returned from provider.",
+            );
           }
         }
       }
@@ -98,7 +117,7 @@ export default function CustomerAuthScreen() {
   };
 
   const handlePhoneLogin = () => {
-    router.push('/(auth)/phone-auth' as any);
+    router.push("/(auth)/phone-auth" as any);
   };
 
   if (loading) {
@@ -108,20 +127,38 @@ export default function CustomerAuthScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.backgroundContainer}>
-        <WaterRipple color={theme.colors.primaryLight} maxScale={4} duration={3000} style={styles.ripple1} />
+        <WaterRipple
+          color={theme.colors.primaryLight}
+          maxScale={4}
+          duration={3000}
+          style={styles.ripple1}
+        />
       </View>
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/welcome' as any)} style={styles.backButton}>
+          <Pressable
+            onPress={() =>
+              router.canGoBack()
+                ? router.back()
+                : router.replace("/(auth)/welcome" as any)
+            }
+            style={styles.backButton}
+          >
             <Text style={styles.backText}>← Back</Text>
           </Pressable>
         </View>
 
         <View style={styles.heroSection}>
-          <Image source={require('../../assets/images/logo.png')} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.title}>Welcome to{'\n'}AquaKart</Text>
-          <Text style={styles.subtitle}>Get pure water delivered{'\n'}to your door</Text>
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Welcome to{"\n"}AquaKart</Text>
+          <Text style={styles.subtitle}>
+            Get pure water delivered{"\n"}to your door
+          </Text>
         </View>
 
         <View style={styles.actionsContainer}>
@@ -140,13 +177,20 @@ export default function CustomerAuthScreen() {
 
           <Pressable style={styles.phoneButton} onPress={handlePhoneLogin}>
             <Text style={styles.phoneIcon}>📱</Text>
-            <Text style={styles.phoneButtonText}>Continue with Phone Number</Text>
+            <Text style={styles.phoneButtonText}>
+              Continue with Phone Number
+            </Text>
           </Pressable>
-          
-          <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)} style={{ alignItems: 'center', marginBottom: 16 }}>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>Login with Email</Text>
+
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/register" as any)}
+            style={{ alignItems: "center", marginBottom: 16 }}
+          >
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>
+              Login with Email
+            </Text>
           </TouchableOpacity>
-          
+
           <Text style={styles.termsText}>
             By continuing, you agree to our Terms & Privacy Policy
           </Text>
@@ -162,11 +206,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   backgroundContainer: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: -1,
   },
   ripple1: {
@@ -180,7 +227,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: theme.spacing.xl,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   header: {
     paddingTop: theme.spacing.md,
@@ -195,8 +242,8 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoImage: {
     width: 64,
@@ -207,30 +254,30 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: theme.fontWeight.bold as any,
     color: theme.colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.md,
     lineHeight: 38,
   },
   subtitle: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
   },
   actionsContainer: {
-    width: '100%',
+    width: "100%",
     paddingBottom: theme.spacing.xl,
   },
   googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -239,8 +286,8 @@ const styles = StyleSheet.create({
   },
   googleIcon: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#DB4437', // Google red
+    fontWeight: "bold",
+    color: "#DB4437", // Google red
     marginRight: theme.spacing.sm,
   },
   googleButtonText: {
@@ -249,8 +296,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.lg,
   },
   divider: {
@@ -264,9 +311,9 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
   },
   phoneButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
@@ -285,12 +332,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: theme.colors.error,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.md,
   },
   termsText: {
     fontSize: 12,
     color: theme.colors.textTertiary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

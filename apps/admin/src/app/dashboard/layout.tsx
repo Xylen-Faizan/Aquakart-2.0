@@ -66,6 +66,30 @@ export default function DashboardLayout({
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             Orders
           </Link>
+          
+          <div className={styles.navSectionTitle}>CONTROL TOWER</div>
+          
+          <Link 
+            href="/dashboard/network/live" 
+            className={`${styles.navLink} ${pathname.startsWith('/dashboard/network/live') ? styles.navLinkActive : ''}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+            Live Network
+          </Link>
+          <Link 
+            href="/dashboard/network/exceptions" 
+            className={`${styles.navLink} ${pathname.startsWith('/dashboard/network/exceptions') ? styles.navLinkActive : ''}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Exceptions
+          </Link>
+          <Link 
+            href="/dashboard/network/coverage" 
+            className={`${styles.navLink} ${pathname.startsWith('/dashboard/network/coverage') ? styles.navLinkActive : ''}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+            Coverage
+          </Link>
         </nav>
 
         <div className={styles.signOutWrapper}>

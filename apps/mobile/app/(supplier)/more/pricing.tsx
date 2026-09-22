@@ -1,16 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, ActivityIndicator, TouchableOpacity, Switch } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { theme } from '../../../constants/theme';
-import { Card, Button } from '../../../components/ui';
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { supabase } from '../../../lib/supabase/client';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  Switch,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { theme } from "../../../constants/theme";
+import { Card, Button } from "../../../components/ui";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { supabase } from "../../../lib/supabase/client";
 
 export default function PricingCatalogScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [supplierId, setSupplierId] = useState<string | null>(null);
@@ -18,49 +29,52 @@ export default function PricingCatalogScreen() {
 
   useEffect(() => {
     fetchCatalog();
-  }, []);
+  }, [user?.id]);
 
   const fetchCatalog = async () => {
-    if (!user?.id) return;
     try {
+      if (!user?.id) return;
       // 1. Get supplier ID
       const { data: supplierData } = await supabase
-        .from('suppliers')
-        .select('id')
-        .eq('profile_id', user.id)
+        .from("suppliers")
+        .select("id")
+        .eq("profile_id", user.id)
         .single();
-        
+
       if (!supplierData) {
-        Alert.alert('Error', 'Please complete your Business Profile first.');
+        Alert.alert("Error", "Please complete your Business Profile first.");
         router.back();
         return;
       }
-      
+
       setSupplierId(supplierData.id);
 
       // 2. Get all global products
       const { data: products } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true);
+        .from("products")
+        .select("*")
+        .eq("active", true);
 
       // 3. Get supplier's specific products
       const { data: supplierProducts } = await supabase
-        .from('supplier_products')
-        .select('*')
-        .eq('supplier_id', supplierData.id);
+        .from("supplier_products")
+        .select("*")
+        .eq("supplier_id", supplierData.id);
 
       // 4. Merge
       if (products) {
         const merged = products.map((p: any) => {
-          const sp = supplierProducts?.find((sp: any) => sp.product_id === p.id);
+          const sp = supplierProducts?.find(
+            (sp: any) => sp.product_id === p.id,
+          );
           return {
             product_id: p.id,
             name: p.name,
-            default_price: p.default_price,
             available: sp ? sp.available : false,
-            custom_price: sp ? sp.custom_price?.toString() : p.default_price?.toString(),
-            sp_id: sp ? sp.id : null
+            custom_price: sp
+              ? sp.price?.toString()
+              : "",
+            sp_id: sp ? sp.id : null,
           };
         });
         setCatalog(merged);
@@ -73,49 +87,53 @@ export default function PricingCatalogScreen() {
   };
 
   const handleToggle = (productId: string, value: boolean) => {
-    setCatalog(prev => prev.map(item => 
-      item.product_id === productId ? { ...item, available: value } : item
-    ));
+    setCatalog((prev) =>
+      prev.map((item) =>
+        item.product_id === productId ? { ...item, available: value } : item,
+      ),
+    );
   };
 
   const handlePriceChange = (productId: string, text: string) => {
-    setCatalog(prev => prev.map(item => 
-      item.product_id === productId ? { ...item, custom_price: text } : item
-    ));
+    setCatalog((prev) =>
+      prev.map((item) =>
+        item.product_id === productId ? { ...item, custom_price: text } : item,
+      ),
+    );
   };
 
   const handleSave = async () => {
     if (!supplierId) return;
     try {
       setSaving(true);
-      
+
       for (const item of catalog) {
         const payload = {
           supplier_id: supplierId,
           product_id: item.product_id,
           available: item.available,
-          custom_price: parseFloat(item.custom_price) || item.default_price
+          price: parseFloat(item.custom_price) || 0,
         };
 
         if (item.sp_id) {
           // Update existing
-          await supabase
-            .from('supplier_products')
+          const { error } = await supabase
+            .from("supplier_products")
             .update(payload)
-            .eq('id', item.sp_id);
+            .eq("id", item.sp_id);
+          if (error) throw error;
         } else if (item.available) {
           // Insert new if made available
-          await supabase
-            .from('supplier_products')
-            .insert(payload);
+          const { error } = await supabase.from("supplier_products").insert(payload);
+          if (error) throw error;
         }
       }
 
-      Alert.alert('Success', 'Catalog updated successfully!');
+      Alert.alert("Success", "Catalog updated successfully!");
       router.back();
     } catch (err: any) {
       console.error(err);
-      Alert.alert('Error', 'Failed to update catalog.');
+      Alert.alert("Error", "Failed to update catalog.");
     } finally {
       setSaving(false);
     }
@@ -123,7 +141,12 @@ export default function PricingCatalogScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.safeArea,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
@@ -132,14 +155,23 @@ export default function PricingCatalogScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Pricing & Catalog</Text>
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         <Text style={styles.description}>
           Select the products you deliver and set your custom marketplace price.
         </Text>
@@ -151,17 +183,22 @@ export default function PricingCatalogScreen() {
               <Switch
                 value={item.available}
                 onValueChange={(val) => handleToggle(item.product_id, val)}
-                trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+                trackColor={{
+                  false: theme.colors.border,
+                  true: theme.colors.primary,
+                }}
               />
             </View>
-            
+
             {item.available && (
               <View style={styles.priceContainer}>
                 <Text style={styles.label}>Price (₹) per unit</Text>
                 <TextInput
                   style={styles.input}
                   value={item.custom_price}
-                  onChangeText={(text) => handlePriceChange(item.product_id, text)}
+                  onChangeText={(text) =>
+                    handlePriceChange(item.product_id, text)
+                  }
                   keyboardType="numeric"
                 />
               </View>
@@ -169,9 +206,9 @@ export default function PricingCatalogScreen() {
           </Card>
         ))}
 
-        <Button 
-          title={saving ? "Saving..." : "Save Catalog"} 
-          onPress={handleSave} 
+        <Button
+          title={saving ? "Saving..." : "Save Catalog"}
+          onPress={handleSave}
           disabled={saving}
           style={styles.saveBtn}
         />
@@ -190,15 +227,15 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backButton: {
     marginRight: 16,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.textPrimary,
   },
   container: {
@@ -217,13 +254,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   productHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   productName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.textPrimary,
   },
   priceContainer: {
@@ -248,5 +285,5 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginTop: 16,
     marginBottom: 40,
-  }
+  },
 });

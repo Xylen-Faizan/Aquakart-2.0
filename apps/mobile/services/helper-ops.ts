@@ -16,11 +16,29 @@ export const helperOpsService = {
       .select(`
         *,
         vehicles(vehicle_number, vehicle_type),
-        drivers(profiles(full_name, phone))
+        drivers(profiles(name, phone))
       `)
       .eq('helper_id', helper.id)
       .eq('run_date', runDate)
       .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  // Get supplier products for load confirmation
+  async getSupplierProducts(supplierId: string) {
+    const { data, error } = await supabase
+      .from('supplier_products')
+      .select(`
+        id,
+        supplier_id,
+        product_id,
+        price,
+        active,
+        products (name, size, unit)
+      `)
+      .eq('supplier_id', supplierId)
+      .eq('active', true);
     if (error) throw error;
     return data;
   },
@@ -31,7 +49,7 @@ export const helperOpsService = {
       .from('delivery_run_stops')
       .select(`
         *,
-        profiles:customer_id (full_name, phone),
+        profiles:customer_id (name, phone),
         addresses (street, city, zip, latitude, longitude),
         products (name, size, unit)
       `)
@@ -69,9 +87,11 @@ export const helperOpsService = {
   },
 
   // Decline opportunity offer
-  async declineOffer(offerId: string) {
+  async declineOffer(offerId: string, reasonCode: string = 'OTHER', reasonNote?: string) {
     const { error } = await supabase.rpc('decline_delivery_offer', {
       p_offer_id: offerId,
+      p_reason_code: reasonCode,
+      p_reason_note: reasonNote,
     });
     if (error) throw error;
   },
@@ -86,7 +106,7 @@ export const helperOpsService = {
           customer_id,
           product_id,
           quantity,
-          profiles:customer_id (full_name),
+          profiles:customer_id (name),
           products:product_id (name),
           addresses:address_id (street, city, sector, latitude, longitude)
         )

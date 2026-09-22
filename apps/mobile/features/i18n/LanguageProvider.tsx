@@ -28,6 +28,8 @@ const dictionary = {
     'welcome.customer_desc': 'Find water suppliers near you',
     'welcome.supplier': "I'm a Water Supplier",
     'welcome.supplier_desc': 'Manage orders & grow your business',
+    'welcome.staff': 'Staff Login',
+    'welcome.staff_desc': 'For drivers, helpers & operations team',
   },
   hi: {
     'welcome.subtitle': 'शुद्ध जल।\nबेहतर जीवन।',
@@ -36,6 +38,8 @@ const dictionary = {
     'welcome.customer_desc': 'अपने आस-पास पानी के आपूर्तिकर्ता खोजें',
     'welcome.supplier': 'मैं जल आपूर्तिकर्ता हूँ',
     'welcome.supplier_desc': 'ऑर्डर प्रबंधित करें और अपना व्यवसाय बढ़ाएं',
+    'welcome.staff': 'स्टाफ लॉगिन',
+    'welcome.staff_desc': 'ड्राइवर, हेल्पर और ऑपरेशंस टीम के लिए',
   }
 };
 

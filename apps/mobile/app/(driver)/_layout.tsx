@@ -1,8 +1,8 @@
-import { Stack, Redirect } from 'expo-router';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { ActivityIndicator, View } from 'react-native';
-import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase/client';
+import { Stack, Redirect } from "expo-router";
+import { useAuth } from "../../features/auth/AuthProvider";
+import { ActivityIndicator, View } from "react-native";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase/client";
 
 export default function DriverLayout() {
   const { session, loading } = useAuth();
@@ -17,12 +17,12 @@ export default function DriverLayout() {
   const checkDriverRole = async () => {
     try {
       const { data, error } = await supabase
-        .from('drivers')
-        .select('id')
-        .eq('profile_id', session?.user.id)
-        .eq('is_active', true)
+        .from("drivers")
+        .select("id")
+        .eq("profile_id", session?.user.id)
+        .eq("is_active", true)
         .single();
-      
+
       setIsDriver(!!data);
     } catch (e) {
       setIsDriver(false);
@@ -30,7 +30,11 @@ export default function DriverLayout() {
   };
 
   if (loading || isDriver === null) {
-    return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   if (!session) {
@@ -44,7 +48,10 @@ export default function DriverLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="route" options={{ title: "Today's Route", headerShown: true }} />
+      <Stack.Screen
+        name="route"
+        options={{ title: "Today's Route", headerShown: true }}
+      />
     </Stack>
   );
 }

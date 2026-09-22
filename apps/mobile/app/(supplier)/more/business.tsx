@@ -1,23 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { theme } from '../../../constants/theme';
-import { Card, Button } from '../../../components/ui';
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { supabase } from '../../../lib/supabase/client';
-import * as Location from 'expo-location';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { theme } from "../../../constants/theme";
+import { Card, Button } from "../../../components/ui";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { supabase } from "../../../lib/supabase/client";
+import * as Location from "expo-location";
 
 export default function BusinessProfileScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [businessName, setBusinessName] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [businessName, setBusinessName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchProfile();
@@ -27,22 +39,21 @@ export default function BusinessProfileScreen() {
     if (!user?.id) return;
     try {
       const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('profile_id', user.id)
+        .from("suppliers")
+        .select("*")
+        .eq("profile_id", user.id)
         .single();
-        
+
       if (error) {
-        if (error.code !== 'PGRST116') {
+        if (error.code !== "PGRST116") {
           console.error(error);
         }
       } else if (data) {
-        setBusinessName(data.business_name || '');
-        setOwnerName(data.owner_name || '');
-        setPhone(data.phone || '');
-        // We won't parse postgis point directly here for simplicity, we'll just show if it's set
-        if (data.location) {
-           setLocation({lat: 0, lng: 0}); // placeholder to indicate it's set
+        setBusinessName(data.business_name || "");
+        setPhone(data.phone || "");
+        setAddress(data.address || "");
+        if (data.lat && data.lng) {
+          setLocation({ lat: data.lat, lng: data.lng });
         }
       }
     } catch (err) {
@@ -56,18 +67,40 @@ export default function BusinessProfileScreen() {
     try {
       setSaving(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Allow location permissions to set your coverage area.');
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Allow location permissions to set your coverage area.",
+        );
         return;
       }
       const locationData = await Location.getCurrentPositionAsync({});
-      setLocation({
-        lat: locationData.coords.latitude,
-        lng: locationData.coords.longitude
+      const lat = locationData.coords.latitude;
+      const lng = locationData.coords.longitude;
+      
+      setLocation({ lat, lng });
+      
+      const reverseGeo = await Location.reverseGeocodeAsync({
+        latitude: lat,
+        longitude: lng,
       });
-      Alert.alert('Success', 'Location updated. Remember to tap Save.');
+
+      if (reverseGeo && reverseGeo.length > 0) {
+        const place = reverseGeo[0];
+        const formattedAddress = [
+          place.name,
+          place.street,
+          place.subregion,
+          place.city,
+        ]
+          .filter(Boolean)
+          .join(", ");
+        setAddress(formattedAddress);
+      }
+      
+      Alert.alert("Success", "Location updated. Remember to tap Save.");
     } catch (error) {
-      Alert.alert('Error', 'Failed to get location.');
+      Alert.alert("Error", "Failed to get location.");
     } finally {
       setSaving(false);
     }
@@ -75,72 +108,75 @@ export default function BusinessProfileScreen() {
 
   const handleSave = async () => {
     if (!businessName || !phone) {
-      Alert.alert('Validation Error', 'Business name and phone are required.');
+      Alert.alert("Validation Error", "Business name and phone are required.");
       return;
     }
 
     try {
       setSaving(true);
-      
+
       const { data: existing } = await supabase
-        .from('suppliers')
-        .select('id')
-        .eq('profile_id', user!.id)
+        .from("suppliers")
+        .select("id")
+        .eq("profile_id", user!.id)
         .single();
 
       if (existing) {
         const updateData: any = {
           business_name: businessName,
-          owner_name: ownerName,
           phone: phone,
+          address: address,
+          lat: location?.lat || null,
+          lng: location?.lng || null,
         };
-        
+
         const { error } = await supabase
-          .from('suppliers')
+          .from("suppliers")
           .update(updateData)
-          .eq('profile_id', user!.id);
-          
+          .eq("profile_id", user!.id);
+
         if (error) throw error;
-        
+
         // Update location via RPC if changed
         if (location && location.lat !== 0) {
-            await supabase.rpc('update_supplier_location', {
-                p_supplier_id: existing.id,
-                p_lng: location.lng,
-                p_lat: location.lat
-            });
+          await supabase.rpc("update_supplier_location", {
+            p_supplier_id: existing.id,
+            p_lng: location.lng,
+            p_lat: location.lat,
+          });
         }
-        
       } else {
         // Insert new supplier
         const { data: newSupplier, error } = await supabase
-          .from('suppliers')
+          .from("suppliers")
           .insert({
             profile_id: user!.id,
             business_name: businessName,
-            owner_name: ownerName,
             phone: phone,
-            is_active: true
+            address: address,
+            lat: location?.lat || null,
+            lng: location?.lng || null,
+            is_active: true,
           })
-          .select('id')
+          .select("id")
           .single();
-          
+
         if (error) throw error;
-        
+
         if (location && location.lat !== 0 && newSupplier) {
-            await supabase.rpc('update_supplier_location', {
-                p_supplier_id: newSupplier.id,
-                p_lng: location.lng,
-                p_lat: location.lat
-            });
+          await supabase.rpc("update_supplier_location", {
+            p_supplier_id: newSupplier.id,
+            p_lng: location.lng,
+            p_lat: location.lat,
+          });
         }
       }
 
-      Alert.alert('Success', 'Business profile updated successfully!');
+      Alert.alert("Success", "Business profile updated successfully!");
       router.back();
     } catch (err: any) {
       console.error(err);
-      Alert.alert('Error', err.message || 'Failed to save profile.');
+      Alert.alert("Error", err.message || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
@@ -148,7 +184,12 @@ export default function BusinessProfileScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.safeArea,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
@@ -157,13 +198,23 @@ export default function BusinessProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Business Profile</Text>
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         <Card style={styles.card}>
           <Text style={styles.label}>Business Name *</Text>
           <TextInput
@@ -173,12 +224,13 @@ export default function BusinessProfileScreen() {
             placeholder="e.g. Pure Jal Enterprise"
           />
 
-          <Text style={styles.label}>Owner Name</Text>
+          <Text style={styles.label}>Business Address</Text>
           <TextInput
-            style={styles.input}
-            value={ownerName}
-            onChangeText={setOwnerName}
-            placeholder="e.g. Rahul Kumar"
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+            value={address}
+            onChangeText={setAddress}
+            placeholder="e.g. 123 Main Street"
+            multiline
           />
 
           <Text style={styles.label}>Business Phone *</Text>
@@ -189,27 +241,28 @@ export default function BusinessProfileScreen() {
             placeholder="e.g. 9999999999"
             keyboardType="phone-pad"
           />
-          
+
           <Text style={styles.label}>Service Location</Text>
           <View style={styles.locationContainer}>
             <Text style={styles.locationText}>
-                {location ? "GPS Coordinates Set ✓" : "Location not set"}
+              {location ? "GPS Coordinates Set ✓" : "Location not set"}
             </Text>
-            <Button 
-                title="Update GPS" 
-                variant="outline" 
-                size="sm" 
-                onPress={handleUpdateLocation} 
+            <Button
+              title="Update GPS"
+              variant="outline"
+              size="sm"
+              onPress={handleUpdateLocation}
             />
           </View>
           <Text style={styles.hintText}>
-            Updating your GPS ensures you appear in the marketplace for nearby customers.
+            Updating your GPS ensures you appear in the marketplace for nearby
+            customers.
           </Text>
         </Card>
 
-        <Button 
-          title={saving ? "Saving..." : "Save Profile"} 
-          onPress={handleSave} 
+        <Button
+          title={saving ? "Saving..." : "Save Profile"}
+          onPress={handleSave}
           disabled={saving}
           style={styles.saveBtn}
         />
@@ -228,15 +281,15 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backButton: {
     marginRight: 16,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.textPrimary,
   },
   container: {
@@ -251,7 +304,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.textSecondary,
     marginBottom: 8,
     marginTop: 16,
@@ -265,9 +318,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.background,
     padding: 12,
     borderRadius: 8,
@@ -277,7 +330,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     color: theme.colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   hintText: {
     fontSize: 12,
@@ -286,5 +339,5 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginTop: 8,
-  }
+  },
 });

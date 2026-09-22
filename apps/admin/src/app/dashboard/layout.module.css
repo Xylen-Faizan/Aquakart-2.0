@@ -71,6 +71,15 @@
   background-color: #bae6fd;
 }
 
+.navSectionTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin: 1.5rem 0 0.5rem 1rem;
+}
+
 .signOutWrapper {
   padding: 1.5rem;
   border-top: 1px solid #e2e8f0;

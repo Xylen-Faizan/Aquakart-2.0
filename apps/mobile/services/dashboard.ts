@@ -39,7 +39,33 @@ export interface SupplierForecast {
   is_at_risk: boolean;
 }
 
+export interface SupplierAlert {
+  id: string;
+  title: string;
+  body: string;
+  notification_type: string;
+  created_at: string;
+}
+
 export const DashboardService = {
+  getSupplierAlerts: async (): Promise<SupplierAlert[]> => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return [];
+
+    const { data, error } = await supabase
+      .from("delivery_notifications")
+      .select("id, title, body, notification_type, created_at")
+      .eq("user_id", userData.user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error("Failed to fetch alerts:", error);
+      return [];
+    }
+
+    return data || [];
+  },
   async getForecast(): Promise<SupplierForecast> {
     const { data, error } = await supabase.rpc('get_supplier_forecast');
     if (error) throw error;

@@ -1,60 +1,70 @@
-import { Tabs } from 'expo-router';
-import { theme } from '../../constants/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from "expo-router";
+import { theme } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function CustomerLayout() {
   return (
-    <Tabs screenOptions={{ 
-      headerShown: true,
-      tabBarActiveTintColor: theme.colors.primary,
-      tabBarInactiveTintColor: theme.colors.textTertiary,
-    }}>
-      <Tabs.Screen 
-        name="home" 
-        options={{ 
-          title: 'Home',
+    <Tabs
+      screenOptions={{
+        headerShown: true,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
           headerShown: false,
-          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />
-        }} 
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={24} color={color} />
+          ),
+        }}
       />
-      <Tabs.Screen 
-        name="orders" 
-        options={{ 
-          title: 'Orders',
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Orders",
           headerShown: true,
-          tabBarIcon: ({ color }) => <Ionicons name="receipt-outline" size={24} color={color} />
-        }} 
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="receipt-outline" size={24} color={color} />
+          ),
+        }}
       />
-      <Tabs.Screen 
-        name="reorder" 
-        options={{ 
-          title: 'Repeat',
+      <Tabs.Screen
+        name="reorder"
+        options={{
+          title: "Repeat",
           headerShown: true,
-          tabBarIcon: ({ color }) => <Ionicons name="refresh-outline" size={24} color={color} />
-        }} 
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="refresh-outline" size={24} color={color} />
+          ),
+        }}
       />
-      <Tabs.Screen 
-        name="profile" 
-        options={{ 
-          title: 'Profile',
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
           headerShown: false,
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />
-        }} 
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={24} color={color} />
+          ),
+        }}
       />
-      
+
       {/* Hidden Screens */}
       <Tabs.Screen
         name="addresses"
         options={{
           href: null,
-          title: 'Addresses'
+          title: "Addresses",
         }}
       />
       <Tabs.Screen
         name="checkout"
         options={{
           href: null,
-          title: 'Checkout',
+          title: "Checkout",
           headerShown: false,
         }}
       />
@@ -62,14 +72,14 @@ export default function CustomerLayout() {
         name="suppliers"
         options={{
           href: null,
-          title: 'Suppliers'
+          title: "Suppliers",
         }}
       />
       <Tabs.Screen
         name="supplier/[id]"
         options={{
           href: null,
-          title: 'Supplier Details',
+          title: "Supplier Details",
           headerShown: false,
         }}
       />
@@ -77,7 +87,7 @@ export default function CustomerLayout() {
         name="product/[id]"
         options={{
           href: null,
-          title: 'Product Details',
+          title: "Product Details",
           headerShown: false,
         }}
       />
@@ -85,7 +95,7 @@ export default function CustomerLayout() {
         name="order/[id]"
         options={{
           href: null,
-          title: 'Order Tracking',
+          title: "Order Tracking",
           headerShown: false,
         }}
       />
@@ -100,7 +110,7 @@ export default function CustomerLayout() {
         name="track-order"
         options={{
           href: null,
-          title: 'Track Order',
+          title: "Track Order",
           headerShown: false,
         }}
       />
@@ -109,14 +119,14 @@ export default function CustomerLayout() {
         options={{
           href: null,
           headerShown: false,
-          tabBarStyle: { display: 'none' }
+          tabBarStyle: { display: "none" },
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           href: null,
-          title: 'Search',
+          title: "Search",
           headerShown: false,
         }}
       />
@@ -124,7 +134,7 @@ export default function CustomerLayout() {
         name="brand/[name]"
         options={{
           href: null,
-          title: 'Brand Products',
+          title: "Brand Products",
           headerShown: false,
         }}
       />
@@ -132,7 +142,7 @@ export default function CustomerLayout() {
         name="catalog"
         options={{
           href: null,
-          title: 'Catalog',
+          title: "Catalog",
           headerShown: false,
         }}
       />

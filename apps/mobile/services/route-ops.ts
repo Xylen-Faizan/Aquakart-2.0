@@ -33,7 +33,7 @@ export const routeOpsService = {
         profile_id, 
         is_active,
         profiles:profile_id (
-          full_name,
+          name,
           phone
         )
       `)
@@ -73,7 +73,7 @@ export const routeOpsService = {
       .select(`
         *,
         vehicles(vehicle_number),
-        drivers(profiles(full_name)),
+        drivers(profiles(name)),
         delivery_run_stops(id, status)
       `)
       .eq('supplier_id', supplierId)
@@ -110,7 +110,7 @@ export const routeOpsService = {
       .from('delivery_run_stops')
       .select(`
         *,
-        profiles:customer_id (full_name, phone),
+        profiles:customer_id (name, phone),
         addresses (street, city, zip),
         products (name, size, unit)
       `)

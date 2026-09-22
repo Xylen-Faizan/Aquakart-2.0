@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Card, Button } from '../ui';
@@ -107,7 +107,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
           <Text style={styles.greeting}>Your Khata</Text>
           <Text style={styles.supplierName}>{subscription.business_name}</Text>
         </View>
-        <TouchableOpacity style={styles.callButton} onPress={() => Alert.alert('Call', `Calling ${subscription.business_phone}...`)}>
+        <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL(`tel:${subscription.business_phone}`)}>
           <Ionicons name="call" size={20} color="white" />
         </TouchableOpacity>
       </View>
