@@ -82,7 +82,20 @@ export const DashboardService = {
   async getTodayManifest(): Promise<TodayManifestItem[]> {
     const { data, error } = await supabase.rpc('get_today_manifest');
     if (error) throw error;
-    return (data || []) as unknown as TodayManifestItem[];
+    const items = (data || []) as unknown as TodayManifestItem[];
+    // Sort items so 'placed' (new orders) are at the top, then accepted, then scheduled
+    const statusWeight: Record<string, number> = {
+      'placed': 0,
+      'accepted': 1,
+      'preparing': 2,
+      'out_for_delivery': 3,
+      'scheduled': 4,
+    };
+    return items.sort((a, b) => {
+      const weightA = statusWeight[a.status] ?? 99;
+      const weightB = statusWeight[b.status] ?? 99;
+      return weightA - weightB;
+    });
   },
 
   async getCapacity(): Promise<number> {
