@@ -94,7 +94,13 @@ export const DashboardService = {
     return items.sort((a, b) => {
       const weightA = statusWeight[a.status] ?? 99;
       const weightB = statusWeight[b.status] ?? 99;
-      return weightA - weightB;
+      if (weightA !== weightB) {
+        return weightA - weightB;
+      }
+      // If same status, sort by newest first (created_at DESC)
+      const dateA = new Date((a as any).created_at || 0).getTime();
+      const dateB = new Date((b as any).created_at || 0).getTime();
+      return dateB - dateA;
     });
   },
 
