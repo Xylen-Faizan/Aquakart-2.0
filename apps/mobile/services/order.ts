@@ -5,34 +5,24 @@ import * as Crypto from 'expo-crypto';
 export const OrderService = {
   async notifySupplier(supplierId: string, quantity: number) {
     try {
-      // 1. Get the supplier's user profile ID
-      const { data: supplier } = await supabase
-        .from('suppliers')
-        .select('profile_id')
-        .eq('id', supplierId)
-        .single();
-      
-      if (!supplier?.profile_id) return;
+      // 1. Get the supplier's push token securely using RPC
+      const { data: pushToken, error: tokenError } = await supabase
+        .rpc('get_supplier_push_token', { p_supplier_id: supplierId });
 
-      // 2. Get their push token
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('expo_push_token')
-        .eq('id', supplier.profile_id)
-        .single();
-      
-      const token = profile?.expo_push_token;
-      if (!token) return;
+      if (tokenError || !pushToken) {
+        console.log("No push token found for supplier", supplierId);
+        return;
+      }
 
       // 3. Get customer info for the message
       const { data: { user } } = await supabase.auth.getUser();
       const { data: customerProfile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('name')
         .eq('id', user?.id)
         .single();
       
-      const customerName = customerProfile?.full_name || 'A customer';
+      const customerName = customerProfile?.name || 'A customer';
 
       // 4. Send Expo Push Notification
       await fetch('https://exp.host/--/api/v2/push/send', {
@@ -43,7 +33,7 @@ export const OrderService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to: token,
+          to: pushToken,
           sound: 'default',
           title: 'New Order Received! 💧',
           body: `${customerName} just ordered ${quantity} jar(s).`,
