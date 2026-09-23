@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { SupplierService } from "../../services/supplier";
 import type { AvailableSupplier } from "@aquakart/types";
 import { theme } from "../../constants/theme";
@@ -22,6 +24,8 @@ import {
 } from "../../components/feedback";
 
 export default function SuppliersScreen() {
+  useAndroidBack();
+  const { t } = useLanguage();
   const [suppliers, setSuppliers] = useState<AvailableSupplier[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -68,7 +72,7 @@ export default function SuppliersScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>Find Suppliers</Text>
+        <Text style={styles.title}>{t('suppliers.title')}</Text>
         <View style={{ width: 40 }} /> {/* For centering balance */}
       </View>
 
@@ -76,7 +80,7 @@ export default function SuppliersScreen() {
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
           <Input
-            placeholder="Search suppliers..."
+            placeholder={t('suppliers.searchPlaceholder')}
             value={searchQuery}
             onChangeText={setSearchQuery}
             leftElement={
@@ -99,9 +103,9 @@ export default function SuppliersScreen() {
       </View>
 
       {loading ? (
-        <LoadingState message="Finding nearby suppliers..." />
+        <LoadingState message={t('suppliers.loading')} />
       ) : error ? (
-        <ErrorState title="Error" message={error} onRetry={fetchSuppliers} />
+        <ErrorState title={t('error')} message={error} onRetry={fetchSuppliers} />
       ) : (
         <FlatList
           data={filteredSuppliers}
@@ -145,7 +149,7 @@ export default function SuppliersScreen() {
 
                   <View style={styles.cardBottomRow}>
                     <Badge
-                      label={isLowCapacity ? "Low Capacity" : "Available"}
+                      label={isLowCapacity ? t('suppliers.lowCapacity') : t('suppliers.available')}
                       variant={isLowCapacity ? "warning" : "success"}
                     />
                     <Text style={styles.capacityText}>
@@ -158,13 +162,13 @@ export default function SuppliersScreen() {
           }}
           ListEmptyComponent={
             <EmptyState
-              title="No suppliers found"
+              title={t('suppliers.noSuppliersTitle')}
               message={
                 searchQuery
-                  ? "No suppliers match your search."
-                  : "There are no active suppliers accepting orders in your area right now."
+                  ? t('suppliers.noSearchMatch')
+                  : t('suppliers.noActiveSuppliers')
               }
-              actionLabel="Refresh"
+              actionLabel={t('refresh')}
               onAction={fetchSuppliers}
             />
           }

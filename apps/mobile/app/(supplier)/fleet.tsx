@@ -10,10 +10,12 @@ import MapView, { Marker, Callout, UrlTile } from "react-native-maps";
 import { theme } from "../../constants/theme";
 import { supabase } from "../../lib/supabase/client";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { useFocusEffect } from "expo-router";
 
 export default function FleetScreen() {
   const { session } = useAuth();
+  const { t } = useLanguage();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -108,7 +110,7 @@ export default function FleetScreen() {
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <View>
-            <Text style={styles.headerTitle}>Live Fleet Map</Text>
+            <Text style={styles.headerTitle}>{t('fleet.title')}</Text>
             <Text style={styles.headerSubtitle}>
               {vehicles.length} Active Vehicles
             </Text>

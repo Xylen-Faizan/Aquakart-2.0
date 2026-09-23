@@ -22,10 +22,12 @@ import { AddressService } from "../../services/address";
 import type { AvailableSupplier, Address } from "@aquakart/types";
 import { supabase } from "../../lib/supabase/client";
 import SubscribedHome from "../../components/customer/SubscribedHome";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
   const [suppliers, setSuppliers] = useState<AvailableSupplier[]>([]);
   const [activeAddress, setActiveAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ export default function HomeScreen() {
               style={styles.headerLeftBtn}
               hitSlop={{ top: 20, bottom: 20, left: 20, right: 40 }}
             >
-              <Text style={styles.deliverToLabel}>Deliver to</Text>
+              <Text style={styles.deliverToLabel}>{t('home.deliverTo')}</Text>
               <View style={styles.locationContainer}>
                 <Ionicons
                   name="location"
@@ -111,7 +113,7 @@ export default function HomeScreen() {
                       : activeAddress.address}
                   </Text>
                 ) : (
-                  <Text style={styles.locationText}>Add delivery address</Text>
+                  <Text style={styles.locationText}>{t('home.addAddress')}</Text>
                 )}
                 <Ionicons
                   name="chevron-down"
@@ -158,7 +160,7 @@ export default function HomeScreen() {
                 { color: theme.colors.textTertiary, paddingVertical: 12 },
               ]}
             >
-              Search water, jars, suppliers...
+              {t('home.searchPlaceholder')}
             </Text>
           </Pressable>
         </View>
@@ -169,7 +171,7 @@ export default function HomeScreen() {
             <View style={styles.mainCardContent}>
               <View style={styles.mainCardLeft}>
                 <Text style={styles.cardTitle}>
-                  Fresh & Pure Water{"\n"}Delivered to your doorstep
+                  {t('home.freshWater')}
                 </Text>
               </View>
               <View style={styles.cardIconContainer}>
@@ -186,14 +188,14 @@ export default function HomeScreen() {
                 }
               }}
             >
-              <Text style={styles.orderButtonText}>Order Now</Text>
+              <Text style={styles.orderButtonText}>{t('home.orderNow')}</Text>
             </Pressable>
           </View>
         </View>
 
         {/* Popular Brands */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Popular Brands</Text>
+          <Text style={styles.sectionTitle}>{t('home.popularBrands')}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -248,9 +250,9 @@ export default function HomeScreen() {
           onPress={() => router.push("/(customer)/bulk-orders" as any)}
         >
           <View style={styles.bulkBannerContent}>
-            <Text style={styles.bulkBannerTitle}>🎉 Party & Bulk Orders</Text>
+            <Text style={styles.bulkBannerTitle}>{t('home.bulkTitle')}</Text>
             <Text style={styles.bulkBannerSubtitle}>
-              Get 10% off on orders of 100+ jars!
+              {t('home.bulkSubtitle')}
             </Text>
           </View>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -259,10 +261,10 @@ export default function HomeScreen() {
         {/* Nearby Suppliers */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nearby Suppliers</Text>
+            <Text style={styles.sectionTitle}>{t('home.nearbySuppliers')}</Text>
             {activeAddress && (
               <Pressable onPress={() => router.push("/(customer)/suppliers")}>
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t('common.seeAll')}</Text>
               </Pressable>
             )}
           </View>
@@ -307,7 +309,7 @@ export default function HomeScreen() {
                   <View style={styles.supplierProductRow}>
                     <Text style={styles.supplierProductText}>
                       20L Jar •{" "}
-                      {supplier.price ? `₹${supplier.price}` : "Price varies"}
+                      {supplier.price ? `₹${supplier.price}` : t('home.priceVaries')}
                     </Text>
                   </View>
 
@@ -324,8 +326,8 @@ export default function HomeScreen() {
                     />
                     <Text style={styles.supplierStatusText}>
                       {supplier.is_accepting_orders
-                        ? "Accepting orders"
-                        : "Currently closed"}
+                        ? t('home.acceptingOrders')
+                        : t('home.currentlyClosed')}
                     </Text>
                   </View>
                 </Pressable>
@@ -339,10 +341,10 @@ export default function HomeScreen() {
                 }}
               >
                 {!activeAddress
-                  ? "Please add a delivery address to find nearby suppliers."
+                  ? t('home.addAddressPrompt')
                   : loading
-                    ? "Finding nearby suppliers..."
-                    : "No suppliers available in your area."}
+                    ? t('home.findingSuppliers')
+                    : t('home.noSuppliers')}
               </Text>
             )}
           </View>
@@ -350,7 +352,7 @@ export default function HomeScreen() {
 
         {/* Popular Products */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Popular Products</Text>
+          <Text style={styles.sectionTitle}>{t('home.popularProducts')}</Text>
           <View style={styles.productsGrid}>
             <Pressable
               style={styles.productCard}
@@ -363,8 +365,8 @@ export default function HomeScreen() {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.productName}>20L Jar</Text>
-              <Text style={styles.productPrice}>Order now</Text>
+              <Text style={styles.productName}>{t('home.jar20l')}</Text>
+              <Text style={styles.productPrice}>{t('common.orderNow')}</Text>
             </Pressable>
             <Pressable
               style={styles.productCard}
@@ -377,8 +379,8 @@ export default function HomeScreen() {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.productName}>1L Bottles</Text>
-              <Text style={styles.productPrice}>Order now</Text>
+              <Text style={styles.productName}>{t('home.bottle1l')}</Text>
+              <Text style={styles.productPrice}>{t('common.orderNow')}</Text>
             </Pressable>
             <Pressable
               style={styles.productCard}
@@ -391,8 +393,8 @@ export default function HomeScreen() {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.productName}>20L Cool Jar</Text>
-              <Text style={styles.productPrice}>Order now</Text>
+              <Text style={styles.productName}>{t('home.coolJar20l')}</Text>
+              <Text style={styles.productPrice}>{t('common.orderNow')}</Text>
             </Pressable>
           </View>
         </View>

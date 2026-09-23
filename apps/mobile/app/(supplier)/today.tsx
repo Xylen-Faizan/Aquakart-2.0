@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,10 +24,12 @@ import { supabase } from "../../lib/supabase/client";
 import { Alert, TextInput, Modal } from "react-native";
 
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function SupplierTodayScreen() {
   const router = useRouter();
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [forecast, setForecast] = useState<SupplierForecast | null>(null);
@@ -75,6 +77,26 @@ export default function SupplierTodayScreen() {
     }, []),
   );
 
+  useEffect(() => {
+    // Subscribe to realtime orders for instant UI updates
+    const channel = supabase
+      .channel("orders_realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          console.log("Realtime order received!", payload);
+          // Refresh the dashboard automatically
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchDashboardData();
@@ -83,7 +105,7 @@ export default function SupplierTodayScreen() {
   const handleUpdateCapacity = async () => {
     const qty = parseInt(newCapacity, 10);
     if (isNaN(qty) || qty < 0) {
-      Alert.alert("Invalid", "Please enter a valid number.");
+      Alert.alert(t("today.invalid"), t("today.validNumber"));
       return;
     }
 
@@ -99,7 +121,7 @@ export default function SupplierTodayScreen() {
         .single();
 
       if (!supplierData) {
-        Alert.alert("Error", "Please complete your Business Profile first.");
+        Alert.alert(t("today.error"), t("today.completeProfile"));
         setCapacityModalVisible(false);
         return;
       }
@@ -118,13 +140,13 @@ export default function SupplierTodayScreen() {
 
       setCapacity(qty);
       Alert.alert(
-        "Success",
-        `Today's marketplace capacity set to ${qty} jars.`,
+        t("today.success"),
+        `${t("today.capacitySet")} ${qty} ${t("today.jars")}.`,
       );
       setCapacityModalVisible(false);
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", "Failed to update capacity.");
+      Alert.alert(t("today.error"), t("today.failedCapacity"));
     } finally {
       setIsUpdatingCapacity(false);
     }
@@ -152,11 +174,11 @@ export default function SupplierTodayScreen() {
   });
 
   const currentHour = today.getHours();
-  let greeting = "Good evening";
-  if (currentHour < 12) greeting = "Good morning";
-  else if (currentHour < 17) greeting = "Good afternoon";
+  let greeting = t("today.greetingEvening");
+  if (currentHour < 12) greeting = t("today.greeting");
+  else if (currentHour < 17) greeting = t("today.greetingAfternoon");
 
-  const supplierName = profile?.name || "Partner";
+  const supplierName = profile?.name || t("today.partner");
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -171,7 +193,7 @@ export default function SupplierTodayScreen() {
         ]}
       >
         <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={styles.headerSubtitle}>Supplier Operations</Text>
+          <Text style={styles.headerSubtitle}>{t("today.supplierOperations")}</Text>
           <Text style={styles.headerTitle}>{dateString}</Text>
           <Text style={styles.headerGreeting}>
             {greeting}, {supplierName}
@@ -189,7 +211,7 @@ export default function SupplierTodayScreen() {
           onPress={() => router.push("/(supplier)/routes" as any)}
         >
           <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 13 }}>
-            Fleet & Routes
+            {t("today.fleetRoutes")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -207,7 +229,7 @@ export default function SupplierTodayScreen() {
         {/* FORECAST */}
         {forecast && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TOMORROW'S FORECAST</Text>
+            <Text style={styles.sectionTitle}>{t("today.tomorrowsForecast")}</Text>
             {forecast.is_at_risk ? (
               <Card
                 style={{
@@ -237,18 +259,16 @@ export default function SupplierTodayScreen() {
                       color: theme.colors.error,
                     }}
                   >
-                    Shortfall Risk
+                    {t("today.shortfallRisk")}
                   </Text>
                 </View>
                 <Text
                   style={{ color: theme.colors.textPrimary, marginBottom: 8 }}
                 >
-                  Warning: You have only {forecast.current_inventory} jars
-                  available but expect {forecast.total_forecast} demand
-                  tomorrow.
+                  {t("today.warningOnly")} {forecast.current_inventory} {t("today.jarsAvailableExpect")} {forecast.total_forecast} {t("today.demandTomorrow")}.
                 </Text>
                 <Button
-                  title="Request Stock"
+                  title={t("today.requestStock")}
                   variant="primary"
                   size="sm"
                   style={{ alignSelf: "flex-start" }}
@@ -283,12 +303,11 @@ export default function SupplierTodayScreen() {
                       color: theme.colors.success,
                     }}
                   >
-                    Healthy Stock
+                    {t("today.healthyStock")}
                   </Text>
                 </View>
                 <Text style={{ color: theme.colors.textPrimary }}>
-                  You have {forecast.current_inventory} jars available. Expected
-                  demand tomorrow is {forecast.total_forecast} jars.
+                  {t("today.youHave")} {forecast.current_inventory} {t("today.jarsAvailableExpectedDemand")} {forecast.total_forecast} {t("today.jars")}.
                 </Text>
               </Card>
             )}
@@ -298,7 +317,7 @@ export default function SupplierTodayScreen() {
         {/* ALERTS / NOTIFICATIONS */}
         {alerts.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>OPERATIONAL ALERTS</Text>
+            <Text style={styles.sectionTitle}>{t("today.operationalAlerts")}</Text>
             {alerts.slice(0, 3).map((alert) => (
               <Card
                 key={alert.id}
@@ -330,7 +349,7 @@ export default function SupplierTodayScreen() {
 
         {/* TODAY's MARKETPLACE CAPACITY */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>MARKETPLACE AVAILABILITY</Text>
+          <Text style={styles.sectionTitle}>{t("today.marketplaceAvailability")}</Text>
           <Card
             style={{
               padding: 16,
@@ -360,8 +379,8 @@ export default function SupplierTodayScreen() {
                   }}
                 >
                   {capacity > 0
-                    ? `${capacity} Jars Available`
-                    : "Offline / No Capacity"}
+                    ? `${capacity} ${t("today.jarsAvailable")}`
+                    : t("today.offlineNoCapacity")}
                 </Text>
                 <Text
                   style={{
@@ -370,11 +389,11 @@ export default function SupplierTodayScreen() {
                     fontSize: 12,
                   }}
                 >
-                  Your capacity for marketplace orders today.
+                  {t("today.yourCapacity")}
                 </Text>
               </View>
               <Button
-                title="Update"
+                title={t("today.update")}
                 variant="primary"
                 size="sm"
                 onPress={() => {
@@ -388,7 +407,7 @@ export default function SupplierTodayScreen() {
 
         {/* TODAY'S METRICS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TODAY</Text>
+          <Text style={styles.sectionTitle}>{t("today.today")}</Text>
           <View style={styles.statsGrid}>
             <Card
               style={[
@@ -397,7 +416,7 @@ export default function SupplierTodayScreen() {
               ]}
             >
               <Text style={styles.statValue}>{stats?.deliveries_due || 0}</Text>
-              <Text style={styles.statLabel}>Deliveries Due</Text>
+              <Text style={styles.statLabel}>{t("today.deliveriesDue")}</Text>
             </Card>
             <Card
               style={[
@@ -406,7 +425,7 @@ export default function SupplierTodayScreen() {
               ]}
             >
               <Text style={styles.statValue}>{stats?.jars_required || 0}</Text>
-              <Text style={styles.statLabel}>Jars Required</Text>
+              <Text style={styles.statLabel}>{t("today.jarsRequired")}</Text>
             </Card>
             <Card
               style={[
@@ -417,7 +436,7 @@ export default function SupplierTodayScreen() {
               <Text style={styles.statValue}>
                 ₹{stats?.expected_revenue || 0}
               </Text>
-              <Text style={styles.statLabel}>Expected Revenue</Text>
+              <Text style={styles.statLabel}>{t("today.expectedRevenue")}</Text>
             </Card>
             <Card
               style={[
@@ -428,20 +447,20 @@ export default function SupplierTodayScreen() {
               <Text style={styles.statValue}>
                 ₹{stats?.outstanding_total || 0}
               </Text>
-              <Text style={styles.statLabel}>Total Outstanding</Text>
+              <Text style={styles.statLabel}>{t("today.totalOutstanding")}</Text>
             </Card>
           </View>
 
           <View style={styles.progressRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.progressLabel}>Deliveries Completed</Text>
+              <Text style={styles.progressLabel}>{t("today.deliveriesCompleted")}</Text>
               <Text style={styles.progressValue}>
                 {stats?.deliveries_done || 0} /{" "}
                 {(stats?.deliveries_due || 0) + (stats?.deliveries_done || 0)}
               </Text>
             </View>
             <View style={{ flex: 1, alignItems: "flex-end" }}>
-              <Text style={styles.progressLabel}>Cash Collected</Text>
+              <Text style={styles.progressLabel}>{t("today.cashCollected")}</Text>
               <Text style={styles.progressValue}>
                 ₹{stats?.collected_today || 0}
               </Text>
@@ -451,7 +470,7 @@ export default function SupplierTodayScreen() {
 
         {/* TODAY'S MANIFEST */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TODAY'S WORK</Text>
+          <Text style={styles.sectionTitle}>{t("today.todaysWork")}</Text>
 
           {manifest.length === 0 ? (
             <Card style={{ padding: 24, alignItems: "center" }}>
@@ -468,7 +487,7 @@ export default function SupplierTodayScreen() {
                   fontWeight: "600",
                 }}
               >
-                All Caught Up!
+                {t("today.allCaughtUp")}
               </Text>
               <Text
                 style={{
@@ -477,7 +496,7 @@ export default function SupplierTodayScreen() {
                   marginTop: 4,
                 }}
               >
-                No pending deliveries remaining for today.
+                {t("today.noPendingDeliveries")}
               </Text>
             </Card>
           ) : (
@@ -492,17 +511,17 @@ export default function SupplierTodayScreen() {
                       {item.customer_name}
                     </Text>
                     <Text style={styles.customerLocation}>
-                      {item.sector ? `${item.sector}` : "No Area"}{" "}
+                      {item.sector ? `${item.sector}` : t("today.noArea")}{" "}
                       {item.address ? `• ${item.address}` : ""}
                     </Text>
                   </View>
                   <Badge
                     label={
                       item.status === "placed"
-                        ? "New Request"
+                        ? t("today.newRequest")
                         : item.status === "scheduled"
-                          ? "Scheduled"
-                          : "Pending"
+                          ? t("today.scheduled")
+                          : t("today.pending")
                     }
                     variant={
                       item.status === "placed"
@@ -556,7 +575,7 @@ export default function SupplierTodayScreen() {
                     }}
                   >
                     <Button
-                      title="Decline"
+                      title={t("today.reject")}
                       variant="outline"
                       style={{ flex: 1, borderColor: theme.colors.error }}
                       textStyle={{ color: theme.colors.error }}
@@ -565,12 +584,12 @@ export default function SupplierTodayScreen() {
                           await DashboardService.rejectOrder(item.order_id);
                           onRefresh();
                         } catch (e) {
-                          Alert.alert("Error", "Failed to decline order.");
+                          Alert.alert(t("today.error"), t("today.failedDecline"));
                         }
                       }}
                     />
                     <Button
-                      title="Accept Order"
+                      title={t("today.accept")}
                       variant="primary"
                       style={{ flex: 1 }}
                       onPress={async () => {
@@ -578,7 +597,7 @@ export default function SupplierTodayScreen() {
                           await DashboardService.acceptOrder(item.order_id);
                           onRefresh();
                         } catch (e) {
-                          Alert.alert("Error", "Failed to accept order.");
+                          Alert.alert(t("today.error"), t("today.failedAccept"));
                         }
                       }}
                     />
@@ -595,7 +614,7 @@ export default function SupplierTodayScreen() {
                     }}
                   >
                     <Button
-                      title="🔔 Send Arrival Alert"
+                      title={t("today.sendArrivalAlert")}
                       variant="outline"
                       style={{ flex: 1, borderColor: theme.colors.primary }}
                       textStyle={{ color: theme.colors.primary }}
@@ -603,13 +622,13 @@ export default function SupplierTodayScreen() {
                         try {
                           await DashboardService.notifyArrival(item.order_id);
                           Alert.alert(
-                            "Success",
-                            "Arrival alert sent to customer!",
+                            t("today.success"),
+                            t("today.arrivalAlertSent"),
                           );
                         } catch (e: any) {
                           Alert.alert(
-                            "Error",
-                            e.message || "Failed to send alert.",
+                            t("today.error"),
+                            e.message || t("today.failedSendAlert"),
                           );
                         }
                       }}
@@ -628,11 +647,11 @@ export default function SupplierTodayScreen() {
       <Modal visible={capacityModalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { marginTop: "auto" }]}>
-            <Text style={styles.modalTitle}>Update Daily Capacity</Text>
+            <Text style={styles.modalTitle}>{t("today.updateDailyCapacity")}</Text>
             <Text
               style={{ color: theme.colors.textSecondary, marginBottom: 16 }}
             >
-              How many jars can you fulfill for new marketplace orders today?
+              {t("today.howManyJars")}
             </Text>
 
             <Text
@@ -643,7 +662,7 @@ export default function SupplierTodayScreen() {
                 marginBottom: 8,
               }}
             >
-              Quantity
+              {t("today.quantity")}
             </Text>
             <TextInput
               style={styles.input}
@@ -654,13 +673,13 @@ export default function SupplierTodayScreen() {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t("today.cancel")}
                 variant="outline"
                 onPress={() => setCapacityModalVisible(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Set Capacity"
+                title={t("today.setCapacity")}
                 variant="primary"
                 onPress={handleUpdateCapacity}
                 loading={isUpdatingCapacity}

@@ -10,13 +10,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { dispatchService } from "../../services/dispatch";
 import { supabase } from "../../lib/supabase/client";
 import MapView, { Marker } from "react-native-maps";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function TrackOrderScreen() {
   const { order_id } = useLocalSearchParams<{ order_id: string }>();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [tracking, setTracking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +85,7 @@ export default function TrackOrderScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#F8FAFC" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Track Delivery</Text>
+        <Text style={styles.headerTitle}>{t('track.title')}</Text>
       </View>
 
       <View style={styles.content}>
@@ -94,10 +98,10 @@ export default function TrackOrderScreen() {
           />
           <Text style={styles.statusTitle}>
             {isDelivered
-              ? "Delivered!"
+              ? t('Delivered!')
               : tracking?.order_status === "out_for_delivery"
-                ? "On the Way"
-                : tracking?.order_status?.toUpperCase() || "Tracking"}
+                ? t('On the Way')
+                : tracking?.order_status?.toUpperCase() || t('Tracking')}
           </Text>
           {tracking?.vehicle_number && (
             <Text style={styles.vehicleInfo}>
@@ -175,10 +179,10 @@ export default function TrackOrderScreen() {
                       ]}
                     >
                       {step === "planned"
-                        ? "Confirmed"
+                        ? t('Confirmed')
                         : step === "en_route"
-                          ? "Nearby"
-                          : "Delivered"}
+                          ? t('Nearby')
+                          : t('Delivered')}
                     </Text>
                     {i < 2 && (
                       <View
@@ -200,7 +204,7 @@ export default function TrackOrderScreen() {
             style={styles.doneBtn}
             onPress={() => router.replace("/(customer)/home")}
           >
-            <Text style={styles.doneBtnText}>Back to Home</Text>
+            <Text style={styles.doneBtnText}>{t('Back to Home')}</Text>
           </TouchableOpacity>
         )}
 

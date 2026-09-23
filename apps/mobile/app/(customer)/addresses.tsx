@@ -16,6 +16,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback } from "react";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { AddressService } from "../../services/address";
 import type { Address } from "@aquakart/types";
 import { theme } from "../../constants/theme";
@@ -27,6 +28,7 @@ import {
 } from "../../components/feedback";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 const BOKARO_SECTORS = [
   { label: "Sector 1", lat: 23.6693, lng: 86.1511 },
@@ -45,6 +47,8 @@ const BOKARO_SECTORS = [
 
 export default function AddressesScreen() {
   const { user } = useAuth();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -202,10 +206,10 @@ export default function AddressesScreen() {
     }
   };
 
-  if (loading) return <LoadingState message="Loading..." />;
+  if (loading) return <LoadingState message={t('common.loading')} />;
   if (error)
     return (
-      <ErrorState title="Error" message={error} onRetry={fetchAddresses} />
+      <ErrorState title={t('common.error')} message={error} onRetry={fetchAddresses} />
     );
 
   if (isAdding) {
@@ -226,7 +230,7 @@ export default function AddressesScreen() {
                 color={theme.colors.textPrimary}
               />
             </Pressable>
-            <Text style={styles.title}>Add Delivery Address</Text>
+            <Text style={styles.title}>{t('addresses.addNew')}</Text>
           </View>
 
           <ScrollView
@@ -242,14 +246,14 @@ export default function AddressesScreen() {
                 size={20}
                 color={theme.colors.primary}
               />
-              <Text style={styles.gpsButtonText}>Use Current Location</Text>
+              <Text style={styles.gpsButtonText}>{t('addresses.useCurrentLocation')}</Text>
             </Pressable>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>House/Flat Number & Building *</Text>
+              <Text style={styles.label}>{t('addresses.houseNumber')} *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Flat 302, Green Valley Apts"
+                placeholder={t('addresses.housePlaceholder')}
                 value={formHouse}
                 onChangeText={setFormHouse}
                 placeholderTextColor={theme.colors.textTertiary}
@@ -257,7 +261,7 @@ export default function AddressesScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Bokaro Sector *</Text>
+              <Text style={styles.label}>{t('addresses.bokaroSector')} *</Text>
               <View style={styles.sectorsGrid}>
                 {BOKARO_SECTORS.map((sector) => (
                   <Pressable
@@ -284,10 +288,10 @@ export default function AddressesScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Landmark (Optional)</Text>
+              <Text style={styles.label}>{t('addresses.landmark')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Near City Center Mall"
+                placeholder={t('addresses.landmarkPlaceholder')}
                 value={formLandmark}
                 onChangeText={setFormLandmark}
                 placeholderTextColor={theme.colors.textTertiary}
@@ -295,7 +299,7 @@ export default function AddressesScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Save As</Text>
+              <Text style={styles.label}>{t('addresses.saveAs')}</Text>
               <View style={styles.labelSelectorRow}>
                 {(["Home", "Office", "Other"] as const).map((l) => (
                   <Pressable
@@ -327,7 +331,7 @@ export default function AddressesScreen() {
                         formLabel === l && styles.labelChipTextActive,
                       ]}
                     >
-                      {l}
+                      {t(`addresses.${l.toLowerCase()}`)}
                     </Text>
                   </Pressable>
                 ))}
@@ -335,10 +339,10 @@ export default function AddressesScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Delivery Instructions (Optional)</Text>
+              <Text style={styles.label}>{t('addresses.deliveryInstructions')}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="e.g. Leave jars near the door, do not ring bell"
+                placeholder={t('addresses.instructionsPlaceholder')}
                 value={formInstructions}
                 onChangeText={setFormInstructions}
                 multiline
@@ -348,7 +352,7 @@ export default function AddressesScreen() {
             </View>
 
             <View style={{ height: 20 }} />
-            <Button title="Save Address" onPress={handleSaveAddress} />
+            <Button title={t('addresses.saveAddress')} onPress={handleSaveAddress} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -365,7 +369,7 @@ export default function AddressesScreen() {
             color={theme.colors.textPrimary}
           />
         </Pressable>
-        <Text style={styles.title}>Select a Location</Text>
+        <Text style={styles.title}>{t('addresses.title')}</Text>
       </View>
 
       <View style={styles.currentLocationWrapper}>
@@ -376,9 +380,9 @@ export default function AddressesScreen() {
           <Ionicons name="locate" size={22} color={theme.colors.primary} />
           <View style={styles.currentLocationTextWrapper}>
             <Text style={styles.currentLocationTitle}>
-              Use current location
+              {t('addresses.useCurrentLocation')}
             </Text>
-            <Text style={styles.currentLocationSub}>Using GPS</Text>
+            <Text style={styles.currentLocationSub}>{t('addresses.usingGPS')}</Text>
           </View>
           <Ionicons
             name="chevron-forward"
@@ -389,7 +393,7 @@ export default function AddressesScreen() {
       </View>
 
       <View style={styles.savedAddressesHeader}>
-        <Text style={styles.savedAddressesTitle}>Saved Addresses</Text>
+        <Text style={styles.savedAddressesTitle}>{t('addresses.savedAddresses')}</Text>
       </View>
 
       <FlatList
@@ -416,7 +420,7 @@ export default function AddressesScreen() {
                     />
                   )}
                   <Badge
-                    label={item.label || "Other"}
+                    label={item.label ? t(`addresses.${item.label.toLowerCase()}`) : t('addresses.other')}
                     variant={
                       item.label === "Home"
                         ? "success"
@@ -427,7 +431,7 @@ export default function AddressesScreen() {
                   />
                 </View>
                 <Button
-                  title="Delete"
+                  title={t('common.delete')}
                   variant="danger"
                   size="sm"
                   onPress={() => handleDelete(item.id)}
@@ -439,14 +443,14 @@ export default function AddressesScreen() {
         )}
         ListEmptyComponent={
           <EmptyState
-            title="No addresses saved"
-            message="Add a delivery address to start ordering."
+            title={t('addresses.noAddressesSaved')}
+            message={t('addresses.addDeliveryAddress')}
           />
         }
       />
 
       <View style={styles.footer}>
-        <Button title="Add New Address" onPress={() => setIsAdding(true)} />
+        <Button title={t('addresses.addNew')} onPress={() => setIsAdding(true)} />
       </View>
     </SafeAreaView>
   );

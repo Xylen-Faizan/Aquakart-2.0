@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 import { theme } from "../../../constants/theme";
 import { supabase } from "../../../lib/supabase/client";
 import { LoadingState } from "../../../components/feedback";
@@ -18,11 +19,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SupplierService } from "../../../services/supplier";
 
 import { getProductImage } from "../../../utils/images";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
 
 export default function BrandScreen() {
   const router = useRouter();
   const { name } = useLocalSearchParams();
+  const { t } = useLanguage();
   const brandName = Array.isArray(name) ? name[0] : name;
+  useAndroidBack();
 
   const [supplier, setSupplier] = useState<any>(null);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -84,7 +88,7 @@ export default function BrandScreen() {
 
   const handlePlaceOrder = () => {
     if (totalQty === 0) {
-      Alert.alert("Empty Order", "Please select at least one product.");
+      Alert.alert(t('emptyOrder') || "Empty Order", t('selectOneProduct') || "Please select at least one product.");
       return;
     }
 
@@ -117,11 +121,11 @@ export default function BrandScreen() {
             color={theme.colors.textPrimary}
           />
         </Pressable>
-        <Text style={styles.headerTitle}>{brandName} Products</Text>
+        <Text style={styles.headerTitle}>{brandName} {t('products') || "Products"}</Text>
       </View>
 
       <ScrollView style={styles.content}>
-        <Text style={styles.label}>Select {brandName} Products</Text>
+        <Text style={styles.label}>{t('select') || "Select"} {brandName} {t('products') || "Products"}</Text>
 
         {products.map((p) => {
           const qty = quantities[p.product_id] || 0;
@@ -175,14 +179,14 @@ export default function BrandScreen() {
               color: theme.colors.textSecondary,
             }}
           >
-            No {brandName} products found at nearby suppliers.
+            {t('no') || "No"} {brandName} {t('productsFoundNearby') || "products found at nearby suppliers."}
           </Text>
         )}
 
         {totalQty > 0 && (
           <View style={styles.summaryCard}>
             <View style={styles.row}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
+              <Text style={styles.totalLabel}>{t('totalAmount') || "Total Amount"}</Text>
               <Text style={styles.totalValue}>₹{totalAmount.toFixed(2)}</Text>
             </View>
           </View>
@@ -197,7 +201,7 @@ export default function BrandScreen() {
           disabled={totalQty === 0 || processing}
         >
           <Text style={styles.btnText}>
-            {processing ? "Processing..." : "Place Order"}
+            {processing ? t('processing') || "Processing..." : t('placeOrder') || "Place Order"}
           </Text>
         </Pressable>
         <View style={{ height: 40 }} />

@@ -11,13 +11,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { theme } from "../../constants/theme";
 import { supabase } from "../../lib/supabase/client";
 import { LoadingState } from "../../components/feedback";
 import { Button } from "../../components/ui";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function CatalogScreen() {
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,13 +35,18 @@ export default function CatalogScreen() {
         const { data, error } = await supabase
           .from("products")
           .select("*")
-          .eq("is_active", true)
+          .eq("active", true)
           .order("name");
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase Error:", error);
+          Alert.alert("Supabase Error", error.message);
+          throw error;
+        }
         setProducts(data || []);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        console.error("Catalog Error:", err);
+        Alert.alert("Catalog Error", err.message || "Failed to load products");
       } finally {
         setLoading(false);
       }
@@ -88,7 +97,7 @@ export default function CatalogScreen() {
           <Text style={styles.productDesc} numberOfLines={2}>
             {product.description}
           </Text>
-          <Text style={styles.productPrice}>Express Delivery</Text>
+          <Text style={styles.productPrice}>{t('catalog.expressDelivery')}</Text>
         </View>
 
         <View style={styles.radioContainer}>
@@ -100,7 +109,7 @@ export default function CatalogScreen() {
     );
   };
 
-  if (loading) return <LoadingState message="Loading catalog..." />;
+  if (loading) return <LoadingState message={t('catalog.loading')} />;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -112,7 +121,7 @@ export default function CatalogScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Product</Text>
+        <Text style={styles.headerTitle}>{t('catalog.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -121,7 +130,7 @@ export default function CatalogScreen() {
         contentContainerStyle={styles.content}
       >
         <Text style={styles.pageSubtitle}>
-          What would you like to order today?
+          {t('catalog.subtitle')}
         </Text>
 
         <View style={styles.list}>{products.map(renderProduct)}</View>
@@ -132,7 +141,7 @@ export default function CatalogScreen() {
       {selectedProduct && (
         <View style={styles.footer}>
           <View style={styles.quantityRow}>
-            <Text style={styles.quantityLabel}>Quantity</Text>
+            <Text style={styles.quantityLabel}>{t('common.quantity')}</Text>
             <View style={styles.stepper}>
               <TouchableOpacity
                 style={styles.stepBtn}

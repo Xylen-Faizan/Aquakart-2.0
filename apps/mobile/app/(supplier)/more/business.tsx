@@ -17,10 +17,14 @@ import { Card, Button } from "../../../components/ui";
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { supabase } from "../../../lib/supabase/client";
 import * as Location from "expo-location";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function BusinessProfileScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,8 +73,8 @@ export default function BusinessProfileScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
-          "Permission Denied",
-          "Allow location permissions to set your coverage area.",
+          t('business.permissionDenied'),
+          t('business.allowLocation'),
         );
         return;
       }
@@ -98,9 +102,9 @@ export default function BusinessProfileScreen() {
         setAddress(formattedAddress);
       }
       
-      Alert.alert("Success", "Location updated. Remember to tap Save.");
+      Alert.alert(t('business.success'), t('business.locationUpdated'));
     } catch (error) {
-      Alert.alert("Error", "Failed to get location.");
+      Alert.alert(t('business.error'), t('business.failedLocation'));
     } finally {
       setSaving(false);
     }
@@ -108,7 +112,7 @@ export default function BusinessProfileScreen() {
 
   const handleSave = async () => {
     if (!businessName || !phone) {
-      Alert.alert("Validation Error", "Business name and phone are required.");
+      Alert.alert(t('business.validationError'), t('business.namePhoneRequired'));
       return;
     }
 
@@ -172,11 +176,11 @@ export default function BusinessProfileScreen() {
         }
       }
 
-      Alert.alert("Success", "Business profile updated successfully!");
+      Alert.alert(t('business.success'), t('business.profileUpdated'));
       router.back();
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", err.message || "Failed to save profile.");
+      Alert.alert(t('business.error'), err.message || t('business.failedSave'));
     } finally {
       setSaving(false);
     }
@@ -208,7 +212,7 @@ export default function BusinessProfileScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Business Profile</Text>
+        <Text style={styles.headerTitle}>{t('business.title')}</Text>
       </View>
 
       <ScrollView
@@ -216,52 +220,51 @@ export default function BusinessProfileScreen() {
         contentContainerStyle={styles.content}
       >
         <Card style={styles.card}>
-          <Text style={styles.label}>Business Name *</Text>
+          <Text style={styles.label}>{t('business.nameLabel')}</Text>
           <TextInput
             style={styles.input}
             value={businessName}
             onChangeText={setBusinessName}
-            placeholder="e.g. Pure Jal Enterprise"
+            placeholder={t('business.namePlaceholder')}
           />
 
-          <Text style={styles.label}>Business Address</Text>
+          <Text style={styles.label}>{t('business.addressLabel')}</Text>
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: "top" }]}
             value={address}
             onChangeText={setAddress}
-            placeholder="e.g. 123 Main Street"
+            placeholder={t('business.addressPlaceholder')}
             multiline
           />
 
-          <Text style={styles.label}>Business Phone *</Text>
+          <Text style={styles.label}>{t('business.phoneLabel')}</Text>
           <TextInput
             style={styles.input}
             value={phone}
             onChangeText={setPhone}
-            placeholder="e.g. 9999999999"
+            placeholder={t('business.phonePlaceholder')}
             keyboardType="phone-pad"
           />
 
-          <Text style={styles.label}>Service Location</Text>
+          <Text style={styles.label}>{t('business.serviceLocation')}</Text>
           <View style={styles.locationContainer}>
             <Text style={styles.locationText}>
-              {location ? "GPS Coordinates Set ✓" : "Location not set"}
+              {location ? t('business.gpsSet') : t('business.locationNotSet')}
             </Text>
             <Button
-              title="Update GPS"
+              title={t('business.updateGps')}
               variant="outline"
               size="sm"
               onPress={handleUpdateLocation}
             />
           </View>
           <Text style={styles.hintText}>
-            Updating your GPS ensures you appear in the marketplace for nearby
-            customers.
+            {t('business.gpsHint')}
           </Text>
         </Card>
 
         <Button
-          title={saving ? "Saving..." : "Save Profile"}
+          title={saving ? t('business.saving') : t('business.saveProfile')}
           onPress={handleSave}
           disabled={saving}
           style={styles.saveBtn}

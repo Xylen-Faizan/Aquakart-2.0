@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { theme } from "../../constants/theme";
 import { SupplierService } from "../../services/supplier";
 import { supabase } from "../../lib/supabase/client";
@@ -20,6 +22,8 @@ import { getProductImage } from "../../utils/images";
 
 export default function BulkOrdersScreen() {
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [supplier, setSupplier] = useState<any>(null);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -84,13 +88,13 @@ export default function BulkOrdersScreen() {
   const handlePlaceOrder = async () => {
     if (totalQty < 100) {
       Alert.alert(
-        "Bulk Order Minimum",
-        "Please select at least 100 items to place a bulk order.",
+        t('bulk.minAlertTitle'),
+        t('bulk.minAlertMessage'),
       );
       return;
     }
     if (!supplier || !addressId) {
-      Alert.alert("Error", "Please setup an address in your profile first.");
+      Alert.alert(t('error'), t('bulk.addressAlert'));
       return;
     }
 
@@ -112,11 +116,11 @@ export default function BulkOrdersScreen() {
         if (error) throw error;
       }
 
-      Alert.alert("Success", "Bulk Order placed successfully!", [
+      Alert.alert(t('success'), t('bulk.successMessage'), [
         { text: "OK", onPress: () => router.push("/(customer)/orders") },
       ]);
     } catch (error: any) {
-      Alert.alert("Order Failed", error.message);
+      Alert.alert(t('bulk.failedAlertTitle'), error.message);
     } finally {
       setProcessing(false);
     }
@@ -134,17 +138,17 @@ export default function BulkOrdersScreen() {
             color={theme.colors.textPrimary}
           />
         </Pressable>
-        <Text style={styles.headerTitle}>Party & Bulk Orders</Text>
+        <Text style={styles.headerTitle}>{t('bulk.title')}</Text>
       </View>
 
       <ScrollView style={styles.content}>
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
-            🎉 Get 10% off automatically on orders of 100+ items!
+            {t('bulk.promo')}
           </Text>
         </View>
 
-        <Text style={styles.label}>Select Products (Total min: 100)</Text>
+        <Text style={styles.label}>{t('bulk.selectProducts')}</Text>
 
         {products.map((p) => {
           const qty = quantities[p.product_id] || 0;
@@ -197,20 +201,20 @@ export default function BulkOrdersScreen() {
         })}
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Order Summary</Text>
+          <Text style={styles.summaryTitle}>{t('checkout.orderSummary')}</Text>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Total Items Selected</Text>
+            <Text style={styles.rowLabel}>{t('bulk.totalItems')}</Text>
             <Text style={[styles.rowValue, totalQty < 100 && { color: "red" }]}>
               {totalQty}
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Subtotal</Text>
+            <Text style={styles.rowLabel}>{t('bulk.subtotal')}</Text>
             <Text style={styles.rowValue}>₹{subtotal}</Text>
           </View>
           {totalQty >= 100 && (
             <View style={styles.row}>
-              <Text style={styles.rowLabelDiscount}>Bulk Discount (10%)</Text>
+              <Text style={styles.rowLabelDiscount}>{t('bulk.discountLabel')}</Text>
               <Text style={styles.rowValueDiscount}>
                 -₹{discount.toFixed(2)}
               </Text>
@@ -218,7 +222,7 @@ export default function BulkOrdersScreen() {
           )}
           <View style={styles.divider} />
           <View style={styles.row}>
-            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>{t('bulk.total')}</Text>
             <Text style={styles.totalValue}>₹{totalAmount.toFixed(2)}</Text>
           </View>
         </View>
@@ -232,7 +236,7 @@ export default function BulkOrdersScreen() {
           disabled={totalQty < 100 || processing}
         >
           <Text style={styles.btnText}>
-            {processing ? "Processing..." : "Place Bulk Order"}
+            {processing ? t('bulk.processing') : t('bulk.placeOrder')}
           </Text>
         </Pressable>
         <View style={{ height: 40 }} />

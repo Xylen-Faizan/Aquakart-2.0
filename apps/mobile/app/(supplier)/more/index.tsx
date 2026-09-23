@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../../../constants/theme";
 import { Card, Button } from "../../../components/ui";
 import { useAuth } from "../../../features/auth/AuthProvider";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../../lib/supabase/client";
@@ -20,49 +21,50 @@ import { Alert } from "react-native";
 
 export default function MoreScreen() {
   const { profile, signOut } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const menuItems = [
     {
       icon: "business-outline",
-      title: "Business Profile",
-      subtitle: "Manage details & coverage",
+      title: t('more.businessProfile'),
+      subtitle: t('more.businessProfileSubtitle'),
       route: "/(supplier)/more/business",
     },
     {
       icon: "pricetag-outline",
-      title: "Pricing & Catalog",
-      subtitle: "Update default product rates",
+      title: t('more.pricingCatalog'),
+      subtitle: t('more.pricingCatalogSubtitle'),
       route: "/(supplier)/more/pricing",
     },
     {
       icon: "people-outline",
-      title: "Team & Crew",
-      subtitle: "Manage drivers and helpers",
+      title: t('more.teamCrew'),
+      subtitle: t('more.teamCrewSubtitle'),
       route: "/(supplier)/more/team",
     },
     {
       icon: "car-outline",
-      title: "Fleet Vehicles",
-      subtitle: "Add & manage delivery vehicles",
+      title: t('more.fleetVehicles'),
+      subtitle: t('more.fleetVehiclesSubtitle'),
       route: "/(supplier)/more/vehicles",
     },
     {
       icon: "document-text-outline",
-      title: "Ledger Reports",
-      subtitle: "Download monthly statements",
+      title: t('more.ledgerReports'),
+      subtitle: t('more.ledgerReportsSubtitle'),
       route: "/(supplier)/more/ledger",
     },
     {
       icon: "settings-outline",
-      title: "App Settings",
-      subtitle: "Notifications & preferences",
+      title: t('more.appSettings'),
+      subtitle: t('more.appSettingsSubtitle'),
       route: "/(supplier)/more/settings",
     },
     {
       icon: "help-circle-outline",
-      title: "Help & Support",
-      subtitle: "Contact AquaKart ops team",
+      title: t('more.helpSupport'),
+      subtitle: t('more.helpSupportSubtitle'),
       route: "support",
     },
   ];
@@ -124,20 +126,20 @@ export default function MoreScreen() {
         if (updateError) throw updateError;
 
         Alert.alert(
-          "Success",
-          "Business logo updated successfully! Please refresh to see changes.",
+          t('more.success'),
+          t('more.businessLogoUpdated'),
         );
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Failed to upload logo.");
+      Alert.alert(t('more.error'), t('more.failedToUploadLogo'));
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>More</Text>
+        <Text style={styles.headerTitle}>{t('more.title')}</Text>
       </View>
 
       <ScrollView
@@ -162,10 +164,10 @@ export default function MoreScreen() {
             </TouchableOpacity>
             <View style={styles.profileInfo}>
               <Text style={styles.businessName}>
-                {profile?.name || "Water Supplier"}
+                {profile?.name || t('more.waterSupplier')}
               </Text>
               <Text style={styles.phoneText}>{profile?.phone}</Text>
-              <Text style={styles.badgeText}>Verified Partner</Text>
+              <Text style={styles.badgeText}>{t('more.verifiedPartner')}</Text>
             </View>
           </View>
         </Card>
@@ -199,7 +201,7 @@ export default function MoreScreen() {
         </View>
 
         <Button
-          title="Sign Out"
+          title={t('more.logOut')}
           variant="outline"
           style={styles.signOutBtn}
           onPress={signOut}

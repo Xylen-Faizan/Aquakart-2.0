@@ -10,9 +10,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { theme } from "../../../constants/theme";
 import { Card } from "../../../components/ui";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function LedgerScreen() {
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -27,7 +31,7 @@ export default function LedgerScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ledger Reports</Text>
+        <Text style={styles.headerTitle}>{t('ledger.title')}</Text>
       </View>
       <View style={styles.container}>
         <Card style={styles.card}>
@@ -37,10 +41,9 @@ export default function LedgerScreen() {
             color={theme.colors.border}
             style={styles.icon}
           />
-          <Text style={styles.title}>Coming Soon</Text>
+          <Text style={styles.title}>{t('ledger.coming_soon')}</Text>
           <Text style={styles.description}>
-            Detailed financial reporting and monthly ledger statements will be
-            available in V2 of AquaKart.
+            {t('ledger.description')}
           </Text>
         </Card>
       </View>

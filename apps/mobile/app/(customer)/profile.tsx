@@ -12,16 +12,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { supabase } from "../../lib/supabase/client";
 import { theme } from "../../constants/theme";
 import { Card, Button } from "../../components/ui";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function ProfileScreen() {
   const { profile, user, session, signOut, refreshProfile } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
+  useAndroidBack();
 
   // Derive a reliable user ID from multiple sources
   // profile.id === user.id === session.user.id (all the same UUID in Supabase)
@@ -164,7 +168,7 @@ export default function ProfileScreen() {
             color={theme.colors.textPrimary}
           />
         </Pressable>
-        <Text style={styles.title}>My Profile</Text>
+        <Text style={styles.title}>{t('profile.title')}</Text>
       </View>
 
       <ScrollView
@@ -212,7 +216,7 @@ export default function ProfileScreen() {
                 value={name}
                 onChangeText={setName}
                 autoFocus
-                placeholder="Enter your name"
+                placeholder={t('profile.enterName')}
                 placeholderTextColor={theme.colors.textTertiary}
                 onSubmitEditing={handleSaveName}
                 returnKeyType="done"
@@ -251,7 +255,7 @@ export default function ProfileScreen() {
 
         {/* Settings Links */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Settings</Text>
+          <Text style={styles.sectionTitle}>{t('profile.accountSettings')}</Text>
 
           <Pressable
             style={styles.settingItem}
@@ -265,7 +269,7 @@ export default function ProfileScreen() {
                   color={theme.colors.primary}
                 />
               </View>
-              <Text style={styles.settingText}>Saved Addresses</Text>
+              <Text style={styles.settingText}>{t('profile.savedAddresses')}</Text>
             </View>
             <Ionicons
               name="chevron-forward"
@@ -286,7 +290,7 @@ export default function ProfileScreen() {
                   color={theme.colors.primary}
                 />
               </View>
-              <Text style={styles.settingText}>Order History</Text>
+              <Text style={styles.settingText}>{t('profile.orderHistory')}</Text>
             </View>
             <Ionicons
               name="chevron-forward"
@@ -297,13 +301,13 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
 
           <Pressable
             style={styles.settingItem}
             onPress={() =>
               Alert.alert(
-                "Help Center",
+                t('profile.helpCenter'),
                 "Our customer support team is available at support@aquakart.com",
               )
             }
@@ -316,7 +320,7 @@ export default function ProfileScreen() {
                   color={theme.colors.primary}
                 />
               </View>
-              <Text style={styles.settingText}>Help Center</Text>
+              <Text style={styles.settingText}>{t('profile.helpCenter')}</Text>
             </View>
             <Ionicons
               name="chevron-forward"
@@ -329,7 +333,7 @@ export default function ProfileScreen() {
         <View style={{ height: 40 }} />
 
         {/* Logout Button */}
-        <Button title="Log Out" variant="danger" onPress={() => signOut()} />
+        <Button title={t('profile.logOut')} variant="danger" onPress={() => signOut()} />
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>

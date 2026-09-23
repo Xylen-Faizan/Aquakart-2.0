@@ -18,9 +18,13 @@ import { fleetOpsService } from "../../services/fleet-ops";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { supabase } from "../../lib/supabase/client";
 import { Button } from "../../components/ui";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 
 export default function SupplierRoutesScreen() {
   const { session } = useAuth();
+  const { t } = useLanguage();
+  useAndroidBack();
   const [runs, setRuns] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,21 +93,21 @@ export default function SupplierRoutesScreen() {
     try {
       const code = await fleetOpsService.generateHelperInvite(supplierId);
       Alert.alert(
-        "Helper Invite Code",
-        `Share this code with the helper:\n\n${code}\n\nValid for 24 hours.`,
+        t('routes.helperInviteTitle'),
+        `${t('routes.shareHelperCode')}:\n\n${code}\n\n${t('routes.validFor24Hours')}`,
         [
           {
-            text: "Share",
+            text: t('routes.share'),
             onPress: () =>
               Share.share({
-                message: `Join my AquaKart team as a helper. Enter this code: ${code}`,
+                message: `${t('routes.joinHelperMessage')} ${code}`,
               }),
           },
-          { text: "OK" },
+          { text: t('routes.ok') },
         ],
       );
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      Alert.alert(t('routes.error'), err.message);
     }
   };
 
@@ -112,41 +116,41 @@ export default function SupplierRoutesScreen() {
     try {
       const code = await fleetOpsService.generateDriverInvite(supplierId);
       Alert.alert(
-        "Driver Invite Code",
-        `Share this code with the driver:\n\n${code}\n\nValid for 24 hours.`,
+        t('routes.driverInviteTitle'),
+        `${t('routes.shareDriverCode')}:\n\n${code}\n\n${t('routes.validFor24Hours')}`,
         [
           {
-            text: "Share",
+            text: t('routes.share'),
             onPress: () =>
               Share.share({
-                message: `Join my AquaKart team as a driver. Enter this code: ${code}`,
+                message: `${t('routes.joinDriverMessage')} ${code}`,
               }),
           },
-          { text: "OK" },
+          { text: t('routes.ok') },
         ],
       );
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      Alert.alert(t('routes.error'), err.message);
     }
   };
 
   const handleAcceptOffer = async (offerId: string) => {
     try {
       await fleetOpsService.acceptOffer(offerId);
-      Alert.alert("Accepted", "Opportunity order added to vehicle route.");
+      Alert.alert(t('routes.accepted'), t('routes.opportunityAdded'));
       await fetchData();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Could not accept offer");
+      Alert.alert(t('routes.error'), err.message || t('routes.couldNotAcceptOffer'));
     }
   };
 
   const handleDeclineOffer = async (offerId: string) => {
     try {
       await fleetOpsService.declineOffer(offerId);
-      Alert.alert("Success", "Offer declined");
+      Alert.alert(t('routes.success'), t('routes.offerDeclined'));
       fetchData();
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      Alert.alert(t('routes.error'), err.message);
     }
   };
 
@@ -167,13 +171,13 @@ export default function SupplierRoutesScreen() {
       if (h?.length) setSelectedHelper(h[0].id);
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Failed to load fleet resources.");
+      Alert.alert(t('routes.error'), t('routes.failedToLoadFleet'));
     }
   };
 
   const handleCreateRun = async () => {
     if (!supplierId || !selectedVehicle || !selectedDriver || !selectedHelper) {
-      Alert.alert("Error", "Please select a vehicle, driver, and helper.");
+      Alert.alert(t('routes.error'), t('routes.pleaseSelectVehicleDriverHelper'));
       return;
     }
     try {
@@ -185,11 +189,11 @@ export default function SupplierRoutesScreen() {
         selectedDriver,
         selectedHelper
       );
-      Alert.alert("Success", "Daily run created successfully!");
+      Alert.alert(t('routes.success'), t('routes.runCreatedSuccessfully'));
       setIsCreatingRun(false);
       fetchData();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to create run.");
+      Alert.alert(t('routes.error'), err.message || t('routes.failedToCreateRun'));
     } finally {
       setCreating(false);
     }
@@ -213,13 +217,13 @@ export default function SupplierRoutesScreen() {
   };
 
   const getGpsFreshness = (capturedAt: string | null) => {
-    if (!capturedAt) return { fresh: false, label: "No GPS" };
+    if (!capturedAt) return { fresh: false, label: t('routes.noGps') };
     const ageSeconds = (Date.now() - new Date(capturedAt).getTime()) / 1000;
     if (ageSeconds < 60)
-      return { fresh: true, label: `${Math.round(ageSeconds)}s ago` };
+      return { fresh: true, label: `${Math.round(ageSeconds)}${t('routes.secondsAgo')}` };
     if (ageSeconds < 300)
-      return { fresh: false, label: `${Math.round(ageSeconds / 60)}m ago` };
-    return { fresh: false, label: "Stale" };
+      return { fresh: false, label: `${Math.round(ageSeconds / 60)}${t('routes.minutesAgo')}` };
+    return { fresh: false, label: t('routes.stale') };
   };
 
   if (loading)
@@ -243,19 +247,19 @@ export default function SupplierRoutesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>Fleet Operations</Text>
+          <Text style={styles.headerTitle}>{t('routes.title')}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createBtn} onPress={openCreateRunModal}>
             <Ionicons name="add" size={16} color="#FFF" />
-            <Text style={styles.createBtnText}>Run</Text>
+            <Text style={styles.createBtnText}>{t('routes.run')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.inviteBtn}
             onPress={handleGenerateDriverInvite}
           >
             <Ionicons name="person-add-outline" size={16} color="#0EA5E9" />
-            <Text style={styles.inviteBtnText}>Driver</Text>
+            <Text style={styles.inviteBtnText}>{t('routes.driver')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.inviteBtn}
@@ -263,7 +267,7 @@ export default function SupplierRoutesScreen() {
           >
             <Ionicons name="person-add-outline" size={16} color="#F59E0B" />
             <Text style={[styles.inviteBtnText, { color: "#F59E0B" }]}>
-              Helper
+              {t('routes.helper')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -273,9 +277,9 @@ export default function SupplierRoutesScreen() {
       <Modal visible={isCreatingRun} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create Daily Run</Text>
+            <Text style={styles.modalTitle}>{t('routes.createDailyRun')}</Text>
             
-            <Text style={styles.modalLabel}>Select Vehicle</Text>
+            <Text style={styles.modalLabel}>{t('routes.selectVehicle')}</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={selectedVehicle}
@@ -287,7 +291,7 @@ export default function SupplierRoutesScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.modalLabel}>Select Driver</Text>
+            <Text style={styles.modalLabel}>{t('routes.selectDriver')}</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={selectedDriver}
@@ -299,7 +303,7 @@ export default function SupplierRoutesScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.modalLabel}>Select Helper</Text>
+            <Text style={styles.modalLabel}>{t('routes.selectHelper')}</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={selectedHelper}
@@ -313,13 +317,13 @@ export default function SupplierRoutesScreen() {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t('routes.cancel')}
                 variant="outline"
                 onPress={() => setIsCreatingRun(false)}
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button
-                title={creating ? "Starting..." : "Start Run"}
+                title={creating ? t('routes.starting') : t('routes.startRun')}
                 onPress={handleCreateRun}
                 disabled={creating || !selectedVehicle || !selectedDriver || !selectedHelper}
                 style={{ flex: 1, marginLeft: 8 }}
@@ -333,7 +337,7 @@ export default function SupplierRoutesScreen() {
       {offers.length > 0 && (
         <View style={styles.offersSection}>
           <Text style={styles.sectionTitle}>
-            ⚡ Opportunity Orders ({offers.length})
+            ⚡ {t('routes.opportunityOrders')} ({offers.length})
           </Text>
           {offers.map((offer) => {
             const req = offer.order_dispatch_requests;
@@ -341,7 +345,7 @@ export default function SupplierRoutesScreen() {
               <View key={offer.id} style={styles.offerCard}>
                 <View style={styles.offerTop}>
                   <Text style={styles.offerCustomer}>
-                    {req?.profiles?.name || "Customer"}
+                    {req?.profiles?.name || t('routes.customer')}
                   </Text>
                   <Text style={styles.offerVehicle}>
                     → {offer.vehicles?.vehicle_number}
@@ -365,7 +369,7 @@ export default function SupplierRoutesScreen() {
                       },
                     ]}
                   >
-                    +{offer.detour_minutes} min detour
+                    +{offer.detour_minutes} {t('routes.minDetour')}
                   </Text>
                 </View>
                 <View style={styles.offerActions}>
@@ -373,13 +377,13 @@ export default function SupplierRoutesScreen() {
                     style={styles.acceptBtn}
                     onPress={() => handleAcceptOffer(offer.id)}
                   >
-                    <Text style={styles.acceptBtnText}>Accept</Text>
+                    <Text style={styles.acceptBtnText}>{t('routes.accept')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.declineBtn}
                     onPress={() => handleDeclineOffer(offer.id)}
                   >
-                    <Text style={styles.declineBtnText}>Decline</Text>
+                    <Text style={styles.declineBtnText}>{t('routes.decline')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -389,12 +393,12 @@ export default function SupplierRoutesScreen() {
       )}
 
       {/* Vehicle Fleet */}
-      <Text style={styles.sectionTitle}>Today's Vehicles ({runs.length})</Text>
+      <Text style={styles.sectionTitle}>{t('routes.todaysVehicles')} ({runs.length})</Text>
 
       {runs.length === 0 ? (
         <View style={styles.emptyCard}>
           <Ionicons name="car-outline" size={48} color="#64748B" />
-          <Text style={styles.emptyText}>No routes generated for today.</Text>
+          <Text style={styles.emptyText}>{t('routes.noRoutesGenerated')}</Text>
         </View>
       ) : (
         runs.map((run) => {
@@ -416,7 +420,7 @@ export default function SupplierRoutesScreen() {
                 <View style={styles.vehicleInfo}>
                   <Ionicons name="car" size={18} color="#0EA5E9" />
                   <Text style={styles.vehicleNumber}>
-                    {run.vehicles?.vehicle_number || "Unassigned"}
+                    {run.vehicles?.vehicle_number || t('routes.unassigned')}
                   </Text>
                 </View>
                 <View
@@ -426,7 +430,7 @@ export default function SupplierRoutesScreen() {
                   ]}
                 >
                   <Text style={styles.badgeText}>
-                    {run.status?.toUpperCase()}
+                    {t(`routes.status_${run.status}`)}
                   </Text>
                 </View>
               </View>
@@ -436,13 +440,13 @@ export default function SupplierRoutesScreen() {
                 <View style={styles.crewItem}>
                   <Ionicons name="person-outline" size={14} color="#94A3B8" />
                   <Text style={styles.crewText}>
-                    Driver: {run.drivers?.profiles?.name || "—"}
+                    {t('routes.driverLabel')}: {run.drivers?.profiles?.name || "—"}
                   </Text>
                 </View>
                 <View style={styles.crewItem}>
                   <Ionicons name="people-outline" size={14} color="#94A3B8" />
                   <Text style={styles.crewText}>
-                    Helper: {run.helpers?.profiles?.name || "—"}
+                    {t('routes.helperLabel')}: {run.helpers?.profiles?.name || "—"}
                   </Text>
                 </View>
               </View>
@@ -461,7 +465,7 @@ export default function SupplierRoutesScreen() {
                   </View>
                   {liveState?.eta_minutes != null && (
                     <Text style={styles.etaText}>
-                      ETA to next stop: ~{liveState.eta_minutes} min
+                      {t('routes.etaToNextStop')}: ~{liveState.eta_minutes} {t('routes.min')}
                     </Text>
                   )}
                 </View>
@@ -470,12 +474,12 @@ export default function SupplierRoutesScreen() {
               {/* Stops summary */}
               <View style={styles.stopsRow}>
                 <Text style={styles.stopsText}>
-                  {deliveredStops}/{totalStops} delivered
+                  {deliveredStops}/{totalStops} {t('routes.delivered')}
                 </Text>
                 {oppStops > 0 && (
                   <View style={styles.oppBadge}>
                     <Ionicons name="flash" size={10} color="#F59E0B" />
-                    <Text style={styles.oppBadgeText}>{oppStops} on-demand</Text>
+                    <Text style={styles.oppBadgeText}>{oppStops} {t('routes.onDemand')}</Text>
                   </View>
                 )}
               </View>

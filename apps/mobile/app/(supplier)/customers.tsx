@@ -21,8 +21,10 @@ import {
 } from "../../services/customer";
 import { LedgerService, CustomerLedger } from "../../services/ledger";
 import { useFocusEffect } from "expo-router";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function CustomersScreen() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
     "All" | CustomerType | "Credit Due"
@@ -94,7 +96,7 @@ export default function CustomersScreen() {
 
   const handleAddCustomer = async () => {
     if (!newName.trim() || !newPhone.trim()) {
-      Alert.alert("Validation Error", "Name and phone are required.");
+      Alert.alert(t("customers.validationError"), t("customers.namePhoneRequired"));
       return;
     }
 
@@ -110,7 +112,7 @@ export default function CustomersScreen() {
       setNewPhone("");
       fetchCustomers();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to add customer");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedAddCustomer"));
     } finally {
       setIsAdding(false);
     }
@@ -135,7 +137,7 @@ export default function CustomersScreen() {
       const data = await LedgerService.getCustomerLedger(customer.id);
       setLedgerData(data);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to load ledger");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedLoadLedger"));
       setLedgerModalVisible(false);
     } finally {
       setIsLedgerLoading(false);
@@ -146,7 +148,7 @@ export default function CustomersScreen() {
     if (!selectedCustomer) return;
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert("Invalid Amount", "Please enter a valid positive amount.");
+      Alert.alert(t("customers.invalidAmount"), t("customers.validPositiveAmount"));
       return;
     }
 
@@ -163,7 +165,7 @@ export default function CustomersScreen() {
       // Refresh customers (since outstanding balance is also shown on cards)
       fetchCustomers();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to record payment");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedRecordPayment"));
     } finally {
       setIsPaying(false);
     }
@@ -173,7 +175,7 @@ export default function CustomersScreen() {
     if (!selectedCustomer) return;
     const parsedPrice = parseFloat(newPrice);
     if (isNaN(parsedPrice) || parsedPrice < 0) {
-      Alert.alert("Invalid Price", "Please enter a valid price.");
+      Alert.alert(t("customers.invalidPrice"), t("customers.validPrice"));
       return;
     }
 
@@ -196,7 +198,7 @@ export default function CustomersScreen() {
         .single();
 
       if (!products) {
-        throw new Error("No active products found for your business.");
+        throw new Error(t("customers.noActiveProducts"));
       }
 
       await CustomerService.setCustomerPrice({
@@ -208,7 +210,7 @@ export default function CustomersScreen() {
       setEditPriceModalVisible(false);
       fetchCustomers();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to update price");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedUpdatePrice"));
     } finally {
       setIsUpdatingPrice(false);
     }
@@ -227,7 +229,7 @@ export default function CustomersScreen() {
       await fetchCustomers();
       setScheduleModalVisible(false);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to update schedule status");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedUpdateScheduleStatus"));
     } finally {
       setIsUpdatingSchedule(false);
     }
@@ -240,8 +242,8 @@ export default function CustomersScreen() {
 
     if (isNaN(qty) || qty <= 0 || isNaN(interval) || interval <= 0) {
       Alert.alert(
-        "Invalid Input",
-        "Quantity and interval must be positive numbers.",
+        t("customers.invalidInput"),
+        t("customers.quantityIntervalPositive"),
       );
       return;
     }
@@ -282,7 +284,7 @@ export default function CustomersScreen() {
       setScheduleModalVisible(false);
       fetchCustomers();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to update schedule");
+      Alert.alert(t("customers.error"), error.message || t("customers.failedUpdateSchedule"));
     } finally {
       setIsUpdatingSchedule(false);
     }
@@ -308,12 +310,12 @@ export default function CustomersScreen() {
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <View>
-            <Text style={styles.headerTitle}>Customers</Text>
+            <Text style={styles.headerTitle}>{t("customers.title")}</Text>
             <Text style={styles.headerSubtitle}>
-              My Business • {customers.length} Total Accounts
+              {t("customers.myBusiness")} • {customers.length} {t("customers.totalAccounts")}
             </Text>
           </View>
-          <Badge variant="success" label={`Active (${activeCount})`} />
+          <Badge variant="success" label={`${t("customers.active")} (${activeCount})`} />
         </View>
 
         <View style={styles.searchRow}>
@@ -325,14 +327,14 @@ export default function CustomersScreen() {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search customer name or phone..."
+              placeholder={t("customers.searchPlaceholder")}
               placeholderTextColor={theme.colors.textTertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
           <Button
-            title="+ Add Customer"
+            title={t("customers.addCustomer")}
             size="sm"
             style={styles.addButton}
             onPress={() => setAddModalVisible(true)}
@@ -360,7 +362,7 @@ export default function CustomersScreen() {
                     activeFilter === f && styles.filterTextActive,
                   ]}
                 >
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {t(`customers.filter_${f.replace(" ", "")}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -376,17 +378,17 @@ export default function CustomersScreen() {
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{customers.length}</Text>
-            <Text style={styles.summaryLabel}>Total</Text>
+            <Text style={styles.summaryLabel}>{t("customers.total")}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{totalJarsOut}</Text>
-            <Text style={styles.summaryLabel}>Jars Out</Text>
+            <Text style={styles.summaryLabel}>{t("customers.jarsOut")}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>--</Text>
-            <Text style={styles.summaryLabel}>Monthly Vol</Text>
+            <Text style={styles.summaryLabel}>{t("customers.monthlyVol")}</Text>
           </View>
         </View>
 
@@ -406,7 +408,7 @@ export default function CustomersScreen() {
                 marginTop: 40,
               }}
             >
-              No customers found.
+              {t("customers.noCustomersFound")}
             </Text>
           ) : (
             displayedCustomers.map((customer) => (
@@ -441,7 +443,7 @@ export default function CustomersScreen() {
                     label={
                       customer.active_price
                         ? `₹${customer.active_price} / 20L`
-                        : "Default Price"
+                        : t("customers.defaultPrice")
                     }
                   />
                 </View>
@@ -449,7 +451,7 @@ export default function CustomersScreen() {
                 <View style={styles.statsRow}>
                   <View style={styles.statBox}>
                     <Text style={styles.statValue}>{customer.jar_balance}</Text>
-                    <Text style={styles.statLabel}>Jars Out</Text>
+                    <Text style={styles.statLabel}>{t("customers.jarsOut")}</Text>
                   </View>
                   <View style={styles.statBox}>
                     <Text
@@ -465,27 +467,27 @@ export default function CustomersScreen() {
                     >
                       ₹{customer.outstanding_balance}
                     </Text>
-                    <Text style={styles.statLabel}>Balance</Text>
+                    <Text style={styles.statLabel}>{t("customers.balance")}</Text>
                   </View>
                 </View>
 
                 <View style={styles.cardActions}>
                   <Button
-                    title="Schedule"
+                    title={t("customers.schedule")}
                     variant="outline"
                     size="sm"
                     style={styles.actionBtn}
                     onPress={() => handleSchedule(customer)}
                   />
                   <Button
-                    title="Edit Price"
+                    title={t("customers.editPrice")}
                     variant="outline"
                     size="sm"
                     style={styles.actionBtn}
                     onPress={() => handleEditPrice(customer)}
                   />
                   <Button
-                    title="Ledger"
+                    title={t("customers.ledger")}
                     variant="primary"
                     size="sm"
                     style={styles.actionBtn}
@@ -504,16 +506,16 @@ export default function CustomersScreen() {
       <Modal visible={editPriceModalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { marginTop: "auto" }]}>
-            <Text style={styles.modalTitle}>Edit Customer Price</Text>
+            <Text style={styles.modalTitle}>{t("customers.editCustomerPrice")}</Text>
             <Text
               style={{ color: theme.colors.textSecondary, marginBottom: 16 }}
             >
-              Setting custom price for {selectedCustomer?.name}
+              {t("customers.settingCustomPriceFor")} {selectedCustomer?.name}
             </Text>
 
             <TextInput
               style={styles.input}
-              placeholder="Price (e.g. 20)"
+              placeholder={t("customers.pricePlaceholder")}
               keyboardType="numeric"
               value={newPrice}
               onChangeText={setNewPrice}
@@ -521,13 +523,13 @@ export default function CustomersScreen() {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t("customers.cancel")}
                 variant="outline"
                 onPress={() => setEditPriceModalVisible(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Save Price"
+                title={t("customers.savePrice")}
                 variant="primary"
                 onPress={saveNewPrice}
                 loading={isUpdatingPrice}
@@ -542,16 +544,16 @@ export default function CustomersScreen() {
       <Modal visible={scheduleModalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { marginTop: "auto" }]}>
-            <Text style={styles.modalTitle}>Delivery Schedule</Text>
+            <Text style={styles.modalTitle}>{t("customers.deliverySchedule")}</Text>
             <Text
               style={{ color: theme.colors.textSecondary, marginBottom: 16 }}
             >
-              Set recurring deliveries for {selectedCustomer?.name}
+              {t("customers.setRecurringDeliveriesFor")} {selectedCustomer?.name}
             </Text>
 
             <TextInput
               style={styles.input}
-              placeholder="Quantity (e.g. 1)"
+              placeholder={t("customers.quantityPlaceholder")}
               keyboardType="numeric"
               value={scheduleQuantity}
               onChangeText={setScheduleQuantity}
@@ -559,7 +561,7 @@ export default function CustomersScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Interval in Days (e.g. 2)"
+              placeholder={t("customers.intervalPlaceholder")}
               keyboardType="numeric"
               value={intervalDays}
               onChangeText={setIntervalDays}
@@ -567,13 +569,13 @@ export default function CustomersScreen() {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t("customers.cancel")}
                 variant="outline"
                 onPress={() => setScheduleModalVisible(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Save Schedule"
+                title={t("customers.saveSchedule")}
                 variant="primary"
                 onPress={saveSchedule}
                 loading={isUpdatingSchedule}
@@ -588,17 +590,17 @@ export default function CustomersScreen() {
       <Modal visible={addModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Customer</Text>
+            <Text style={styles.modalTitle}>{t("customers.addNewCustomer")}</Text>
 
             <TextInput
               style={styles.input}
-              placeholder="Customer Name"
+              placeholder={t("customers.customerNamePlaceholder")}
               value={newName}
               onChangeText={setNewName}
             />
             <TextInput
               style={styles.input}
-              placeholder="Phone Number"
+              placeholder={t("customers.phoneNumberPlaceholder")}
               keyboardType="phone-pad"
               value={newPhone}
               onChangeText={setNewPhone}
@@ -619,7 +621,7 @@ export default function CustomersScreen() {
                       : styles.typeText
                   }
                 >
-                  Household
+                  {t("customers.household")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -636,20 +638,20 @@ export default function CustomersScreen() {
                       : styles.typeText
                   }
                 >
-                  Office
+                  {t("customers.office")}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t("customers.cancel")}
                 variant="outline"
                 onPress={() => setAddModalVisible(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Save"
+                title={t("customers.save")}
                 variant="primary"
                 onPress={handleAddCustomer}
                 loading={isAdding}
@@ -672,7 +674,7 @@ export default function CustomersScreen() {
               }}
             >
               <Text style={styles.modalTitle}>
-                Ledger: {selectedCustomer?.name}
+                {t("customers.ledgerFor")}: {selectedCustomer?.name}
               </Text>
               <TouchableOpacity onPress={() => setLedgerModalVisible(false)}>
                 <Ionicons
@@ -705,7 +707,7 @@ export default function CustomersScreen() {
                       marginBottom: 4,
                     }}
                   >
-                    Outstanding Balance
+                    {t("customers.outstandingBalance")}
                   </Text>
                   <Text
                     style={{
@@ -721,19 +723,19 @@ export default function CustomersScreen() {
                   </Text>
                 </Card>
 
-                <Text>Record Payment</Text>
+                <Text>{t("customers.recordPayment")}</Text>
                 <View
                   style={{ flexDirection: "row", gap: 12, marginBottom: 24 }}
                 >
                   <TextInput
                     style={[styles.input, { flex: 1, marginTop: 0 }]}
-                    placeholder="Amount (₹)"
+                    placeholder={t("customers.amountPlaceholder")}
                     keyboardType="numeric"
                     value={paymentAmount}
                     onChangeText={setPaymentAmount}
                   />
                   <Button
-                    title="Accept Cash"
+                    title={t("customers.acceptCash")}
                     variant="primary"
                     loading={isPaying}
                     onPress={handleRecordPayment}
@@ -748,7 +750,7 @@ export default function CustomersScreen() {
                     marginBottom: 12,
                   }}
                 >
-                  Transaction History
+                  {t("customers.transactionHistory")}
                 </Text>
                 <ScrollView>
                   {ledgerData?.entries.map((entry) => (
@@ -771,8 +773,8 @@ export default function CustomersScreen() {
                           }}
                         >
                           {entry.reference_type === "delivery"
-                            ? "Delivery Cost"
-                            : "Payment Received"}
+                            ? t("customers.deliveryCost")
+                            : t("customers.paymentReceived")}
                         </Text>
                         <Text
                           style={{
@@ -807,7 +809,7 @@ export default function CustomersScreen() {
                         marginTop: 20,
                       }}
                     >
-                      No ledger history.
+                      {t("customers.noLedgerHistory")}
                     </Text>
                   )}
                 </ScrollView>

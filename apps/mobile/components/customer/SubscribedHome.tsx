@@ -5,6 +5,7 @@ import { theme } from '../../constants/theme';
 import { Card, Button } from '../ui';
 import { supabase } from '../../lib/supabase/client';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '../../features/i18n/LanguageProvider';
 
 interface SubscriptionData {
   supplier_customer_id: string;
@@ -36,6 +37,7 @@ interface SubscribedHomeProps {
 
 export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [ledger, setLedger] = useState<MonthlyLedger | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -104,7 +106,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
     >
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Your Khata</Text>
+          <Text style={styles.greeting}>{t('khata.title')}</Text>
           <Text style={styles.supplierName}>{subscription.business_name}</Text>
         </View>
         <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL(`tel:${subscription.business_phone}`)}>
@@ -119,7 +121,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
           <TouchableOpacity onPress={handlePreviousMonth} style={styles.monthBtn}>
             <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.monthText}>{displayMonth} Bill</Text>
+          <Text style={styles.monthText}>{displayMonth} {t('khata.bill') || "Bill"}</Text>
           <TouchableOpacity onPress={handleNextMonth} style={[styles.monthBtn, isCurrentMonth && { opacity: 0.3 }]} disabled={isCurrentMonth}>
             <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
@@ -130,23 +132,23 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
           <View style={styles.analyticsGrid}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{ledger?.jars_consumed || 0}</Text>
-              <Text style={styles.statLabel}>Jars This Month</Text>
+              <Text style={styles.statLabel}>{t('khata.jarsThisMonth') || "Jars This Month"}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={[styles.statValue, { color: theme.colors.error }]}>₹{ledger?.bill_generated || 0}</Text>
-              <Text style={styles.statLabel}>Bill Generated</Text>
+              <Text style={styles.statLabel}>{t('khata.billGenerated') || "Bill Generated"}</Text>
             </View>
           </View>
           
           <View style={styles.bottomStatsRow}>
             <View>
-              <Text style={styles.bottomStatLabel}>Paid This Month</Text>
+              <Text style={styles.bottomStatLabel}>{t('khata.paidThisMonth') || "Paid This Month"}</Text>
               <Text style={[styles.bottomStatValue, { color: theme.colors.success }]}>₹{ledger?.amount_paid || 0}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.bottomStatLabel}>Empty Jars With You</Text>
-              <Text style={styles.bottomStatValue}>{subscription.jar_balance} Jars</Text>
+              <Text style={styles.bottomStatLabel}>{t('khata.emptyJarsWithYou') || "Empty Jars With You"}</Text>
+              <Text style={styles.bottomStatValue}>{subscription.jar_balance} {t('khata.jars') || "Jars"}</Text>
             </View>
           </View>
         </Card>
@@ -154,7 +156,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
         {/* Order Extra Button */}
         {isCurrentMonth && (
           <Button 
-            title="Order Extra Jars Now" 
+            title={t('khata.orderExtraJars') || "Order Extra Jars Now"} 
             variant="primary" 
             leftElement={<Ionicons name="add-circle-outline" size={20} color="white" style={{ marginRight: 8 }} />}
             onPress={() => router.push(`/(customer)/catalog?supplier_id=${subscription.supplier_id}` as any)}
@@ -163,10 +165,10 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
         )}
 
         {/* Transactions List */}
-        <Text style={styles.sectionTitle}>Daily Record</Text>
+        <Text style={styles.sectionTitle}>{t('khata.dailyRecord') || "Daily Record"}</Text>
         
         {loading && !refreshing ? (
-          <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary }}>Loading ledger...</Text>
+          <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary }}>{t('khata.loadingLedger') || "Loading ledger..."}</Text>
         ) : ledger?.entries && ledger.entries.length > 0 ? (
           <View style={styles.ledgerList}>
             {ledger.entries.map((entry) => (
@@ -180,18 +182,18 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
                 </View>
                 <View style={styles.entryDetails}>
                   <Text style={styles.entryTitle}>
-                    {entry.type === 'delivery' ? 'Delivery Received' : 'Payment Made'}
+                    {entry.type === 'delivery' ? t('khata.deliveryReceived') || 'Delivery Received' : t('khata.paymentMade') || 'Payment Made'}
                   </Text>
                   <Text style={styles.entrySub}>
                     {new Date(entry.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </Text>
                   {entry.type === 'delivery' && entry.jars && (
                     <Text style={styles.jarSub}>
-                      +{entry.jars.delivered} Delivered | -{entry.jars.returned} Returned
+                      +{entry.jars.delivered} {t('khata.delivered') || "Delivered"} | -{entry.jars.returned} {t('khata.returned') || "Returned"}
                     </Text>
                   )}
                   {entry.type === 'payment' && (
-                    <Text style={styles.jarSub}>via {entry.payment_method?.toUpperCase() || 'CASH'}</Text>
+                    <Text style={styles.jarSub}>{t('khata.via') || "via"} {entry.payment_method?.toUpperCase() || 'CASH'}</Text>
                   )}
                 </View>
                 <View style={styles.entryAmountBox}>
@@ -208,7 +210,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
         ) : (
           <View style={styles.emptyState}>
             <Ionicons name="document-text-outline" size={48} color={theme.colors.border} />
-            <Text style={styles.emptyText}>No records found for this month.</Text>
+            <Text style={styles.emptyText}>{t('khata.noRecordsFound') || "No records found for this month."}</Text>
           </View>
         )}
 

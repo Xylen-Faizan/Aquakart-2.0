@@ -11,9 +11,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { theme } from "../../../constants/theme";
 import { Card } from "../../../components/ui";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [pushEnabled, setPushEnabled] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(false);
 
@@ -30,14 +34,14 @@ export default function SettingsScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>App Settings</Text>
+        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
       </View>
       <View style={styles.container}>
         <Card style={styles.card}>
           <View style={styles.settingRow}>
             <View>
-              <Text style={styles.settingTitle}>Push Notifications</Text>
-              <Text style={styles.settingDesc}>Get alerts for new orders</Text>
+              <Text style={styles.settingTitle}>{t('settings.pushNotifications')}</Text>
+              <Text style={styles.settingDesc}>{t('settings.pushDesc')}</Text>
             </View>
             <Switch
               value={pushEnabled}
@@ -50,9 +54,9 @@ export default function SettingsScreen() {
           </View>
           <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
             <View>
-              <Text style={styles.settingTitle}>SMS Alerts</Text>
+              <Text style={styles.settingTitle}>{t('settings.smsAlerts')}</Text>
               <Text style={styles.settingDesc}>
-                Receive critical alerts via SMS
+                {t('settings.smsDesc')}
               </Text>
             </View>
             <Switch

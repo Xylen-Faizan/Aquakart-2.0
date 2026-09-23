@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { theme } from "../../constants/theme";
 import { supabase } from "../../lib/supabase/client";
 import { LoadingState } from "../../components/feedback";
@@ -18,6 +20,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SearchScreen() {
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<
     { id: string; name: string; type: "supplier" | "product"; image?: string }[]
@@ -119,7 +123,7 @@ export default function SearchScreen() {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search water, jars, suppliers..."
+            placeholder={t('search.placeholder')}
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -139,7 +143,7 @@ export default function SearchScreen() {
 
       {loading && query.length > 1 ? (
         <View style={{ marginTop: 40 }}>
-          <LoadingState message="Searching..." />
+          <LoadingState message={t('search.loading')} />
         </View>
       ) : (
         <FlatList
@@ -166,7 +170,7 @@ export default function SearchScreen() {
               <View style={styles.resultInfo}>
                 <Text style={styles.resultName}>{item.name}</Text>
                 <Text style={styles.resultType}>
-                  {item.type === "supplier" ? "Supplier" : "Product"}
+                  {item.type === "supplier" ? t('search.supplierType') : t('search.productType')}
                 </Text>
               </View>
               <Ionicons
@@ -185,7 +189,7 @@ export default function SearchScreen() {
                   color={theme.colors.border}
                 />
                 <Text style={styles.emptyText}>
-                  No results found for "{query}"
+                  {t('search.noResults')} "{query}"
                 </Text>
               </View>
             ) : (
@@ -196,7 +200,7 @@ export default function SearchScreen() {
                   color={theme.colors.primaryLight}
                 />
                 <Text style={styles.emptyText}>
-                  Search for your favorite brands and local suppliers.
+                  {t('search.emptyMessage')}
                 </Text>
               </View>
             )

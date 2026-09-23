@@ -16,10 +16,14 @@ import { theme } from "../../../constants/theme";
 import { Card, Button } from "../../../components/ui";
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { supabase } from "../../../lib/supabase/client";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function VehiclesScreen() {
   const router = useRouter();
   const { profile } = useAuth();
+  useAndroidBack();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -47,7 +51,7 @@ export default function VehiclesScreen() {
         .single();
 
       if (!supData) {
-        Alert.alert("Error", "Please complete your Business Profile first.");
+        Alert.alert(t('error'), t('vehicles.complete_profile'));
         router.back();
         return;
       }
@@ -65,7 +69,7 @@ export default function VehiclesScreen() {
       if (vData) setVehicles(vData);
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Failed to load vehicles.");
+      Alert.alert(t('error'), t('vehicles.failed_load'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,7 @@ export default function VehiclesScreen() {
   const handleAddVehicle = async () => {
     if (!supplierId) return;
     if (!newVehicleNumber.trim()) {
-      Alert.alert("Error", "Please enter a vehicle number (e.g., JH-01-AB-1234)");
+      Alert.alert(t('error'), t('vehicles.enter_number'));
       return;
     }
 
@@ -89,13 +93,13 @@ export default function VehiclesScreen() {
 
       if (error) throw error;
 
-      Alert.alert("Success", "Vehicle added successfully!");
+      Alert.alert(t('success'), t('vehicles.added_success'));
       setNewVehicleNumber("");
       setIsAddingNew(false);
       fetchVehicles(); // Refresh the list
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", err.message || "Failed to add vehicle.");
+      Alert.alert(t('error'), err.message || t('vehicles.failed_add'));
     } finally {
       setAdding(false);
     }
@@ -115,25 +119,25 @@ export default function VehiclesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fleet Vehicles</Text>
+        <Text style={styles.headerTitle}>{t('vehicles.title')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {isAddingNew ? (
           <Card style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Add New Vehicle</Text>
+            <Text style={styles.sectionTitle}>{t('vehicles.add_new')}</Text>
             
-            <Text style={styles.label}>Registration Number *</Text>
+            <Text style={styles.label}>{t('vehicles.reg_number')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. MH-01-AB-1234"
+              placeholder={t('vehicles.reg_placeholder')}
               value={newVehicleNumber}
               onChangeText={setNewVehicleNumber}
               autoCapitalize="characters"
             />
 
-            <Text style={styles.label}>Vehicle Type</Text>
+            <Text style={styles.label}>{t('vehicles.type')}</Text>
             <View style={styles.typeSelector}>
               {["auto", "pickup", "truck", "bike"].map((type) => (
                 <TouchableOpacity
@@ -158,13 +162,13 @@ export default function VehiclesScreen() {
 
             <View style={styles.formActions}>
               <Button
-                title="Cancel"
+                title={t('cancel')}
                 variant="outline"
                 onPress={() => setIsAddingNew(false)}
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button
-                title={adding ? "Saving..." : "Save Vehicle"}
+                title={adding ? t('vehicles.saving') : t('vehicles.save')}
                 onPress={handleAddVehicle}
                 disabled={adding}
                 style={{ flex: 1, marginLeft: 8 }}
@@ -173,18 +177,18 @@ export default function VehiclesScreen() {
           </Card>
         ) : (
           <Button
-            title="+ Add New Vehicle"
+            title={t('vehicles.btn_add_new')}
             onPress={() => setIsAddingNew(true)}
             style={{ marginBottom: 16 }}
           />
         )}
 
-        <Text style={styles.sectionTitle}>Your Vehicles ({vehicles.length})</Text>
+        <Text style={styles.sectionTitle}>{t('vehicles.your_vehicles')} ({vehicles.length})</Text>
 
         {vehicles.length === 0 && !isAddingNew ? (
           <View style={styles.emptyState}>
             <Ionicons name="car-outline" size={48} color={theme.colors.textSecondary} />
-            <Text style={styles.emptyStateText}>No vehicles added yet.</Text>
+            <Text style={styles.emptyStateText}>{t('vehicles.no_vehicles')}</Text>
           </View>
         ) : (
           vehicles.map((v) => (
@@ -203,7 +207,7 @@ export default function VehiclesScreen() {
               <View style={styles.vehicleInfo}>
                 <Text style={styles.vehicleNumber}>{v.vehicle_number}</Text>
                 <Text style={styles.vehicleType}>
-                  {v.vehicle_type?.toUpperCase() || "UNKNOWN"}
+                  {v.vehicle_type?.toUpperCase() || t('vehicles.unknown')}
                 </Text>
               </View>
               <View
@@ -222,7 +226,7 @@ export default function VehiclesScreen() {
                     { color: v.is_active ? theme.colors.success : theme.colors.error },
                   ]}
                 >
-                  {v.is_active ? "Active" : "Inactive"}
+                  {v.is_active ? t('vehicles.active') : t('vehicles.inactive')}
                 </Text>
               </View>
             </Card>

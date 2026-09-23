@@ -14,10 +14,14 @@ import { theme } from "../../../constants/theme";
 import { Card, Button } from "../../../components/ui";
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { supabase } from "../../../lib/supabase/client";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function TeamScreen() {
   const { profile } = useAuth();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -97,7 +101,7 @@ export default function TeamScreen() {
       setGeneratedCode({ role, code: data });
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", err.message || "Failed to generate invite");
+      Alert.alert(t('team.error'), err.message || t('team.failedInvite'));
     }
   };
 
@@ -112,7 +116,7 @@ export default function TeamScreen() {
       </View>
       <View style={styles.memberInfo}>
         <Text style={styles.memberName}>
-          {member.profile?.name || "Unnamed"}
+          {member.profile?.name || t('team.unnamed')}
         </Text>
         <Text style={styles.memberPhone}>{member.profile?.phone}</Text>
       </View>
@@ -136,7 +140,7 @@ export default function TeamScreen() {
             },
           ]}
         >
-          {member.is_active ? "Active" : "Inactive"}
+          {member.is_active ? t('team.active') : t('team.inactive')}
         </Text>
       </View>
     </View>
@@ -151,7 +155,7 @@ export default function TeamScreen() {
           color={theme.colors.textPrimary}
           onPress={() => router.back()}
         />
-        <Text style={styles.headerTitle}>Team & Crew</Text>
+        <Text style={styles.headerTitle}>{t('team.title')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -162,17 +166,17 @@ export default function TeamScreen() {
         {generatedCode && (
           <Card style={styles.codeCard}>
             <Text style={styles.codeTitle}>
-              New {generatedCode.role} Invite Code
+              {t('team.newInviteCode')} {generatedCode.role}
             </Text>
             <Text style={styles.codeSubtitle}>
-              Share this 6-character code with your new {generatedCode.role}.
-              They will enter it when they open the app.
+              {t('team.shareCodeMsgPart1')} {generatedCode.role}.
+              {t('team.shareCodeMsgPart2')}
             </Text>
             <View style={styles.codeBox}>
               <Text style={styles.codeText}>{generatedCode.code}</Text>
             </View>
             <Button
-              title="Done"
+              title={t('team.done')}
               onPress={() => setGeneratedCode(null)}
               variant="outline"
               style={{ marginTop: 12 }}
@@ -181,9 +185,9 @@ export default function TeamScreen() {
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Drivers</Text>
+          <Text style={styles.sectionTitle}>{t('team.drivers')}</Text>
           <Button
-            title="+ Add Driver"
+            title={t('team.addDriver')}
             onPress={() => generateInvite("driver")}
             size="sm"
             disabled={!!generatedCode}
@@ -197,13 +201,13 @@ export default function TeamScreen() {
             {drivers.map((d) => renderCrewMember(d, "driver"))}
           </Card>
         ) : (
-          <Text style={styles.emptyText}>No drivers added yet.</Text>
+          <Text style={styles.emptyText}>{t('team.noDrivers')}</Text>
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Helpers</Text>
+          <Text style={styles.sectionTitle}>{t('team.helpers')}</Text>
           <Button
-            title="+ Add Helper"
+            title={t('team.addHelper')}
             onPress={() => generateInvite("helper")}
             size="sm"
             disabled={!!generatedCode}
@@ -217,7 +221,7 @@ export default function TeamScreen() {
             {helpers.map((h) => renderCrewMember(h, "helper"))}
           </Card>
         ) : (
-          <Text style={styles.emptyText}>No helpers added yet.</Text>
+          <Text style={styles.emptyText}>{t('team.noHelpers')}</Text>
         )}
       </ScrollView>
     </SafeAreaView>

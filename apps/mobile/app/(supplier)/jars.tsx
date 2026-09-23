@@ -21,8 +21,10 @@ import {
 } from "../../services/inventory";
 import { CustomerService, SupplierCustomer } from "../../services/customer";
 import { useFocusEffect } from "expo-router";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function JarsScreen() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<InventoryStats | null>(null);
   const [activity, setActivity] = useState<JarActivity[]>([]);
   const [customers, setCustomers] = useState<SupplierCustomer[]>([]);
@@ -65,11 +67,11 @@ export default function JarsScreen() {
 
   const handleConfirmAdjustment = async () => {
     if (!selectedCustomerId) {
-      Alert.alert("Validation Error", "Please select a customer first.");
+      Alert.alert(t("jars.validationError"), t("jars.selectCustomerFirst"));
       return;
     }
     if (returnCount === 0 && dispatchCount === 0) {
-      Alert.alert("Validation Error", "Please adjust at least one jar.");
+      Alert.alert(t("jars.validationError"), t("jars.adjustAtLeastOne"));
       return;
     }
 
@@ -81,13 +83,13 @@ export default function JarsScreen() {
         jarsReturned: returnCount,
       });
 
-      Alert.alert("Success", "Jar adjustment recorded.");
+      Alert.alert(t("jars.success"), t("jars.adjustmentRecorded"));
       setReturnCount(0);
       setDispatchCount(0);
       setSelectedCustomerId("");
       fetchInventory();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to record adjustment");
+      Alert.alert(t("jars.error"), error.message || t("jars.failedRecordAdjustment"));
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +98,7 @@ export default function JarsScreen() {
   const handlePurchase = async () => {
     const qty = parseInt(purchaseCount, 10);
     if (isNaN(qty) || qty <= 0) {
-      Alert.alert("Invalid Quantity", "Please enter a valid positive number.");
+      Alert.alert(t("jars.invalidQuantity"), t("jars.validPositiveNumber"));
       return;
     }
 
@@ -104,10 +106,10 @@ export default function JarsScreen() {
       setIsPurchasing(true);
       await InventoryService.recordPurchase(qty);
       setPurchaseModalVisible(false);
-      Alert.alert("Success", `Added ${qty} jars to warehouse stock.`);
+      Alert.alert(t("jars.success"), `${t("jars.added")} ${qty} ${t("jars.jarsToStock")}`);
       fetchInventory();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to record purchase");
+      Alert.alert(t("jars.error"), error.message || t("jars.failedRecordPurchase"));
     } finally {
       setIsPurchasing(false);
     }
@@ -134,13 +136,13 @@ export default function JarsScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Jars Inventory</Text>
+          <Text style={styles.headerTitle}>{t("jars.title")}</Text>
           <Text style={styles.headerSubtitle}>
-            Manage your 20L can circulation
+            {t("jars.subtitle")}
           </Text>
         </View>
         <Button
-          title="Buy Stock"
+          title={t("jars.buyStock")}
           variant="outline"
           size="sm"
 
@@ -154,11 +156,11 @@ export default function JarsScreen() {
       >
         {/* Overview Stats */}
         <Card style={styles.overviewCard}>
-          <Text style={styles.sectionTitle}>Current Status</Text>
+          <Text style={styles.sectionTitle}>{t("jars.currentStatus")}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats?.available || 0}</Text>
-              <Text style={styles.statLabel}>Available (Warehouse)</Text>
+              <Text style={styles.statLabel}>{t("jars.availableWarehouse")}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
@@ -170,7 +172,7 @@ export default function JarsScreen() {
               >
                 {stats?.with_customers || 0}
               </Text>
-              <Text style={styles.statLabel}>Out with Customers</Text>
+              <Text style={styles.statLabel}>{t("jars.outWithCustomers")}</Text>
             </View>
           </View>
           <View style={styles.progressContainer}>
@@ -194,16 +196,16 @@ export default function JarsScreen() {
             />
           </View>
           <Text style={styles.totalText}>
-            Total Owned Inventory: {total} Jars
+            {t("jars.totalOwnedInventory")}: {total} {t("jars.jars")}
           </Text>
         </Card>
 
         {/* Record Manual Return/Dispatch */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Manual Adjustments</Text>
+          <Text style={styles.sectionTitle}>{t("jars.manualAdjustments")}</Text>
           <Card style={styles.actionCard}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Customer</Text>
+              <Text style={styles.inputLabel}>{t("jars.customer")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -232,7 +234,7 @@ export default function JarsScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Empty Jars Returned</Text>
+              <Text style={styles.inputLabel}>{t("jars.emptyJarsReturned")}</Text>
               <View style={styles.counterRow}>
                 <TouchableOpacity
                   style={styles.counterBtn}
@@ -256,7 +258,7 @@ export default function JarsScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                Filled Jars Dispatched (Manual)
+                {t("jars.filledJarsDispatched")}
               </Text>
               <View style={styles.counterRow}>
                 <TouchableOpacity
@@ -282,7 +284,7 @@ export default function JarsScreen() {
             </View>
 
             <Button
-              title="Confirm Adjustment"
+              title={t("jars.confirmAdjustment")}
               variant="primary"
               style={{ marginTop: 8 }}
               onPress={handleConfirmAdjustment}
@@ -293,7 +295,7 @@ export default function JarsScreen() {
 
         {/* Recent Activity */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Jar Activity</Text>
+          <Text style={styles.sectionTitle}>{t("jars.recentActivity")}</Text>
 
           {activity.length === 0 ? (
             <Text
@@ -303,7 +305,7 @@ export default function JarsScreen() {
                 marginTop: 20,
               }}
             >
-              No recent jar activity.
+              {t("jars.noRecentActivity")}
             </Text>
           ) : (
             activity.map((act) => {
@@ -318,15 +320,15 @@ export default function JarsScreen() {
               let color: string = theme.colors.primary;
 
               if (isDispatch) {
-                title = `Dispatched ${act.jars_delivered} Jars`;
+                title = `${t("jars.dispatched")} ${act.jars_delivered} ${t("jars.jars")}`;
                 icon = "arrow-up-circle";
                 color = theme.colors.warning;
               } else if (isReturn) {
-                title = `Returned ${act.jars_returned} Jars`;
+                title = `${t("jars.returned")} ${act.jars_returned} ${t("jars.jars")}`;
                 icon = "arrow-down-circle";
                 color = theme.colors.success;
               } else if (isBoth) {
-                title = `Dispatched ${act.jars_delivered}, Returned ${act.jars_returned}`;
+                title = `${t("jars.dispatched")} ${act.jars_delivered}, ${t("jars.returned")} ${act.jars_returned}`;
                 icon = "swap-horizontal";
                 color = theme.colors.primary;
               }
@@ -363,14 +365,14 @@ export default function JarsScreen() {
       <Modal visible={purchaseModalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { marginTop: "auto" }]}>
-            <Text style={styles.modalTitle}>Purchase New Jars</Text>
+            <Text style={styles.modalTitle}>{t("jars.purchaseNewJars")}</Text>
             <Text
               style={{ color: theme.colors.textSecondary, marginBottom: 16 }}
             >
-              Add newly purchased empty jars to your warehouse inventory.
+              {t("jars.purchaseSubtitle")}
             </Text>
 
-            <Text style={styles.inputLabel}>Quantity</Text>
+            <Text style={styles.inputLabel}>{t("jars.quantity")}</Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
@@ -380,13 +382,13 @@ export default function JarsScreen() {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancel"
+                title={t("jars.cancel")}
                 variant="outline"
                 onPress={() => setPurchaseModalVisible(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Add to Stock"
+                title={t("jars.addToStock")}
                 variant="primary"
                 onPress={handlePurchase}
                 loading={isPurchasing}

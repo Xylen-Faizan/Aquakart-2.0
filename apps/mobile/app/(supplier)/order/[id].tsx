@@ -16,10 +16,14 @@ import { ErrorState, LoadingState } from "../../../components/feedback";
 import { supabase } from "../../../lib/supabase/client";
 import { VALID_TRANSITIONS, OrderStatus } from "@aquakart/config";
 import { useSupplierOrderRealtime } from "../../../hooks/useSupplierOrderRealtime";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function SupplierOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -36,7 +40,7 @@ export default function SupplierOrderDetailScreen() {
       const data = await SupplierOrderService.getOrderDetails(id!);
       setOrder(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load order details");
+      setError(err.message || t('order.failed_load_details'));
     } finally {
       setLoading(false);
     }
@@ -52,10 +56,10 @@ export default function SupplierOrderDetailScreen() {
     try {
       setActionLoading(true);
       await SupplierOrderService.acceptOrder(id!);
-      Alert.alert("Success", "Order accepted successfully.");
+      Alert.alert(t('success'), t('order.accepted_success'));
       fetchOrder();
     } catch (err: any) {
-      Alert.alert("Failed to Accept", err.message);
+      Alert.alert(t('order.failed_accept'), err.message);
     } finally {
       setActionLoading(false);
     }
@@ -63,18 +67,18 @@ export default function SupplierOrderDetailScreen() {
 
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
-      Alert.alert("Reason Required", "Please provide a reason for rejection.");
+      Alert.alert(t('order.reason_required'), t('order.provide_reason'));
       return;
     }
 
     try {
       setActionLoading(true);
       await SupplierOrderService.rejectOrder(id!, rejectionReason);
-      Alert.alert("Order Rejected", "The order has been rejected.");
+      Alert.alert(t('order.rejected_title'), t('order.rejected_success'));
       setShowRejectForm(false);
       fetchOrder();
     } catch (err: any) {
-      Alert.alert("Failed to Reject", err.message);
+      Alert.alert(t('order.failed_reject'), err.message);
     } finally {
       setActionLoading(false);
     }
@@ -82,19 +86,19 @@ export default function SupplierOrderDetailScreen() {
 
   const handleUpdateStatus = async (newStatus: OrderStatus) => {
     Alert.alert(
-      "Confirm Update",
+      t('order.confirm_update'),
       `Update status to ${newStatus.replace(/_/g, " ")}?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('cancel'), style: "cancel" },
         {
-          text: "Update",
+          text: t('update'),
           onPress: async () => {
             try {
               setActionLoading(true);
               await SupplierOrderService.updateOrderStatus(id!, newStatus);
               fetchOrder();
             } catch (err: any) {
-              Alert.alert("Update Failed", err.message);
+              Alert.alert(t('order.update_failed'), err.message);
             } finally {
               setActionLoading(false);
             }
@@ -123,11 +127,11 @@ export default function SupplierOrderDetailScreen() {
     }
   };
 
-  if (loading) return <LoadingState message="Loading order details..." />;
+  if (loading) return <LoadingState message={t('order.loading')} />;
   if (error)
-    return <ErrorState title="Error" message={error} onRetry={fetchOrder} />;
+    return <ErrorState title={t('error')} message={error} onRetry={fetchOrder} />;
   if (!order)
-    return <ErrorState title="Not Found" message="Order not found." />;
+    return <ErrorState title={t('not_found')} message={t('order.not_found')} />;
 
   const availableTransitions =
     VALID_TRANSITIONS[order.status as OrderStatus] || [];
@@ -148,36 +152,36 @@ export default function SupplierOrderDetailScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Customer</Text>
+          <Text style={styles.sectionTitle}>{t('order.customer')}</Text>
           <Card style={styles.card}>
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Name:</Text> {order.customer?.name}
+              <Text style={styles.bold}>{t('order.name_label')}</Text> {order.customer?.name}
             </Text>
             {order.customer?.phone && (
               <Text style={styles.infoText}>
-                <Text style={styles.bold}>Phone:</Text> {order.customer.phone}
+                <Text style={styles.bold}>{t('order.phone_label')}</Text> {order.customer.phone}
               </Text>
             )}
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Address:</Text> {order.address?.label} -{" "}
+              <Text style={styles.bold}>{t('order.address_label')}</Text> {order.address?.label} -{" "}
               {order.address?.address}
             </Text>
           </Card>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Items</Text>
+          <Text style={styles.sectionTitle}>{t('order.order_items')}</Text>
           <Card style={styles.card}>
             {order.order_items?.map((item: any) => (
               <View key={item.id} style={styles.itemRow}>
-                <Text style={styles.itemName}>{item.quantity}x Water Jar</Text>
+                <Text style={styles.itemName}>{item.quantity}x {t('order.water_jar')}</Text>
                 <Text style={styles.itemPrice}>₹{item.total}</Text>
               </View>
             ))}
             <View style={styles.divider} />
             <View style={styles.totalRow}>
               <Text style={styles.totalText}>
-                Total ({order.payment_method})
+                {t('order.total')} ({order.payment_method})
               </Text>
               <Text style={styles.totalAmount}>₹{order.total}</Text>
             </View>
@@ -186,7 +190,7 @@ export default function SupplierOrderDetailScreen() {
 
         {order.rejection_reason && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Rejection Reason</Text>
+            <Text style={styles.sectionTitle}>{t('order.rejection_reason_title')}</Text>
             <Card style={styles.card}>
               <Text style={styles.infoText}>{order.rejection_reason}</Text>
             </Card>
@@ -199,14 +203,14 @@ export default function SupplierOrderDetailScreen() {
         {order.status === "placed" && !showRejectForm && (
           <View style={styles.actionButtons}>
             <Button
-              title="Reject"
+              title={t('order.reject_btn')}
               variant="danger"
               disabled={actionLoading}
               onPress={() => setShowRejectForm(true)}
               style={styles.flexBtn}
             />
             <Button
-              title="Accept Order"
+              title={t('order.accept_btn')}
               variant="primary"
               disabled={actionLoading}
               onPress={handleAccept}
@@ -219,20 +223,20 @@ export default function SupplierOrderDetailScreen() {
           <View style={styles.rejectForm}>
             <TextInput
               style={styles.input}
-              placeholder="Reason for rejection (e.g. Out of stock, too far)"
+              placeholder={t('order.reject_placeholder')}
               value={rejectionReason}
               onChangeText={setRejectionReason}
               multiline
             />
             <View style={styles.actionButtons}>
               <Button
-                title="Cancel"
+                title={t('cancel')}
                 variant="outline"
                 onPress={() => setShowRejectForm(false)}
                 style={styles.flexBtn}
               />
               <Button
-                title="Confirm Reject"
+                title={t('order.confirm_reject')}
                 variant="danger"
                 disabled={actionLoading}
                 onPress={handleReject}

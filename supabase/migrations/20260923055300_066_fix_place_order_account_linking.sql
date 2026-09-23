@@ -1,0 +1,125 @@
+-- 066_fix_place_order_account_linking.sql
+
+-- Fix place_order to handle the case where the supplier already added the customer manually (by phone number)
+-- Instead of failing with a unique constraint violation, it will link the user_id to the existing customer record.
+
+CREATE OR REPLACE FUNCTION public.place_order(
+    p_supplier_id UUID,
+    p_address_id UUID,
+    p_product_id UUID,
+    p_quantity INT,
+    p_payment_method TEXT,
+    p_idempotency_key UUID DEFAULT NULL
+) RETURNS UUID AS $$
+DECLARE
+    v_order_id UUID;
+    v_user_id UUID;
+    v_supplier_customer_id UUID;
+    v_unit_price NUMERIC(10,2);
+    v_subtotal NUMERIC(10,2);
+    v_delivery_fee NUMERIC(10,2) := 0;
+    v_supplier_product_id UUID;
+    v_available_capacity INT;
+    v_customer_profile RECORD;
+    v_existing_payload JSONB;
+    v_normalized_phone TEXT;
+BEGIN
+    v_user_id := auth.uid();
+    IF v_user_id IS NULL THEN RAISE EXCEPTION 'Not authenticated'; END IF;
+
+    -- Idempotency Check
+    IF p_idempotency_key IS NOT NULL THEN
+        SELECT response_payload INTO v_existing_payload 
+        FROM public.api_idempotency 
+        WHERE idempotency_key = p_idempotency_key AND user_id = v_user_id;
+
+        IF v_existing_payload IS NOT NULL THEN
+            RETURN (v_existing_payload->>'order_id')::UUID;
+        END IF;
+    END IF;
+
+    -- Map marketplace customer to Supplier CRM
+    SELECT id INTO v_supplier_customer_id FROM public.supplier_customers 
+    WHERE user_id = v_user_id AND supplier_id = p_supplier_id;
+
+    IF v_supplier_customer_id IS NULL THEN
+        SELECT * INTO v_customer_profile FROM public.profiles WHERE id = v_user_id;
+        v_normalized_phone := COALESCE(RIGHT(REGEXP_REPLACE(v_customer_profile.phone, '\D', '', 'g'), 10), '0000000000');
+        
+        -- Check if the supplier already added this customer manually using their phone number
+        SELECT id INTO v_supplier_customer_id FROM public.supplier_customers
+        WHERE supplier_id = p_supplier_id AND normalized_phone = v_normalized_phone;
+        
+        IF v_supplier_customer_id IS NOT NULL THEN
+            -- Link the user account to the existing manual record
+            UPDATE public.supplier_customers 
+            SET user_id = v_user_id 
+            WHERE id = v_supplier_customer_id;
+        ELSE
+            -- Truly a new customer
+            INSERT INTO public.supplier_customers (
+                supplier_id, user_id, name, phone, normalized_phone, customer_type, address, sector
+            )
+            VALUES (
+                p_supplier_id, 
+                v_user_id, 
+                COALESCE(v_customer_profile.name, 'Customer'), 
+                v_customer_profile.phone, 
+                v_normalized_phone, 
+                'household', 
+                '', 
+                ''
+            ) RETURNING id INTO v_supplier_customer_id;
+        END IF;
+    END IF;
+
+    -- Validate product and get supplier_product_id
+    SELECT id INTO v_supplier_product_id 
+    FROM public.supplier_products 
+    WHERE supplier_id = p_supplier_id AND product_id = p_product_id AND available = true;
+    
+    IF v_supplier_product_id IS NULL THEN RAISE EXCEPTION 'Product not available from this supplier'; END IF;
+
+    -- Check Capacity
+    SELECT (max_capacity - reserved_quantity - fulfilled_quantity) INTO v_available_capacity 
+    FROM public.supplier_capacity 
+    WHERE supplier_id = p_supplier_id AND date = timezone('Asia/Kolkata', now())::date
+    FOR UPDATE;
+
+    IF COALESCE(v_available_capacity, 0) < p_quantity THEN 
+        RAISE EXCEPTION 'Insufficient supplier capacity for this order'; 
+    END IF;
+
+    -- Resolve secure price
+    v_unit_price := public.get_effective_customer_price(v_supplier_customer_id, v_supplier_product_id);
+    IF v_unit_price IS NULL THEN RAISE EXCEPTION 'Could not resolve pricing'; END IF;
+
+    v_subtotal := v_unit_price * p_quantity;
+
+    -- AUTOMATIC BULK DISCOUNT: 10% off for quantities >= 100
+    IF p_quantity >= 100 THEN
+        v_subtotal := v_subtotal * 0.9;
+    END IF;
+
+    -- Insert Order
+    INSERT INTO public.orders (customer_id, supplier_id, address_id, status, subtotal, delivery_fee, total, payment_method, payment_status)
+    VALUES (v_user_id, p_supplier_id, p_address_id, 'placed', v_subtotal, v_delivery_fee, v_subtotal + v_delivery_fee, p_payment_method, 'pending')
+    RETURNING id INTO v_order_id;
+
+    -- Insert Order Items
+    INSERT INTO public.order_items (order_id, product_id, quantity, unit_price, total)
+    VALUES (v_order_id, p_product_id, p_quantity, v_unit_price, v_subtotal);
+
+    -- Track history
+    INSERT INTO public.order_status_history (order_id, status, changed_by)
+    VALUES (v_order_id, 'placed', v_user_id);
+
+    -- Idempotency save
+    IF p_idempotency_key IS NOT NULL THEN
+        INSERT INTO public.api_idempotency (idempotency_key, user_id, api_route, response_payload)
+        VALUES (p_idempotency_key, v_user_id, 'place_order', jsonb_build_object('order_id', v_order_id));
+    END IF;
+
+    RETURN v_order_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

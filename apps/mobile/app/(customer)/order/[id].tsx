@@ -12,16 +12,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 import { OrderService } from "../../../services/order";
 import { theme } from "../../../constants/theme";
 import { Button, Card, Badge } from "../../../components/ui";
 import { ErrorState, LoadingState } from "../../../components/feedback";
 import { supabase } from "../../../lib/supabase/client";
 import type { OrderStatus } from "@aquakart/types";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useLanguage();
+  useAndroidBack();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,11 +88,11 @@ export default function OrderDetailScreen() {
   };
 
   const stages: { status: OrderStatus; label: string }[] = [
-    { status: "placed", label: "Order Placed" },
-    { status: "accepted", label: "Order Accepted" },
-    { status: "preparing", label: "Preparing Order" },
-    { status: "out_for_delivery", label: "Out for Delivery" },
-    { status: "delivered", label: "Delivered" },
+    { status: "placed", label: t('order.status.placed') || "Order Placed" },
+    { status: "accepted", label: t('order.status.accepted') || "Order Accepted" },
+    { status: "preparing", label: t('order.status.preparing') || "Preparing Order" },
+    { status: "out_for_delivery", label: t('order.status.outForDelivery') || "Out for Delivery" },
+    { status: "delivered", label: t('order.status.delivered') || "Delivered" },
   ];
 
   const getStageIndex = (status: OrderStatus) => {
@@ -99,10 +103,10 @@ export default function OrderDetailScreen() {
 
   const handleCancelOrder = async () => {
     // In a real app, we'd call an API to cancel
-    Alert.alert("Cancel Order", "Are you sure you want to cancel this order?", [
-      { text: "No", style: "cancel" },
+    Alert.alert(t('order.cancelTitle') || "Cancel Order", t('order.cancelConfirm') || "Are you sure you want to cancel this order?", [
+      { text: t('no') || "No", style: "cancel" },
       {
-        text: "Yes, Cancel",
+        text: t('yesCancel') || "Yes, Cancel",
         style: "destructive",
         onPress: () => {
           // Dummy update for UI
@@ -116,15 +120,15 @@ export default function OrderDetailScreen() {
     if (order?.supplier?.phone) {
       Linking.openURL(`tel:${order.supplier.phone}`);
     } else {
-      Alert.alert("Unavailable", "No phone number provided for this supplier.");
+      Alert.alert(t('unavailable') || "Unavailable", t('order.noPhone') || "No phone number provided for this supplier.");
     }
   };
 
-  if (loading) return <LoadingState message="Loading order details..." />;
+  if (loading) return <LoadingState message={t('order.loading') || "Loading order details..."} />;
   if (error)
-    return <ErrorState title="Error" message={error} onRetry={fetchOrder} />;
+    return <ErrorState title={t('error') || "Error"} message={error} onRetry={fetchOrder} />;
   if (!order)
-    return <ErrorState title="Not Found" message="Order not found." />;
+    return <ErrorState title={t('notFound') || "Not Found"} message={t('order.notFound') || "Order not found."} />;
 
   const currentStageIndex = getStageIndex(order.status);
   const isFailed = order.status === "rejected" || order.status === "cancelled";
@@ -143,7 +147,7 @@ export default function OrderDetailScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>Order #{order.display_id}</Text>
+        <Text style={styles.title}>{t('order.title') || "Order"} #{order.display_id}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -156,16 +160,16 @@ export default function OrderDetailScreen() {
           />
           <Text style={styles.estimatedTime}>
             {order.status === "delivered"
-              ? "Completed"
+              ? t('order.completed') || "Completed"
               : isFailed
-                ? "Order Terminated"
-                : "Arriving in 20-30 mins"}
+                ? t('order.terminated') || "Order Terminated"
+                : t('order.arriving') || "Arriving in 20-30 mins"}
           </Text>
         </View>
 
         {order.rejection_reason && (
           <View style={styles.rejectionBox}>
-            <Text style={styles.rejectionTitle}>Order Rejected</Text>
+            <Text style={styles.rejectionTitle}>{t('order.rejected') || "Order Rejected"}</Text>
             <Text style={styles.rejectionText}>{order.rejection_reason}</Text>
           </View>
         )}
@@ -173,7 +177,7 @@ export default function OrderDetailScreen() {
         {/* Status Tracker */}
         {!isFailed && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Order Status</Text>
+            <Text style={styles.sectionTitle}>{t('order.statusTitle') || "Order Status"}</Text>
             <Card style={styles.trackerCard}>
               {stages.map((stage, index) => {
                 const isActive = index <= currentStageIndex;
@@ -217,7 +221,7 @@ export default function OrderDetailScreen() {
 
         {/* Supplier Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Supplier Details</Text>
+          <Text style={styles.sectionTitle}>{t('order.supplierDetails') || "Supplier Details"}</Text>
           <Card style={styles.supplierCard}>
             <View style={styles.supplierInfoContainer}>
               <View style={styles.supplierIconWrapper}>
@@ -232,7 +236,7 @@ export default function OrderDetailScreen() {
                   {order.supplier?.business_name}
                 </Text>
                 <Text style={styles.supplierPhone}>
-                  {order.supplier?.phone || "No phone provided"}
+                  {order.supplier?.phone || t('order.noPhoneProvided') || "No phone provided"}
                 </Text>
               </View>
             </View>
@@ -244,7 +248,7 @@ export default function OrderDetailScreen() {
 
         {/* Delivery Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Delivery Address</Text>
+          <Text style={styles.sectionTitle}>{t('order.deliveryAddress') || "Delivery Address"}</Text>
           <Card style={styles.card}>
             <View style={styles.addressContainer}>
               <Ionicons
@@ -263,7 +267,7 @@ export default function OrderDetailScreen() {
 
         {/* Order Items */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Items</Text>
+          <Text style={styles.sectionTitle}>{t('order.items') || "Order Items"}</Text>
           <Card style={styles.card}>
             {order.order_items?.map((item: any) => (
               <View key={item.id} style={styles.itemRow}>
@@ -279,7 +283,7 @@ export default function OrderDetailScreen() {
             <View style={styles.divider} />
             <View style={styles.totalRow}>
               <Text style={styles.totalText}>
-                Total ({order.payment_method})
+                {t('total') || "Total"} ({order.payment_method})
               </Text>
               <Text style={styles.totalAmount}>
                 ₹{order.total_amount || order.total}
@@ -295,20 +299,20 @@ export default function OrderDetailScreen() {
       <View style={styles.footerBar}>
         {order.status === "placed" || order.status === "accepted" ? (
           <Button
-            title="Cancel Order"
+            title={t('order.cancelOrderBtn') || "Cancel Order"}
             variant="outline"
             onPress={handleCancelOrder}
             style={styles.actionButton}
           />
         ) : isFailed ? (
           <Button
-            title="Find Alternate Supplier"
+            title={t('order.findAlternate') || "Find Alternate Supplier"}
             onPress={() => router.push("/(customer)/suppliers")}
             style={styles.actionButton}
           />
         ) : (
           <Button
-            title="Reorder"
+            title={t('order.reorder') || "Reorder"}
             onPress={() =>
               router.push(`/(customer)/supplier/${order.supplier_id}`)
             }

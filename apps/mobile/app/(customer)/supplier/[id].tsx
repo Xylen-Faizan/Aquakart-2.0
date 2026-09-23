@@ -15,10 +15,14 @@ import { SupplierService } from "../../../services/supplier";
 import { theme } from "../../../constants/theme";
 import { Card, Button, Badge } from "../../../components/ui";
 import { ErrorState, LoadingState } from "../../../components/feedback";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function SupplierDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +123,7 @@ export default function SupplierDetailScreen() {
             </View>
             <Badge
               label={
-                supplier.is_accepting_orders ? "Accepting Orders" : "Closed"
+                supplier.is_accepting_orders ? t('Accepting Orders') : t('Closed')
               }
               variant={supplier.is_accepting_orders ? "success" : "error"}
             />
@@ -151,7 +155,7 @@ export default function SupplierDetailScreen() {
         </View>
         <View style={styles.divider} />
         <View style={styles.productSection}>
-          <Text style={styles.sectionTitle}>Available Products</Text>
+          <Text style={styles.sectionTitle}>{t('Available Products')}</Text>
 
           {mainProduct ? (
             <Card elevated style={styles.productCard}>
@@ -209,16 +213,16 @@ export default function SupplierDetailScreen() {
       {mainProduct && (
         <View style={styles.footerBar}>
           <View style={styles.footerTotalContainer}>
-            <Text style={styles.footerTotalLabel}>Total Price</Text>
+            <Text style={styles.footerTotalLabel}>{t('Total Price')}</Text>
             <Text style={styles.footerTotalPrice}>
               ₹{mainProduct.price * quantity}
             </Text>
             <Text style={styles.footerTotalItems}>
-              ({quantity} {quantity === 1 ? "can" : "cans"})
+              ({quantity} {quantity === 1 ? t('can') : t('cans')})
             </Text>
           </View>
           <Button
-            title="Checkout"
+            title={t('Checkout')}
             onPress={handleCheckout}
             disabled={
               !supplier.is_accepting_orders ||

@@ -9,6 +9,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { LoadingState } from "../components/feedback";
+import { NotificationService } from "../features/notifications/NotificationService";
 
 import * as Network from "expo-network";
 import { View, Text } from "react-native";
@@ -52,6 +53,12 @@ function ProtectedLayout() {
   const { language, loading: langLoading } = useLanguage();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      NotificationService.registerForPushNotificationsAsync();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (authLoading || langLoading) return;

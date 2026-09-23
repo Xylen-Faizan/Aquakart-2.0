@@ -3,6 +3,58 @@ import type { OrderWithItems, PlaceOrderParams } from '@aquakart/types';
 import * as Crypto from 'expo-crypto';
 
 export const OrderService = {
+  async notifySupplier(supplierId: string, quantity: number) {
+    try {
+      // 1. Get the supplier's user profile ID
+      const { data: supplier } = await supabase
+        .from('suppliers')
+        .select('profile_id')
+        .eq('id', supplierId)
+        .single();
+      
+      if (!supplier?.profile_id) return;
+
+      // 2. Get their push token
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('expo_push_token')
+        .eq('id', supplier.profile_id)
+        .single();
+      
+      const token = profile?.expo_push_token;
+      if (!token) return;
+
+      // 3. Get customer info for the message
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: customerProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+      
+      const customerName = customerProfile?.full_name || 'A customer';
+
+      // 4. Send Expo Push Notification
+      await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: token,
+          sound: 'default',
+          title: 'New Order Received! 💧',
+          body: `${customerName} just ordered ${quantity} jar(s).`,
+          data: { route: '/(supplier)/today' },
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to notify supplier:", error);
+    }
+  },
+
   async placeOrder(params: PlaceOrderParams) {
     const idempotencyKey = Crypto.randomUUID();
     const { data: orderId, error } = await supabase
@@ -16,6 +68,10 @@ export const OrderService = {
       });
 
     if (error) throw error;
+
+    // Fire and forget notification
+    this.notifySupplier(params.supplier_id, params.items[0].quantity).catch(console.error);
+
     return orderId as string;
   },
 

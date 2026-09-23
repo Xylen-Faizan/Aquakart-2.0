@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type Language = 'en' | 'hi';
+import { translations, type Language } from './translations';
 
 interface LanguageContextType {
   language: Language | null;
@@ -17,31 +16,8 @@ const LanguageContext = createContext<LanguageContextType>({
   t: (key) => key,
 });
 
+export type { Language };
 export const useLanguage = () => useContext(LanguageContext);
-
-// Extremely simple dictionary for the proof of concept
-const dictionary = {
-  en: {
-    'welcome.subtitle': 'Pure Water.\nBetter Life.',
-    'welcome.question': 'How would you like\nto continue?',
-    'welcome.customer': 'Order Water',
-    'welcome.customer_desc': 'Find water suppliers near you',
-    'welcome.supplier': "I'm a Water Supplier",
-    'welcome.supplier_desc': 'Manage orders & grow your business',
-    'welcome.staff': 'Staff Login',
-    'welcome.staff_desc': 'For drivers, helpers & operations team',
-  },
-  hi: {
-    'welcome.subtitle': 'शुद्ध जल।\nबेहतर जीवन।',
-    'welcome.question': 'आप कैसे जारी रखना\nचाहेंगे?',
-    'welcome.customer': 'पानी ऑर्डर करें',
-    'welcome.customer_desc': 'अपने आस-पास पानी के आपूर्तिकर्ता खोजें',
-    'welcome.supplier': 'मैं जल आपूर्तिकर्ता हूँ',
-    'welcome.supplier_desc': 'ऑर्डर प्रबंधित करें और अपना व्यवसाय बढ़ाएं',
-    'welcome.staff': 'स्टाफ लॉगिन',
-    'welcome.staff_desc': 'ड्राइवर, हेल्पर और ऑपरेशंस टीम के लिए',
-  }
-};
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language | null>(null);
@@ -74,9 +50,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
-    if (!language) return key;
-    const dict = dictionary[language] as Record<string, string>;
-    return dict[key] || key;
+    // Default to English if no language selected
+    const lang = language || 'en';
+    const dict = translations[lang] as Record<string, string>;
+    return dict[key] || translations['en'][key] || key;
   };
 
   return (

@@ -9,13 +9,17 @@ import {
   TextInput,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { supabase } from "../../lib/supabase/client";
 import { Ionicons } from "@expo/vector-icons";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function ArrivalAlertScreen() {
   const { stop_id, eta_minutes, supplier_name, quantity, product_name } =
     useLocalSearchParams();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [skipReason, setSkipReason] = useState("Not at home");
   const [customReason, setCustomReason] = useState("");
@@ -78,14 +82,14 @@ export default function ArrivalAlertScreen() {
         </View>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleReady}>
-          <Text style={styles.btnText}>I'M READY</Text>
+          <Text style={styles.btnText}>{t("I'M READY")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={() => setShowSkipModal(true)}
         >
-          <Text style={styles.secondaryBtnText}>CAN'T RECEIVE TODAY</Text>
+          <Text style={styles.secondaryBtnText}>{t("CAN'T RECEIVE TODAY")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -104,7 +108,7 @@ export default function ArrivalAlertScreen() {
                 <View style={styles.radioOuter}>
                   {skipReason === option && <View style={styles.radioInner} />}
                 </View>
-                <Text style={styles.radioText}>{option}</Text>
+                <Text style={styles.radioText}>{t(option)}</Text>
               </TouchableOpacity>
             ))}
 

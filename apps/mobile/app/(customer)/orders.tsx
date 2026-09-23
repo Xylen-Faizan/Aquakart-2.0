@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { OrderService } from "../../services/order";
 import { theme } from "../../constants/theme";
 import { Card, Badge, Button } from "../../components/ui";
@@ -18,8 +19,11 @@ import {
   ErrorState,
   LoadingState,
 } from "../../components/feedback";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function OrdersScreen() {
+  useAndroidBack();
+  const { t } = useLanguage();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +89,7 @@ export default function OrdersScreen() {
     );
   };
 
-  if (loading) return <LoadingState message="Loading orders..." />;
+  if (loading) return <LoadingState message={t('common.loading')} />;
   if (error)
     return <ErrorState title="Error" message={error} onRetry={fetchOrders} />;
 
@@ -103,7 +107,7 @@ export default function OrdersScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>My Orders</Text>
+        <Text style={styles.title}>{t('orders.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -119,7 +123,7 @@ export default function OrdersScreen() {
               activeTab === "active" && styles.activeTabText,
             ]}
           >
-            Active
+            {t('orders.active')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -132,7 +136,7 @@ export default function OrdersScreen() {
               activeTab === "past" && styles.activeTabText,
             ]}
           >
-            Past
+            {t('orders.past')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -193,7 +197,7 @@ export default function OrdersScreen() {
 
                   <View style={styles.totalContainer}>
                     <Text style={styles.itemsCount}>
-                      {totalItems} {totalItems === 1 ? "Item" : "Items"} •{" "}
+                      {totalItems} {totalItems === 1 ? t('orders.item') : t('orders.items')} •{" "}
                     </Text>
                     <Text style={styles.total}>
                       ₹{item.total_amount || item.total}
@@ -203,7 +207,7 @@ export default function OrdersScreen() {
 
                 <View style={styles.actionContainer}>
                   <Button
-                    title={isPast ? "Reorder" : "Track Order"}
+                    title={isPast ? t('orderDetail.reorder') : t('orderDetail.trackOrder')}
                     variant={isPast ? "outline" : "primary"}
                     size="sm"
                     style={styles.actionButton}
@@ -223,14 +227,14 @@ export default function OrdersScreen() {
         ListEmptyComponent={
           <EmptyState
             title={
-              activeTab === "active" ? "No active orders" : "No past orders"
+              activeTab === "active" ? t('orders.noActiveOrders') : t('orders.noPastOrders')
             }
             message={
               activeTab === "active"
-                ? "You don't have any ongoing deliveries right now."
-                : "You haven't completed any orders yet."
+                ? t('orders.noOngoingDeliveries')
+                : t('orders.noCompletedOrders')
             }
-            actionLabel="Find Suppliers"
+            actionLabel={t('orders.findSupplier')}
             onAction={() => router.push("/(customer)/suppliers")}
           />
         }

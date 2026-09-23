@@ -19,9 +19,13 @@ import {
   EmptyState,
 } from "../../components/feedback";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { useCallback } from "react";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function ReorderScreen() {
+  useAndroidBack();
+  const { t } = useLanguage();
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +66,7 @@ export default function ReorderScreen() {
   };
 
   if (loading && schedules.length === 0)
-    return <LoadingState message="Loading your schedules..." />;
+    return <LoadingState message={t('common.loading')} />;
   if (error)
     return (
       <ErrorState title="Error" message={error} onRetry={fetchSchedules} />
@@ -71,7 +75,7 @@ export default function ReorderScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Repeat Deliveries</Text>
+        <Text style={styles.title}>{t('reorder.title')}</Text>
       </View>
 
       <FlatList
@@ -111,7 +115,7 @@ export default function ReorderScreen() {
                   </View>
                 </View>
                 <Badge
-                  label={item.is_active ? "Active" : "Paused"}
+                  label={item.is_active ? t('reorder.active') : t('reorder.paused')}
                   variant={item.is_active ? "success" : "neutral"}
                 />
               </View>
@@ -120,29 +124,29 @@ export default function ReorderScreen() {
 
               <View style={styles.scheduleDetailsRow}>
                 <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Frequency</Text>
+                  <Text style={styles.detailLabel}>{t('reorder.frequency')}</Text>
                   <Text style={styles.detailValue}>
                     {item.interval_days === 1
-                      ? "Daily"
-                      : `Every ${item.interval_days} days`}
+                      ? t('reorder.daily')
+                      : t('reorder.everyDays').replace('{days}', item.interval_days)}
                   </Text>
                 </View>
                 <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Next Delivery</Text>
+                  <Text style={styles.detailLabel}>{t('reorder.nextDelivery')}</Text>
                   <Text style={styles.detailValue}>
                     {item.next_delivery_date
                       ? new Date(item.next_delivery_date).toLocaleDateString(
                           "en-GB",
                           { day: "2-digit", month: "short", year: "numeric" },
                         )
-                      : "Pending"}
+                      : t('reorder.pending')}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.actionsRow}>
                 <Button
-                  title={item.is_active ? "Pause Schedule" : "Resume Schedule"}
+                  title={item.is_active ? t('reorder.pauseSchedule') : t('reorder.resumeSchedule')}
                   variant={item.is_active ? "outline" : "primary"}
                   size="sm"
                   onPress={() => toggleSchedule(item.id, item.is_active)}
@@ -154,9 +158,9 @@ export default function ReorderScreen() {
         }}
         ListEmptyComponent={
           <EmptyState
-            title="No Active Schedules"
-            message="You don't have any recurring deliveries set up yet. Order water and choose 'Subscribe' to save time."
-            actionLabel="Order Water"
+            title={t('reorder.noSchedules')}
+            message={t('reorder.noSchedulesMessage')}
+            actionLabel={t('reorder.orderWater')}
             onAction={() => router.push("/(customer)/home")}
           />
         }

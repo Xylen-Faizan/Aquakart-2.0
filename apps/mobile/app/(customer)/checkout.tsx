@@ -20,9 +20,11 @@ import { theme } from "../../constants/theme";
 import { Button, Card, Badge, Input } from "../../components/ui";
 import { LoadingState } from "../../components/feedback";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { supabase } from "../../lib/supabase/client";
 import * as Location from "expo-location";
 import type { Address, PaymentMethod } from "@aquakart/types";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 type DispatchState = "none" | "searching" | "assigned" | "failed";
 
@@ -35,6 +37,8 @@ export default function CheckoutScreen() {
     quantity?: string;
   }>();
   const router = useRouter();
+  const { t } = useLanguage();
+  useAndroidBack();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
@@ -68,7 +72,7 @@ export default function CheckoutScreen() {
           setSelectedAddress(data[0].id);
         }
       } catch (err: any) {
-        Alert.alert("Error", "Failed to load addresses.");
+        Alert.alert(t('common.error') || "Error", t('checkout.loadAddressError') || "Failed to load addresses.");
       } finally {
         setLoading(false);
       }
@@ -122,7 +126,7 @@ export default function CheckoutScreen() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
-      Alert.alert("Address Required", "Please select a delivery address.");
+      Alert.alert(t('checkout.addressRequired') || "Address Required", t('checkout.addressRequiredMsg') || "Please select a delivery address.");
       return;
     }
 
@@ -134,15 +138,15 @@ export default function CheckoutScreen() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
-            "Permission Denied",
-            "Location permissions are required since the selected address lacks coordinates.",
+            t('checkout.permissionDenied') || "Permission Denied",
+            t('checkout.permissionDeniedMsg') || "Location permissions are required since the selected address lacks coordinates.",
           );
           setSubmitting(false);
           return;
         }
         const providerStatus = await Location.getProviderStatusAsync();
         if (!providerStatus.locationServicesEnabled) {
-          Alert.alert("GPS Disabled", "Please enable GPS/Location services.");
+          Alert.alert(t('checkout.gpsDisabled') || "GPS Disabled", t('checkout.gpsDisabledMsg') || "Please enable GPS/Location services.");
           setSubmitting(false);
           return;
         }
@@ -172,8 +176,8 @@ export default function CheckoutScreen() {
       }
     } catch (err: any) {
       Alert.alert(
-        "Order Failed",
-        err.message || "Something went wrong while placing your order.",
+        t('checkout.orderFailed') || "Order Failed",
+        err.message || t('checkout.orderFailedMsg') || "Something went wrong while placing your order.",
       );
       setSubmitting(false);
       setDispatchState("none");
@@ -210,14 +214,14 @@ export default function CheckoutScreen() {
 
   const selectedAddrObj = addresses.find((a) => a.id === selectedAddress);
 
-  if (loading) return <LoadingState message="Loading checkout..." />;
+  if (loading) return <LoadingState message={t('checkout.loading') || "Loading checkout..."} />;
 
   const needsPhone = !profile?.phone;
 
   if (needsPhone) {
     const handleSavePhone = async () => {
       if (phoneNumber.length < 10) {
-        Alert.alert("Invalid Phone", "Please enter a valid phone number");
+        Alert.alert(t('checkout.invalidPhone'), t('checkout.invalidPhoneMsg'));
         return;
       }
       try {
@@ -229,7 +233,7 @@ export default function CheckoutScreen() {
         if (error) throw error;
         await refreshProfile();
       } catch (err: any) {
-        Alert.alert("Error", err.message);
+        Alert.alert(t('common.error') || "Error", err.message);
       } finally {
         setSubmittingPhone(false);
       }
@@ -255,7 +259,7 @@ export default function CheckoutScreen() {
             { padding: theme.spacing.xl, justifyContent: "center" },
           ]}
         >
-          <Text style={styles.title}>One last thing...</Text>
+          <Text style={styles.title}>{t('checkout.phoneCta')}</Text>
           <Text
             style={{
               fontSize: 16,
@@ -264,11 +268,11 @@ export default function CheckoutScreen() {
               marginTop: 8,
             }}
           >
-            We need your phone number so the delivery agent can contact you.
+            {t('checkout.phoneDesc')}
           </Text>
           <Input
-            label="Mobile Number"
-            placeholder="Enter 10-digit number"
+            label={t('checkout.mobileNumber')}
+            placeholder={t('checkout.phonePlaceholder')}
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
@@ -281,7 +285,7 @@ export default function CheckoutScreen() {
             }
           />
           <Button
-            title="Continue to Checkout"
+            title={t('checkout.continueToCheckout')}
             onPress={handleSavePhone}
             loading={submittingPhone}
             style={{ marginTop: 16 }}
@@ -306,16 +310,16 @@ export default function CheckoutScreen() {
               <Ionicons name="water" size={48} color="#0EA5E9" />
             </Animated.View>
             <Text style={styles.searchTitle}>
-              Finding a delivery vehicle...
+              {t('checkout.findingVehicle') || "Finding a delivery vehicle..."}
             </Text>
             <Text style={styles.searchSubtitle}>
-              Looking for available vehicles near you
+              {t('checkout.lookingForVehicles') || "Looking for available vehicles near you"}
             </Text>
             <TouchableOpacity
               style={styles.cancelBtn}
               onPress={handleCancelDispatch}
             >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>{t('common.cancel') || "Cancel"}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -325,16 +329,16 @@ export default function CheckoutScreen() {
             <View style={styles.successCircle}>
               <Ionicons name="checkmark-circle" size={64} color="#22C55E" />
             </View>
-            <Text style={styles.successTitle}>Supplier Found!</Text>
+            <Text style={styles.successTitle}>{t('checkout.supplierFound') || "Supplier Found!"}</Text>
             <Text style={styles.successSubtitle}>
-              Your water delivery is on its way.
+              {t('checkout.deliveryOnWay') || "Your water delivery is on its way."}
             </Text>
             <TouchableOpacity
               style={styles.trackBtn}
               onPress={handleTrackOrder}
             >
               <Ionicons name="navigate" size={20} color="#FFF" />
-              <Text style={styles.trackBtnText}>Track Delivery</Text>
+              <Text style={styles.trackBtnText}>{t('checkout.trackDelivery') || "Track Delivery"}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -342,16 +346,15 @@ export default function CheckoutScreen() {
         {dispatchState === "failed" && (
           <View style={styles.centered}>
             <Ionicons name="sad-outline" size={64} color="#64748B" />
-            <Text style={styles.failTitle}>No Vehicles Available</Text>
+            <Text style={styles.failTitle}>{t('checkout.noVehicles') || "No Vehicles Available"}</Text>
             <Text style={styles.failSubtitle}>
-              No delivery vehicles with capacity are currently near you. Please
-              try again later.
+              {t('checkout.noVehiclesDesc') || "No delivery vehicles with capacity are currently near you. Please try again later."}
             </Text>
             <TouchableOpacity
               style={styles.retryBtn}
               onPress={handleRetryDispatch}
             >
-              <Text style={styles.retryBtnText}>Try Again</Text>
+              <Text style={styles.retryBtnText}>{t('common.tryAgain') || "Try Again"}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -377,13 +380,13 @@ export default function CheckoutScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>Checkout</Text>
+        <Text style={styles.title}>{t('checkout.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Delivery Address</Text>
+          <Text style={styles.sectionTitle}>{t('checkout.deliveryAddress')}</Text>
           {selectedAddrObj ? (
             <Card style={styles.addressCard}>
               <View style={styles.addressContainer}>
@@ -400,7 +403,7 @@ export default function CheckoutScreen() {
                       {selectedAddrObj.label}
                     </Text>
                     <Badge
-                      label="Default"
+                      label={t('checkout.default')}
                       variant="info"
                       style={{ marginLeft: 8 }}
                     />
@@ -412,7 +415,7 @@ export default function CheckoutScreen() {
                 <TouchableOpacity
                   onPress={() => router.push("/(customer)/addresses")}
                 >
-                  <Text style={styles.changeBtnText}>Change</Text>
+                  <Text style={styles.changeBtnText}>{t('common.change')}</Text>
                 </TouchableOpacity>
               </View>
             </Card>
@@ -420,10 +423,10 @@ export default function CheckoutScreen() {
             <Card style={styles.addressCard}>
               <View style={styles.noAddressContainer}>
                 <Text style={styles.noAddressText}>
-                  No delivery address found
+                  {t('checkout.noAddress')}
                 </Text>
                 <Button
-                  title="Add Address"
+                  title={t('checkout.addAddress')}
                   size="sm"
                   onPress={() => router.push("/(customer)/addresses")}
                 />
@@ -433,7 +436,7 @@ export default function CheckoutScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Summary</Text>
+          <Text style={styles.sectionTitle}>{t('checkout.orderSummary')}</Text>
           <Card style={styles.summaryCard}>
             <View style={styles.summaryItem}>
               <View style={styles.summaryItemInfo}>
@@ -442,10 +445,10 @@ export default function CheckoutScreen() {
                 </View>
                 <View>
                   <Text style={styles.summaryItemName}>
-                    AquaKart Product x {quantity}
+                    {t('checkout.productName')} x {quantity}
                   </Text>
                   <Text style={styles.summaryItemSupplier}>
-                    {params.business_name || "Express Dispatch"}
+                    {params.business_name || t('checkout.expressDispatch')}
                   </Text>
                 </View>
               </View>
@@ -455,27 +458,27 @@ export default function CheckoutScreen() {
             <View style={styles.divider} />
 
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Subtotal</Text>
+              <Text style={styles.priceLabel}>{t('checkout.subtotal')}</Text>
               <Text style={styles.priceValue}>₹{subtotal}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Delivery Fee</Text>
+              <Text style={styles.priceLabel}>{t('checkout.deliveryFee')}</Text>
               <Text style={styles.priceValue}>
-                {deliveryFee === 0 ? "Free" : `₹${deliveryFee}`}
+                {deliveryFee === 0 ? t('common.free') : `₹${deliveryFee}`}
               </Text>
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t('common.total')}</Text>
               <Text style={styles.totalValue}>₹{total}</Text>
             </View>
           </Card>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Method</Text>
+          <Text style={styles.sectionTitle}>{t('checkout.paymentMethod')}</Text>
           <View style={styles.paymentMethodsGrid}>
             <TouchableOpacity
               style={[
@@ -506,7 +509,7 @@ export default function CheckoutScreen() {
                   paymentMethod === "cash" && styles.paymentMethodNameActive,
                 ]}
               >
-                Cash on Delivery
+                {t('checkout.cashOnDelivery')}
               </Text>
               {paymentMethod === "cash" ? (
                 <View style={styles.checkmarkBadge}>
@@ -548,7 +551,7 @@ export default function CheckoutScreen() {
                   paymentMethod === "upi" && styles.paymentMethodNameActive,
                 ]}
               >
-                UPI / Online
+                {t('checkout.upiOnline')}
               </Text>
               {paymentMethod === "upi" ? (
                 <View style={styles.checkmarkBadge}>
@@ -568,11 +571,11 @@ export default function CheckoutScreen() {
 
       <View style={styles.footerBar}>
         <View style={styles.footerTotalContainer}>
-          <Text style={styles.footerTotalLabel}>Total Payment</Text>
+          <Text style={styles.footerTotalLabel}>{t('checkout.totalPayment')}</Text>
           <Text style={styles.footerTotalPrice}>₹{total}</Text>
         </View>
         <Button
-          title="Place Order"
+          title={t('checkout.placeOrder')}
           onPress={handlePlaceOrder}
           disabled={submitting || !selectedAddress}
           style={styles.checkoutButton}

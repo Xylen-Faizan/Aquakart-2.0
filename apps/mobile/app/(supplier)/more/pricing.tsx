@@ -17,10 +17,14 @@ import { theme } from "../../../constants/theme";
 import { Card, Button } from "../../../components/ui";
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { supabase } from "../../../lib/supabase/client";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function PricingCatalogScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  useAndroidBack();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,7 +46,7 @@ export default function PricingCatalogScreen() {
         .single();
 
       if (!supplierData) {
-        Alert.alert("Error", "Please complete your Business Profile first.");
+        Alert.alert(t('pricing.error'), t('pricing.completeProfileFirst'));
         router.back();
         return;
       }
@@ -129,11 +133,11 @@ export default function PricingCatalogScreen() {
         }
       }
 
-      Alert.alert("Success", "Catalog updated successfully!");
+      Alert.alert(t('pricing.success'), t('pricing.catalogUpdated'));
       router.back();
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", "Failed to update catalog.");
+      Alert.alert(t('pricing.error'), t('pricing.failedUpdate'));
     } finally {
       setSaving(false);
     }
@@ -165,7 +169,7 @@ export default function PricingCatalogScreen() {
             color={theme.colors.textPrimary}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pricing & Catalog</Text>
+        <Text style={styles.headerTitle}>{t('pricing.title')}</Text>
       </View>
 
       <ScrollView
@@ -173,7 +177,7 @@ export default function PricingCatalogScreen() {
         contentContainerStyle={styles.content}
       >
         <Text style={styles.description}>
-          Select the products you deliver and set your custom marketplace price.
+          {t('pricing.description')}
         </Text>
 
         {catalog.map((item, index) => (
@@ -192,7 +196,7 @@ export default function PricingCatalogScreen() {
 
             {item.available && (
               <View style={styles.priceContainer}>
-                <Text style={styles.label}>Price (₹) per unit</Text>
+                <Text style={styles.label}>{t('pricing.pricePerUnit')}</Text>
                 <TextInput
                   style={styles.input}
                   value={item.custom_price}
@@ -207,7 +211,7 @@ export default function PricingCatalogScreen() {
         ))}
 
         <Button
-          title={saving ? "Saving..." : "Save Catalog"}
+          title={saving ? t('pricing.saving') : t('pricing.save')}
           onPress={handleSave}
           disabled={saving}
           style={styles.saveBtn}
