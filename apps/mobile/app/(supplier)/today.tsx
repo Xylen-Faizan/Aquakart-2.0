@@ -506,7 +506,7 @@ export default function SupplierTodayScreen() {
                 style={styles.manifestCard}
               >
                 <View style={styles.manifestHeader}>
-                  <View>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
                     <Text style={styles.customerName}>
                       {item.customer_name}
                     </Text>
