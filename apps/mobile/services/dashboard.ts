@@ -76,7 +76,8 @@ export const DashboardService = {
   async getTodayStats(): Promise<TodayStats> {
     const { data, error } = await supabase.rpc('get_supplier_today');
     if (error) throw error;
-    return data as unknown as TodayStats;
+    // RPC returning TABLE returns an array. We just need the first row.
+    return (Array.isArray(data) ? data[0] : data) as unknown as TodayStats;
   },
   async getTodayManifest(): Promise<TodayManifestItem[]> {
     const { data, error } = await supabase.rpc('get_today_manifest');
