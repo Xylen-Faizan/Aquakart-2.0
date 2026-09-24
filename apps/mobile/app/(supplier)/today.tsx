@@ -602,6 +602,38 @@ export default function SupplierTodayScreen() {
                       }}
                     />
                   </View>
+                ) : item.status === "out_for_delivery" ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 12,
+                      marginTop: 16,
+                      paddingTop: 16,
+                      borderTopWidth: 1,
+                      borderTopColor: theme.colors.border,
+                    }}
+                  >
+                    <Button
+                      title={t("today.markDelivered") || "Mark as Delivered"}
+                      variant="primary"
+                      style={{ flex: 1 }}
+                      onPress={async () => {
+                        try {
+                          await DashboardService.completeOrder(item.order_id);
+                          onRefresh();
+                          Alert.alert(
+                            t("today.success"),
+                            "Order marked as delivered successfully!"
+                          );
+                        } catch (e: any) {
+                          Alert.alert(
+                            t("today.error"),
+                            e.message || "Failed to mark as delivered"
+                          );
+                        }
+                      }}
+                    />
+                  </View>
                 ) : (
                   <View
                     style={{

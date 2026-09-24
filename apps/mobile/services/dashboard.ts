@@ -142,6 +142,13 @@ export const DashboardService = {
     if (error) throw error;
   },
 
+  async completeOrder(orderId: string): Promise<void> {
+    const { error } = await supabase.rpc('complete_order', {
+      p_order_id: orderId
+    });
+    if (error) throw error;
+  },
+
   async rejectOrder(orderId: string, reason: string = 'Rejected by supplier'): Promise<void> {
     const { error } = await supabase.rpc('reject_order', {
       p_order_id: orderId,
