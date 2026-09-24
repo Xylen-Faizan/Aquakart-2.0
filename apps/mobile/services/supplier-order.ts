@@ -34,6 +34,10 @@ export const SupplierOrderService = {
       .single();
 
     if (error) throw error;
+    if (data) {
+      if (Array.isArray(data.customer)) data.customer = data.customer[0];
+      if (Array.isArray(data.address)) data.address = data.address[0];
+    }
     return data;
   },
 
