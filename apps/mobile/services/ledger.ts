@@ -13,6 +13,23 @@ export interface CustomerLedger {
   entries: LedgerEntry[];
 }
 
+export interface KhataSummary {
+  total_jars: number;
+  total_billed: number;
+  total_paid: number;
+  outstanding: number;
+}
+
+export interface KhataEvent {
+  event_type: 'delivery' | 'payment';
+  event_timestamp: string;
+  quantity?: number;
+  amount: number;
+  payment_method?: string;
+  delivery_id?: string;
+  payment_id?: string;
+}
+
 export const LedgerService = {
   async getCustomerLedger(customerId: string): Promise<CustomerLedger> {
     const { data, error } = await supabase.rpc('get_customer_ledger', {
@@ -33,5 +50,23 @@ export const LedgerService = {
       p_payment_method: params.paymentMethod || 'cash',
     });
     if (error) throw error;
+  },
+
+  async getCustomerKhataSummary(supplierCustomerId: string, month: string): Promise<KhataSummary> {
+    const { data, error } = await supabase.rpc('get_customer_khata_summary', {
+      p_supplier_customer_id: supplierCustomerId,
+      p_month: month,
+    });
+    if (error) throw error;
+    return data as KhataSummary;
+  },
+
+  async getCustomerKhataTimeline(supplierCustomerId: string, month: string | null): Promise<KhataEvent[]> {
+    const { data, error } = await supabase.rpc('get_customer_khata_timeline', {
+      p_supplier_customer_id: supplierCustomerId,
+      p_month: month,
+    });
+    if (error) throw error;
+    return data as KhataEvent[];
   }
 };

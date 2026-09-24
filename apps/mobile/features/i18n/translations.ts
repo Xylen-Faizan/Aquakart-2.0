@@ -311,6 +311,11 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // ─── Supplier Customers ───
     "customers.title": "Customers",
+    "customers.filter_All": "All",
+    "customers.filter_household": "Household",
+    "customers.filter_office": "Office",
+    "customers.filter_shop": "Shop",
+    "customers.filter_CreditDue": "Credit Due",
     "customers.searchPlaceholder": "Search customers...",
     "customers.addCustomer": "Add Customer",
     "customers.noCustomers": "No customers yet",
@@ -1288,6 +1293,11 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // ─── Supplier Customers ───
     "customers.title": "ग्राहक",
+    "customers.filter_All": "सभी",
+    "customers.filter_household": "घरेलू",
+    "customers.filter_office": "कार्यालय",
+    "customers.filter_shop": "दुकान",
+    "customers.filter_CreditDue": "बाकी",
     "customers.searchPlaceholder": "ग्राहक खोजें...",
     "customers.addCustomer": "ग्राहक जोड़ें",
     "customers.noCustomers": "अभी तक कोई ग्राहक नहीं",

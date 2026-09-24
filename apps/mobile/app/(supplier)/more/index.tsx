@@ -38,6 +38,12 @@ export default function MoreScreen() {
       route: "/(supplier)/more/pricing",
     },
     {
+      icon: "cart-outline",
+      title: "Marketplace History",
+      subtitle: "Past opportunistic orders",
+      route: "/(supplier)/more/marketplace-history",
+    },
+    {
       icon: "people-outline",
       title: t('more.teamCrew'),
       subtitle: t('more.teamCrewSubtitle'),

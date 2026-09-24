@@ -83,6 +83,22 @@ export default function SupplierLayout() {
           title: "Team & Crew",
         }}
       />
+      <Tabs.Screen
+        name="khata/[id]"
+        options={{
+          href: null,
+          title: "Khata",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="more/marketplace-history"
+        options={{
+          href: null,
+          title: "Marketplace History",
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

@@ -20,7 +20,7 @@ import {
   CustomerType,
 } from "../../services/customer";
 import { LedgerService, CustomerLedger } from "../../services/ledger";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 export default function CustomersScreen() {
@@ -129,19 +129,10 @@ export default function CustomersScreen() {
     setScheduleModalVisible(true);
   };
 
-  const handleViewLedger = async (customer: SupplierCustomer) => {
-    setSelectedCustomer(customer);
-    setLedgerModalVisible(true);
-    setIsLedgerLoading(true);
-    try {
-      const data = await LedgerService.getCustomerLedger(customer.id);
-      setLedgerData(data);
-    } catch (error: any) {
-      Alert.alert(t("customers.error"), error.message || t("customers.failedLoadLedger"));
-      setLedgerModalVisible(false);
-    } finally {
-      setIsLedgerLoading(false);
-    }
+  const { push } = useRouter();
+
+  const handleViewLedger = (customer: SupplierCustomer) => {
+    push(`/(supplier)/khata/${customer.id}` as any);
   };
 
   const handleRecordPayment = async () => {

@@ -143,8 +143,9 @@ export const DashboardService = {
   },
 
   async completeOrder(orderId: string): Promise<void> {
-    const { error } = await supabase.rpc('complete_order', {
-      p_order_id: orderId
+    const { error } = await supabase.rpc('update_order_status', {
+      p_order_id: orderId,
+      p_new_status: 'delivered'
     });
     if (error) throw error;
   },

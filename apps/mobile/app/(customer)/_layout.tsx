@@ -32,6 +32,16 @@ export default function CustomerLayout() {
         }}
       />
       <Tabs.Screen
+        name="khata"
+        options={{
+          title: "Khata",
+          headerShown: true,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="book-outline" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reorder"
         options={{
           title: "Repeat",

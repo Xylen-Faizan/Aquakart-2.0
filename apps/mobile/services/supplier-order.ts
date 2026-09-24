@@ -54,5 +54,11 @@ export const SupplierOrderService = {
   async updateOrderStatus(orderId: string, newStatus: string) {
     const { error } = await supabase.rpc('update_order_status', { p_order_id: orderId, p_new_status: newStatus });
     if (error) throw error;
+  },
+
+  async getOpportunisticOrderHistory(role: 'supplier' | 'customer') {
+    const { data, error } = await supabase.rpc('get_opportunistic_order_history', { p_role: role });
+    if (error) throw error;
+    return data || [];
   }
 };

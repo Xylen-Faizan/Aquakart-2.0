@@ -77,6 +77,7 @@ export const OrderService = {
         order_items (*)
       `)
       .eq('customer_id', user.id)
+      .eq('fulfillment_mode', 'opportunistic_route')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
