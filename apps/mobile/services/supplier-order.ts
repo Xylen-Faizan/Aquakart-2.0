@@ -9,8 +9,8 @@ export const SupplierOrderService = {
       .from('orders')
       .select(`
         *,
-        customer:customer_id (name, phone),
-        address:address_id (label, address),
+        customer:profiles(name, phone),
+        address:addresses(label, address),
         order_items (*)
       `)
       .eq('supplier_id', supplier.id)
@@ -25,8 +25,8 @@ export const SupplierOrderService = {
       .from('orders')
       .select(`
         *,
-        customer:customer_id (name, phone),
-        address:address_id (*),
+        customer:profiles(name, phone),
+        address:addresses(*),
         order_items (*),
         history:order_status_history (*)
       `)

@@ -789,11 +789,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "not_found": "Not_found",
     "order.not_found": "Not_found",
     "order.customer": "Customer",
-    "order.name_label": "Name_label",
-    "order.phone_label": "Phone_label",
-    "order.address_label": "Address_label",
-    "order.order_items": "Order_items",
-    "order.water_jar": "Water_jar",
+    "order.name_label": "Name:",
+    "order.phone_label": "Phone:",
+    "order.address_label": "Address:",
+    "order.order_items": "Order Items",
+    "order.water_jar": "Water Jar",
     "order.total": "Total",
     "order.rejection_reason_title": "Rejection_reason_title",
     "order.reject_btn": "Reject_btn",
@@ -1491,6 +1491,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "household": "Household",
     "office": "Office",
     "business": "Business",
-    "Default Price": "Default Price"
+    "Default Price": "Default Price",
+    "order.name_label": "नाम:",
+    "order.phone_label": "फ़ोन:",
+    "order.address_label": "पता:"
   }
 };
