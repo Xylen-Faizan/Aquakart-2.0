@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../../constants/theme";
@@ -500,39 +501,74 @@ export default function SupplierTodayScreen() {
               </Text>
             </Card>
           ) : (
-            manifest.map((item, index) => (
-              <Card
-                key={`${item.customer_id}-${index}`}
-                style={styles.manifestCard}
+            manifest.map((item, index) => {
+              // Determine badge label and color per status
+              const getStatusBadge = () => {
+                switch (item.status) {
+                  case "placed":
+                    return { label: t("today.newRequest"), variant: "error" as const };
+                  case "accepted":
+                    return { label: t("today.accepted"), variant: "warning" as const };
+                  case "preparing":
+                    return { label: t("today.preparing"), variant: "warning" as const };
+                  case "out_for_delivery":
+                    return { label: t("today.outForDelivery"), variant: "info" as const };
+                  case "scheduled":
+                    return { label: t("today.scheduled"), variant: "neutral" as const };
+                  default:
+                    return { label: t("today.pending"), variant: "warning" as const };
+                }
+              };
+
+              const statusBadge = getStatusBadge();
+
+              // Determine left border color by status
+              const getBorderColor = () => {
+                switch (item.status) {
+                  case "placed": return theme.colors.error;
+                  case "accepted":
+                  case "preparing": return theme.colors.warning;
+                  case "out_for_delivery": return theme.colors.primary;
+                  default: return theme.colors.border;
+                }
+              };
+
+              const locationText = item.address
+                ? item.address
+                : item.sector
+                  ? item.sector
+                  : t("today.noArea");
+
+              return (
+              <TouchableOpacity
+                key={`${item.order_id || item.customer_id}-${index}`}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (item.order_id) {
+                    router.push(`/(supplier)/order/${item.order_id}` as any);
+                  }
+                }}
               >
+              <Card
+                style={[styles.manifestCard, { borderLeftColor: getBorderColor() }]}
+              >
+                {/* Header: Name + Badge */}
                 <View style={styles.manifestHeader}>
                   <View style={{ flex: 1, paddingRight: 8 }}>
                     <Text style={styles.customerName}>
                       {item.customer_name}
                     </Text>
-                    <Text style={styles.customerLocation}>
-                      {item.sector ? `${item.sector}` : t("today.noArea")}{" "}
-                      {item.address ? `• ${item.address}` : ""}
+                    <Text style={styles.customerLocation} numberOfLines={2}>
+                      {locationText}
                     </Text>
                   </View>
                   <Badge
-                    label={
-                      item.status === "placed"
-                        ? t("today.newRequest")
-                        : item.status === "scheduled"
-                          ? t("today.scheduled")
-                          : t("today.pending")
-                    }
-                    variant={
-                      item.status === "placed"
-                        ? "error"
-                        : item.status === "scheduled"
-                          ? "neutral"
-                          : "warning"
-                    }
+                    label={statusBadge.label}
+                    variant={statusBadge.variant}
                   />
                 </View>
 
+                {/* Details: Quantity + Price */}
                 <View style={styles.manifestDetails}>
                   <View style={styles.detailRow}>
                     <Ionicons
@@ -553,25 +589,69 @@ export default function SupplierTodayScreen() {
                       {item.expected_amount})
                     </Text>
                   </View>
-                  <View style={styles.detailRow}>
-                    <Ionicons
-                      name="call-outline"
-                      size={16}
-                      color={theme.colors.textSecondary}
-                    />
-                    <Text style={styles.detailText}>{item.phone}</Text>
-                  </View>
                 </View>
 
+                {/* Quick Actions: Call + Directions */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.colors.border,
+                  }}
+                >
+                  {item.phone ? (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: theme.colors.success + "15",
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        gap: 6,
+                      }}
+                      onPress={() => Linking.openURL(`tel:${item.phone}`)}
+                    >
+                      <Ionicons name="call" size={16} color={theme.colors.success} />
+                      <Text style={{ color: theme.colors.success, fontWeight: "600", fontSize: 13 }}>
+                        {t("today.callCustomer")}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {item.address ? (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: theme.colors.primary + "15",
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        gap: 6,
+                      }}
+                      onPress={() => {
+                        const query = encodeURIComponent(item.address || "");
+                        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${query}`);
+                      }}
+                    >
+                      <Ionicons name="navigate" size={16} color={theme.colors.primary} />
+                      <Text style={{ color: theme.colors.primary, fontWeight: "600", fontSize: 13 }}>
+                        {t("today.viewRoute")}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                {/* Status-based Action Buttons */}
                 {item.status === "placed" ? (
                   <View
                     style={{
                       flexDirection: "row",
                       gap: 12,
-                      marginTop: 16,
-                      paddingTop: 16,
-                      borderTopWidth: 1,
-                      borderTopColor: theme.colors.border,
+                      marginTop: 12,
                     }}
                   >
                     <Button
@@ -603,52 +683,34 @@ export default function SupplierTodayScreen() {
                     />
                   </View>
                 ) : item.status === "out_for_delivery" ? (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 12,
-                      marginTop: 16,
-                      paddingTop: 16,
-                      borderTopWidth: 1,
-                      borderTopColor: theme.colors.border,
-                    }}
-                  >
+                  <View style={{ marginTop: 12 }}>
                     <Button
-                      title={t("today.markDelivered") || "Mark as Delivered"}
+                      title={t("today.markDelivered")}
                       variant="primary"
-                      style={{ flex: 1 }}
+                      style={{ width: "100%" }}
                       onPress={async () => {
                         try {
                           await DashboardService.completeOrder(item.order_id);
                           onRefresh();
                           Alert.alert(
                             t("today.success"),
-                            "Order marked as delivered successfully!"
+                            t("today.markedDelivered"),
                           );
                         } catch (e: any) {
                           Alert.alert(
                             t("today.error"),
-                            e.message || "Failed to mark as delivered"
+                            e.message || t("today.failedMarkDelivered"),
                           );
                         }
                       }}
                     />
                   </View>
-                ) : (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 12,
-                      marginTop: 16,
-                      paddingTop: 16,
-                      borderTopWidth: 1,
-                      borderTopColor: theme.colors.border,
-                    }}
-                  >
+                ) : (item.status === "accepted" || item.status === "preparing") ? (
+                  <View style={{ marginTop: 12 }}>
                     <Button
                       title={t("today.sendArrivalAlert")}
                       variant="outline"
-                      style={{ flex: 1, borderColor: theme.colors.primary }}
+                      style={{ width: "100%", borderColor: theme.colors.primary }}
                       textStyle={{ color: theme.colors.primary }}
                       onPress={async () => {
                         try {
@@ -667,9 +729,11 @@ export default function SupplierTodayScreen() {
                       }}
                     />
                   </View>
-                )}
+                ) : null}
               </Card>
-            ))
+              </TouchableOpacity>
+              );
+            })
           )}
         </View>
 
@@ -813,7 +877,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.warning,
   },
   manifestHeader: {
     flexDirection: "row",
