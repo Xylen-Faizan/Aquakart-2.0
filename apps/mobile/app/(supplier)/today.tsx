@@ -621,6 +621,7 @@ export default function SupplierTodayScreen() {
                       onPress={async () => {
                         try {
                           await DashboardService.notifyArrival(item.order_id);
+                          onRefresh();
                           Alert.alert(
                             t("today.success"),
                             t("today.arrivalAlertSent"),

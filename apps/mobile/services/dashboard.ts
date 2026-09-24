@@ -142,11 +142,11 @@ export const DashboardService = {
     if (error) throw error;
   },
 
-  async rejectOrder(orderId: string): Promise<void> {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', orderId);
+  async rejectOrder(orderId: string, reason: string = 'Rejected by supplier'): Promise<void> {
+    const { error } = await supabase.rpc('reject_order', {
+      p_order_id: orderId,
+      p_reason: reason
+    });
     if (error) throw error;
   },
 
