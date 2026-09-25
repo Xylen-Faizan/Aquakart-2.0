@@ -104,3 +104,18 @@ a:focus-visible {
   .header { align-items: flex-start; flex-direction: column; }
   .nav { gap: .75rem; }
 }
+
+
+.readiness {
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(6, 52, 112, .2);
+  color: var(--color-primary-dark) !important;
+}
+.nav a:hover,
+.brand:hover,
+.contact a:hover,
+.footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
