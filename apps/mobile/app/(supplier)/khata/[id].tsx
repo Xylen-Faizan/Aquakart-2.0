@@ -17,7 +17,10 @@ export default function KhataScreen() {
   const [loading, setLoading] = useState(true);
 
   // For pilot, we use the current month
-  const currentMonth = new Date().toISOString().substring(0, 7); // e.g. '2026-09'
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istDate = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + istOffset);
+  const currentMonth = istDate.toISOString().substring(0, 7);
 
   useEffect(() => {
     fetchData();
@@ -138,7 +141,7 @@ export default function KhataScreen() {
                       </View>
                       <View style={styles.eventFooter}>
                         <Text style={styles.eventTime}>
-                          {date.toLocaleDateString()} • {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} • {date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}
                         </Text>
                         {!isDelivery && event.payment_method && (
                           <Text style={styles.paymentMethod}>

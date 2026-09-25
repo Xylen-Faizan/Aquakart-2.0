@@ -54,6 +54,7 @@ export default function CheckoutScreen() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [assignedOrderId, setAssignedOrderId] = useState<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const retryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fix for on-demand pricing: fallback to 80 if no supplier provided
   const price = parseFloat(params.price || (params.supplier_id ? "0" : "80"));
@@ -110,6 +111,13 @@ export default function CheckoutScreen() {
       requestId,
       (payload: any) => {
         const newStatus = payload.new?.status;
+        if (['offered', 'accepted', 'assigned', 'failed', 'expired'].includes(newStatus)) {
+          if (retryIntervalRef.current) {
+            clearInterval(retryIntervalRef.current);
+            retryIntervalRef.current = null;
+          }
+        }
+        
         if (newStatus === "assigned") {
           setAssignedOrderId(payload.new.assigned_order_id);
           setDispatchState("assigned");
@@ -121,6 +129,10 @@ export default function CheckoutScreen() {
 
     return () => {
       supabase.removeChannel(channel);
+      if (retryIntervalRef.current) {
+        clearInterval(retryIntervalRef.current);
+        retryIntervalRef.current = null;
+      }
     };
   }, [requestId]);
 
@@ -158,6 +170,7 @@ export default function CheckoutScreen() {
           supplier_id: params.supplier_id,
           delivery_address_id: selectedAddress,
           items: [{ product_id: params.product_id, quantity }],
+          payment_method: paymentMethod,
         });
         router.replace(`/(customer)/order/${orderId}`);
       } else {
@@ -170,9 +183,22 @@ export default function CheckoutScreen() {
         );
         setRequestId(reqId);
 
-        const offerCount = await dispatchService.searchVehicles(reqId);
-        // Do not immediately fail. The search function returns quickly, but the request remains in 'searching' state.
-        // It will either timeout or succeed via realtime updates.
+        // Initial search
+        await dispatchService.searchVehicles(reqId).catch(() => {});
+        
+        // Retry loop
+        retryIntervalRef.current = setInterval(async () => {
+          try {
+            await dispatchService.searchVehicles(reqId);
+          } catch (e) { /* ignore */ }
+        }, 5000);
+        
+        setTimeout(() => {
+          if (retryIntervalRef.current) {
+            clearInterval(retryIntervalRef.current);
+            retryIntervalRef.current = null;
+          }
+        }, 55000);
       }
     } catch (err: any) {
       Alert.alert(

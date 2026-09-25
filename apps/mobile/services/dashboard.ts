@@ -142,10 +142,13 @@ export const DashboardService = {
     if (error) throw error;
   },
 
-  async completeOrder(orderId: string): Promise<void> {
-    const { error } = await supabase.rpc('update_order_status', {
+  async completeOrder(orderId: string, params?: { jarsDelivered?: number; jarsReturned?: number; amountCollected?: number; paymentMethod?: string }): Promise<void> {
+    const { error } = await supabase.rpc('complete_order_delivery', {
       p_order_id: orderId,
-      p_new_status: 'delivered'
+      p_jars_delivered: params?.jarsDelivered || null,
+      p_jars_returned: params?.jarsReturned ?? 0,
+      p_amount_collected: params?.amountCollected ?? 0,
+      p_payment_method: params?.paymentMethod || 'cash',
     });
     if (error) throw error;
   },

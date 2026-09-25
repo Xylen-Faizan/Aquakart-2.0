@@ -45,7 +45,7 @@ export const OrderService = {
     }
   },
 
-  async placeOrder(params: PlaceOrderParams) {
+  async placeOrder(params: PlaceOrderParams & { payment_method?: string }) {
     const idempotencyKey = Crypto.randomUUID();
     const { data: orderId, error } = await supabase
       .rpc('place_order', {
@@ -53,7 +53,7 @@ export const OrderService = {
         p_address_id: params.delivery_address_id,
         p_product_id: params.items[0].product_id,
         p_quantity: params.items[0].quantity,
-        p_payment_method: 'cash', // Hardcoded for MVP since checkout sets it
+        p_payment_method: params.payment_method || 'cash',
         p_idempotency_key: idempotencyKey
       });
 

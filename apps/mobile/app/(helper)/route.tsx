@@ -58,7 +58,7 @@ export default function HelperRoute() {
         text: "Delivered",
         onPress: async () => {
           try {
-            await helperOpsService.completeStop(stopId);
+            await helperOpsService.completeStop(run.id, stopId);
             await loadData();
           } catch (err: any) {
             Alert.alert("Error", err.message);

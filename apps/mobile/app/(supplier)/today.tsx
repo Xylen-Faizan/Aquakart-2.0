@@ -42,6 +42,13 @@ export default function SupplierTodayScreen() {
   const [newCapacity, setNewCapacity] = useState("");
   const [isUpdatingCapacity, setIsUpdatingCapacity] = useState(false);
 
+  const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+  const [deliveryModalOrder, setDeliveryModalOrder] = useState<any>(null);
+  const [modalJarsDelivered, setModalJarsDelivered] = useState('');
+  const [modalJarsReturned, setModalJarsReturned] = useState('0');
+  const [modalAmountCollected, setModalAmountCollected] = useState('0');
+  const [modalPaymentMethod, setModalPaymentMethod] = useState('cash');
+
   const fetchDashboardData = async () => {
     try {
       const [statsData, manifestData, forecastData, alertsData] = await Promise.all([
@@ -150,6 +157,23 @@ export default function SupplierTodayScreen() {
       Alert.alert(t("today.error"), t("today.failedCapacity"));
     } finally {
       setIsUpdatingCapacity(false);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (!deliveryModalOrder) return;
+    try {
+      await DashboardService.completeOrder(deliveryModalOrder.order_id, {
+        jarsDelivered: parseInt(modalJarsDelivered) || 0,
+        jarsReturned: parseInt(modalJarsReturned) || 0,
+        amountCollected: parseFloat(modalAmountCollected) || 0,
+        paymentMethod: modalPaymentMethod,
+      });
+      setDeliveryModalVisible(false);
+      setDeliveryModalOrder(null);
+      onRefresh();
+    } catch (err) {
+      Alert.alert('Error', 'Failed to complete delivery');
     }
   };
 
@@ -688,20 +712,13 @@ export default function SupplierTodayScreen() {
                       title={t("today.markDelivered")}
                       variant="primary"
                       style={{ width: "100%" }}
-                      onPress={async () => {
-                        try {
-                          await DashboardService.completeOrder(item.order_id);
-                          onRefresh();
-                          Alert.alert(
-                            t("today.success"),
-                            t("today.markedDelivered"),
-                          );
-                        } catch (e: any) {
-                          Alert.alert(
-                            t("today.error"),
-                            e.message || t("today.failedMarkDelivered"),
-                          );
-                        }
+                      onPress={() => {
+                        setDeliveryModalOrder(item);
+                        setModalJarsDelivered(String(item.quantity || 2));
+                        setModalJarsReturned('0');
+                        setModalAmountCollected('0');
+                        setModalPaymentMethod('cash');
+                        setDeliveryModalVisible(true);
                       }}
                     />
                   </View>
@@ -782,6 +799,56 @@ export default function SupplierTodayScreen() {
                 loading={isUpdatingCapacity}
                 style={{ flex: 1, marginLeft: 12 }}
               />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={deliveryModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDeliveryModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ backgroundColor: '#1E293B', borderRadius: 16, padding: 24, width: '85%', maxWidth: 400 }}>
+            <Text style={{ color: '#F8FAFC', fontSize: 18, fontWeight: '700', marginBottom: 4 }}>Mark Delivery Complete</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 14, marginBottom: 16 }}>
+              {deliveryModalOrder?.customer_name || 'Customer'}
+            </Text>
+
+            <Text style={{ color: '#CBD5E1', fontSize: 13, marginBottom: 4 }}>Jars Delivered</Text>
+            <TextInput style={{ backgroundColor: '#334155', color: '#F8FAFC', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 16 }}
+              keyboardType="numeric" value={modalJarsDelivered} onChangeText={setModalJarsDelivered} />
+
+            <Text style={{ color: '#CBD5E1', fontSize: 13, marginBottom: 4 }}>Jars Returned</Text>
+            <TextInput style={{ backgroundColor: '#334155', color: '#F8FAFC', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 16 }}
+              keyboardType="numeric" value={modalJarsReturned} onChangeText={setModalJarsReturned} />
+
+            <Text style={{ color: '#CBD5E1', fontSize: 13, marginBottom: 4 }}>Amount Collected (₹)</Text>
+            <TextInput style={{ backgroundColor: '#334155', color: '#F8FAFC', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 16 }}
+              keyboardType="numeric" value={modalAmountCollected} onChangeText={setModalAmountCollected} />
+
+            <Text style={{ color: '#CBD5E1', fontSize: 13, marginBottom: 4 }}>Payment Method</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+              {(['cash', 'upi'] as const).map(m => (
+                <TouchableOpacity key={m} onPress={() => setModalPaymentMethod(m)}
+                  style={{ flex: 1, padding: 10, borderRadius: 8, alignItems: 'center',
+                    backgroundColor: modalPaymentMethod === m ? '#3B82F6' : '#334155' }}>
+                  <Text style={{ color: '#F8FAFC', fontWeight: '600', textTransform: 'uppercase' }}>{m}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity onPress={() => setDeliveryModalVisible(false)}
+                style={{ flex: 1, padding: 14, borderRadius: 10, backgroundColor: '#475569', alignItems: 'center' }}>
+                <Text style={{ color: '#F8FAFC', fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleConfirmDelivery}
+                style={{ flex: 1, padding: 14, borderRadius: 10, backgroundColor: '#22C55E', alignItems: 'center' }}>
+                <Text style={{ color: '#FFF', fontWeight: '700' }}>Confirm</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

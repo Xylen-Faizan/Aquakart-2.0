@@ -111,7 +111,7 @@ export const routeOpsService = {
       .select(`
         *,
         profiles:customer_id (name, phone),
-        addresses (street, city, zip),
+        addresses (label, address, lat, lng),
         products (name, size, unit)
       `)
       .eq('run_id', runId)

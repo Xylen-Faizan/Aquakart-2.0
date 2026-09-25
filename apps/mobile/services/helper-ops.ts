@@ -34,11 +34,11 @@ export const helperOpsService = {
         supplier_id,
         product_id,
         price,
-        active,
+        available,
         products (name, size, unit)
       `)
       .eq('supplier_id', supplierId)
-      .eq('active', true);
+      .eq('available', true);
     if (error) throw error;
     return data;
   },
@@ -50,7 +50,7 @@ export const helperOpsService = {
       .select(`
         *,
         profiles:customer_id (name, phone),
-        addresses (street, city, zip, latitude, longitude),
+        addresses (label, address, lat, lng),
         products (name, size, unit)
       `)
       .eq('run_id', runId)
@@ -108,7 +108,7 @@ export const helperOpsService = {
           quantity,
           profiles:customer_id (name),
           products:product_id (name),
-          addresses:address_id (street, city, sector, latitude, longitude)
+          addresses:address_id (label, address, lat, lng)
         )
       `)
       .eq('run_id', runId)
@@ -119,10 +119,14 @@ export const helperOpsService = {
   },
 
   // Complete a stop
-  async completeStop(stopId: string, actualQuantity?: number) {
+  async completeStop(runId: string, stopId: string, jarsDelivered?: number, jarsReturned?: number, amountCollected?: number, paymentMethod?: string) {
     const { error } = await supabase.rpc('complete_delivery_run_stop', {
+      p_run_id: runId,
       p_stop_id: stopId,
-      p_actual_quantity: actualQuantity || null,
+      p_jars_delivered: jarsDelivered || null,
+      p_jars_returned: jarsReturned ?? 0,
+      p_amount_collected: amountCollected ?? 0,
+      p_payment_method: paymentMethod || 'cash',
     });
     if (error) throw error;
   },

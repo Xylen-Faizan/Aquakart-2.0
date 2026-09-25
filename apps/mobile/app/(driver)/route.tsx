@@ -164,13 +164,6 @@ export default function DriverRouteScreen() {
               {isCurrent && run.status === "in_progress" && (
                 <View style={styles.actions}>
                   <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={() => handleAction(stop.id, "delivered")}
-                  >
-                    <Text style={styles.btnText}>Delivered</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
                     style={[styles.actionBtn, styles.skipBtn]}
                     onPress={() => handleAction(stop.id, "skipped")}
                   >
