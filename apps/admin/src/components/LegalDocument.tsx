@@ -34,7 +34,7 @@ export default function LegalDocument({ document }: Props) {
             <h2 id="business-details">Business details</h2>
             <p><strong>Operator name used in the service:</strong> {BUSINESS_DETAILS.displayName}</p>
             <p><strong>Service area:</strong> {BUSINESS_DETAILS.serviceArea}</p>
-            <p><strong>Support:</strong> <a href={`mailto:${BUSINESS_DETAILS.supportEmail}`}>{BUSINESS_DETAILS.supportEmail}</a> · <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a></p>
+            <p><strong>Support:</strong> <a href={`mailto:${BUSINESS_DETAILS.supportEmail}`}>{BUSINESS_DETAILS.supportEmail}</a> · <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a></p>
           </section>
 
           {data.sections.map((section) => (

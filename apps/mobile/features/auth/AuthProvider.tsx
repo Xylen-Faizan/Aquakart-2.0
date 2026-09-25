@@ -3,6 +3,8 @@ import { AppState } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase/client';
 import { notificationService } from '../../services/notifications';
+import { LEGAL_VERSION } from '@aquakart/config';
+import { legalService } from '../../services/legal';
 
 type AuthContextType = {
   user: User | null;
@@ -95,6 +97,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(currentSession?.user ?? null);
           if (currentSession?.user) {
             await fetchProfile(currentSession.user.id);
+            if (currentSession.user.user_metadata?.legal_terms_version === LEGAL_VERSION) {
+              try { await legalService.recordConsent("mobile-auth-state"); } catch (e) { console.error("Legal consent record failed:", e); }
+            }
             // Sync push token when user signs in
             notificationService.syncPushToken(currentSession.user.id);
           }
@@ -133,6 +138,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         data: {
           name,
+          legal_terms_version: LEGAL_VERSION,
+          legal_privacy_version: LEGAL_VERSION,
         }
       }
     });

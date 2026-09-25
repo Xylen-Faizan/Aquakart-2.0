@@ -14,6 +14,8 @@ import { router } from "expo-router";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 export default function PhoneAuthScreen() {
   const { signInWithPhone, verifyPhoneOtp } = useAuth();
@@ -24,6 +26,7 @@ export default function PhoneAuthScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleSendOtp = async () => {
     if (!phone || phone.length < 10) {
@@ -34,6 +37,10 @@ export default function PhoneAuthScreen() {
     }
 
     try {
+      if (!legalAccepted) {
+        setError("Please agree to the Terms of Service and acknowledge the Privacy Policy.");
+        return;
+      }
       setLoading(true);
       setError(null);
       const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
@@ -67,6 +74,7 @@ export default function PhoneAuthScreen() {
       if (error) {
         setError(error.message);
       } else {
+        await legalService.persistForCurrentUser("mobile-phone");
         router.replace("/");
       }
     } catch (err: any) {
@@ -132,6 +140,7 @@ export default function PhoneAuthScreen() {
                 }
               />
               {error && <Text style={styles.errorText}>{error}</Text>}
+              <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
               <Button
                 title="Send Code"
                 onPress={handleSendOtp}

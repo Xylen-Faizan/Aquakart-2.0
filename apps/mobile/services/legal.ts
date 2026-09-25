@@ -22,11 +22,7 @@ export const legalService = {
   },
 
   async persistForCurrentUser(source: string = "mobile") {
-    try {
-      await this.attachConsentMetadata();
-      await this.recordConsent(source);
-    } catch (error) {
-      console.error("Failed to persist legal consent:", error);
-    }
+    await this.attachConsentMetadata();
+    await this.recordConsent(source);
   },
 };
