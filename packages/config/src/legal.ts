@@ -4,8 +4,14 @@ export const LEGAL_EFFECTIVE_DATE = "25 September 2026";
 export const BUSINESS_DETAILS = {
   displayName: "AquaKart 2.0",
   serviceArea: "Bokaro Steel City & Chas, Jharkhand, India",
-  supportEmail: "",
   supportPhone: "+91 74888 30394",
+  // These must be populated from the actual registered/operating business records
+  // before public commercial launch. Do not invent or infer them.
+  legalName: "",
+  principalAddress: "",
+  grievanceOfficerName: "",
+  grievanceOfficerDesignation: "",
+  grievanceOfficerPhone: "",
 };
 
 export type LegalSection = {
@@ -91,8 +97,8 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
       {
         heading: "9. Your choices and rights",
         paragraphs: [
-          "You may request access to information about your personal data, correction of inaccurate data, deletion where legally appropriate, and withdrawal of consent where processing is based on consent. Withdrawal does not make prior lawful processing unlawful.",
-          "You can make a privacy request using the support contact below. We will verify the requester's account before disclosing or changing personal data.",
+          "Where the applicable law provides these rights, you may request access to and correction or deletion of personal data, withdraw consent for processing that is based on consent, and raise a grievance. Withdrawal of consent does not make prior lawful processing unlawful.",
+          "Privacy and data requests are currently handled through the support contact below. We verify the requester before disclosing or changing personal data. A request may be limited where retention is required for law, accounting, security, fraud prevention, or dispute resolution.",
         ],
       },
       {
@@ -110,14 +116,14 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
       {
         heading: "12. Complaints and privacy requests",
         paragraphs: [
-          "Privacy requests and complaints can be sent to mukulkumarofficially@gmail.com or +91 74888 30394 with the subject line “Privacy Request”. Please include enough information for us to identify the relevant account without sending passwords, OTPs, or authentication tokens.",
-          "Grievance contact: AquaKart Grievance Desk via the same contact details. A named legal grievance officer should be formally appointed and added before full commercial launch.",
+          "Privacy requests and complaints can be made by calling +91 74888 30394. Please provide enough information for us to identify the relevant account, but never disclose passwords, OTPs, or authentication tokens.",
+          "The current configuration does not yet contain the legal entity name, principal office address, or designated grievance-officer name/designation. These details must be added from the actual business records before full commercial launch.",
         ],
       },
       {
         heading: "13. India DPDP readiness",
         paragraphs: [
-          "This policy is drafted to support readiness for the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025. The Government has provided a phased commencement timeline, so individual statutory provisions become operative on the dates notified by the Central Government. AquaKart is adopting the notice, consent, minimisation, security, rights, and grievance principles in advance of the full applicable regime.",
+          "This policy is designed for readiness with the Digital Personal Data Protection Act, 2023 and the Digital Personal Data Protection Rules, 2025. The commencement of individual statutory provisions is phased by Government notification. AquaKart is implementing notice, consent, data-minimisation, security, rights, and grievance controls appropriate to its current pilot, but this policy is not a certification of legal compliance and should be reviewed by Indian counsel before full commercial launch.",
         ],
       },
       {
@@ -195,28 +201,35 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
         ],
       },
       {
-        heading: "10. Disclaimer and liability",
+        heading: "10. Google Maps and third-party services",
+        paragraphs: [
+          "The web dashboard uses Google Maps Platform for operational map functionality. Use of Google Maps Platform is also subject to Google's applicable terms, including the Google Maps Platform Terms of Service. Google's Privacy Policy describes Google's handling of information in its services.",
+          "AquaKart does not control third-party services. Their availability, processing and retention practices are governed by the respective provider policies and terms.",
+        ],
+      },
+      {
+        heading: "11. Disclaimer and liability",
         paragraphs: [
           "AquaKart provides software and coordination services on an “as available” basis. We do not promise uninterrupted service, exact delivery times, or that every supplier or product will always be available.",
           "Nothing in these Terms excludes or limits liability that cannot lawfully be excluded under applicable Indian law. Consumer rights provided by applicable law remain unaffected.",
         ],
       },
       {
-        heading: "11. Suspension and termination",
+        heading: "12. Suspension and termination",
         paragraphs: [
           "We may suspend or terminate accounts where necessary for security, fraud prevention, legal compliance, serious misuse, or material breach of these Terms. Customers may stop using the service and may request account deletion through support.",
         ],
       },
       {
-        heading: "12. Governing law",
+        heading: "13. Governing law",
         paragraphs: [
           "These Terms are governed by applicable laws of India. Consumer protections and mandatory rights available under applicable Indian law continue to apply.",
         ],
       },
       {
-        heading: "13. Contact",
+        heading: "14. Contact",
         paragraphs: [
-          "AquaKart 2.0 support: mukulkumarofficially@gmail.com and +91 74888 30394. Service area: Bokaro Steel City & Chas, Jharkhand, India.",
+          "AquaKart 2.0 support: +91 74888 30394. Service area: Bokaro Steel City & Chas, Jharkhand, India.",
         ],
       },
     ],
@@ -230,7 +243,7 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
         heading: "1. Current cookie status",
         paragraphs: [
           "The current AquaKart web code uses strictly necessary authentication cookies through Supabase SSR for login/session handling. The mobile app uses app storage for its Supabase session and does not rely on browser cookies.",
-          "The current repository does not include non-essential analytics or advertising pixels/SDKs. Because there are currently no non-essential cookies that require a consent choice in the web application, AquaKart does not display a cookie-consent banner at this time.",
+          "The current repository does not include a first-party analytics SDK, advertising pixel, or other non-essential tracking technology that would be activated by default. For the current India-only pilot, AquaKart therefore does not display a consent banner solely for cookies that are strictly necessary for authentication or core service operation. This is not a blanket rule for every jurisdiction: before adding non-essential tracking, advertising, or marketing technologies, or expanding into jurisdictions with additional consent requirements, the implementation and consent controls must be revisited.",
         ],
       },
       {
@@ -243,20 +256,20 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
       {
         heading: "3. Third-party services",
         paragraphs: [
-          "Google Maps is loaded on the authenticated network-map pages. Google may use technical storage/cookies and collect technical information according to Google's own policies.",
+          "Google Maps is loaded on authenticated network-map pages. Google may use its own technical storage/cookies and process technical information for its services. AquaKart does not control Google's processing; users should also review Google's applicable privacy and Maps terms.",
           "Supabase provides authentication, database, and realtime infrastructure. Expo services support mobile notifications. Google OAuth may be used for customer sign-in.",
         ],
       },
       {
         heading: "4. Future analytics",
         paragraphs: [
-          "If AquaKart adds analytics, advertising, marketing pixels, or other non-essential tracking, those technologies should be disabled until the relevant consent choice has been collected, and this policy should be updated to identify the provider, purpose, data, retention, and controls.",
+          "If AquaKart adds analytics, advertising, marketing pixels, or other non-essential tracking, those technologies should not be activated until the required consent choice has been collected. The Cookie Policy and Privacy Policy must then identify the provider, purpose, data categories, retention, international transfers where relevant, and user controls.",
         ],
       },
       {
         heading: "5. Contact",
         paragraphs: [
-          "Questions about cookies or privacy: mukulkumarofficially@gmail.com or +91 74888 30394.",
+          "Questions about cookies or privacy: +91 74888 30394.",
         ],
       },
     ],
@@ -315,7 +328,7 @@ export const LEGAL_DOCUMENTS: Record<"privacy" | "terms" | "cookies" | "refunds"
       {
         heading: "8. Contact",
         paragraphs: [
-          "Refunds and cancellation support: mukulkumarofficially@gmail.com or +91 74888 30394.",
+          "Refunds and cancellation support: +91 74888 30394.",
         ],
       },
     ],
