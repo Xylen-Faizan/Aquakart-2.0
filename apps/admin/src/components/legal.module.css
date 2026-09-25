@@ -119,3 +119,14 @@ a:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.ordered {
+  padding-left: 1.35rem;
+  margin: .5rem 0;
+}
+.ordered li {
+  max-width: 78ch;
+  color: var(--color-text-primary);
+  line-height: 1.7;
+  margin: .45rem 0;
+}
