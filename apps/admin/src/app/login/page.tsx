@@ -113,6 +113,9 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+      <nav aria-label="Legal links" style={{ position: 'fixed', bottom: 16, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 16, fontSize: 13 }}>
+        <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a><a href="/refunds">Refunds</a>
+      </nav>
     </div>
   );
 }

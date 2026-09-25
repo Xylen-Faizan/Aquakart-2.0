@@ -301,6 +301,26 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal & Privacy</Text>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "privacy" } } as any)} accessibilityRole="button" accessibilityLabel="Open Privacy Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Privacy Policy</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "terms" } } as any)} accessibilityRole="button" accessibilityLabel="Open Terms of Service">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Terms of Service</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "refunds" } } as any)} accessibilityRole="button" accessibilityLabel="Open Refund and Cancellation Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Refund & Cancellation</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "cookies" } } as any)} accessibilityRole="button" accessibilityLabel="Open Cookie Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Cookie Policy</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
 
           <Pressable

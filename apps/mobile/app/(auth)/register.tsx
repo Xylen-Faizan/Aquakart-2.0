@@ -15,6 +15,8 @@ import { z } from "zod";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,11 +32,16 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleRegister = async () => {
     try {
       setErrors({});
       signUpSchema.parse({ name, email, password });
+      if (!legalAccepted) {
+        setErrors({ form: "Please agree to the Terms of Service and acknowledge the Privacy Policy." });
+        return;
+      }
 
       setLoading(true);
       const { error } = await signUp(name, email, password);
@@ -42,6 +49,7 @@ export default function RegisterScreen() {
       if (error) {
         setErrors({ form: error.message });
       } else {
+        await legalService.persistForCurrentUser("mobile-email-signup");
         // Show verification message or navigate
         // Auth state change will handle routing if auto-login
       }
@@ -72,6 +80,8 @@ export default function RegisterScreen() {
         {/* Top Bar with Back Button */}
         <View style={styles.topBar}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             onPress={() =>
               router.canGoBack()
                 ? router.back()
@@ -157,8 +167,10 @@ export default function RegisterScreen() {
 
           {errors.form && <Text style={styles.errorText}>{errors.form}</Text>}
 
+          <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
+
           <Button
-            title="Sign Up"
+            title="Create account"
             onPress={handleRegister}
             loading={loading}
             style={styles.primaryButton}

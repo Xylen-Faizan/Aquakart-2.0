@@ -100,7 +100,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className={styles.mainContent}>
+      <main id="main-content" className={styles.mainContent}>
         {/* Top Navbar */}
         <header className={styles.topBar}>
           {!isMainDashboard ? (
@@ -115,6 +115,12 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         {children}
+        <footer style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '.85rem' }} aria-label="Legal links">
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Terms of Service</Link>
+          <Link href="/cookies">Cookie Policy</Link>
+          <Link href="/refunds">Refund & Cancellation</Link>
+        </footer>
       </main>
     </div>
   );

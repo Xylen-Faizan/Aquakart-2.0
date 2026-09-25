@@ -17,15 +17,22 @@ import { LoadingState } from "../../components/feedback";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as Linking from "expo-linking";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function CustomerAuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
+      if (!legalAccepted) {
+        setError("Please agree to the Terms of Service and acknowledge the Privacy Policy.");
+        return;
+      }
       setLoading(true);
       setError(null);
 
@@ -47,6 +54,7 @@ export default function CustomerAuthScreen() {
           if (signUpError) throw signUpError;
         }
 
+        await legalService.persistForCurrentUser("mobile-google-development");
         router.replace("/");
         return;
       }
@@ -82,6 +90,7 @@ export default function CustomerAuthScreen() {
             const { error: sessionError } =
               await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
+            await legalService.persistForCurrentUser("mobile-google");
             return; // Success handled by AuthProvider listener
           }
 
@@ -191,9 +200,7 @@ export default function CustomerAuthScreen() {
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.termsText}>
-            By continuing, you agree to our Terms & Privacy Policy
-          </Text>
+          <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
         </View>
       </View>
     </SafeAreaView>

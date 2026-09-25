@@ -173,7 +173,7 @@ export default function MoreScreen() {
                 {profile?.name || t('more.waterSupplier')}
               </Text>
               <Text style={styles.phoneText}>{profile?.phone}</Text>
-              <Text style={styles.badgeText}>{t('more.verifiedPartner')}</Text>
+              <Text style={styles.badgeText}>Supplier account</Text>
             </View>
           </View>
         </Card>
