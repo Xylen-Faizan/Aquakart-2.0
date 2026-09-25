@@ -65,13 +65,16 @@ export default function LegalScreen() {
         ))}
 
         <TouchableOpacity
-          onPress={() => Linking.openURL(`mailto:${BUSINESS_DETAILS.supportEmail}?subject=Privacy%20or%20Legal%20Request`)}
+          onPress={() => Linking.openURL(`tel:${BUSINESS_DETAILS.supportPhone.replace(/\s/g, "")}`)}
           style={styles.contact}
           accessibilityRole="button"
-          accessibilityLabel="Email AquaKart legal and privacy support"
+          accessibilityLabel="Call AquaKart legal and privacy support"
         >
-          <Text style={styles.contactText}>Email legal/privacy support</Text>
+          <Text style={styles.contactText}>Call legal/privacy support</Text>
         </TouchableOpacity>
+        <Text style={styles.deletionNote}>
+          To request account deletion, contact AquaKart support using the number above. A public account-deletion web resource should also be configured before Google Play submission.
+        </Text>
       </ScrollView>
     </View>
   );
@@ -107,4 +110,5 @@ const styles = StyleSheet.create({
   tabTextActive: { color: theme.colors.primary },
   contact: { marginTop: 18, minHeight: 48, paddingHorizontal: 16, borderRadius: 10, backgroundColor: theme.colors.primary, justifyContent: "center", alignItems: "center" },
   contactText: { color: theme.colors.white, fontWeight: "800" },
+  deletionNote: { color: theme.colors.textSecondary, fontSize: 12, lineHeight: 18, marginTop: 12, textAlign: "center" },
 });
