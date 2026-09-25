@@ -34,7 +34,24 @@ export default function LegalDocument({ document }: Props) {
             <h2 id="business-details">Business details</h2>
             <p><strong>Operator name used in the service:</strong> {BUSINESS_DETAILS.displayName}</p>
             <p><strong>Service area:</strong> {BUSINESS_DETAILS.serviceArea}</p>
-            <p><strong>Support:</strong> <a href={`mailto:${BUSINESS_DETAILS.supportEmail}`}>{BUSINESS_DETAILS.supportEmail}</a> · <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a></p>
+            <p><strong>Support:</strong> <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a></p>
+            {BUSINESS_DETAILS.legalName || BUSINESS_DETAILS.principalAddress || BUSINESS_DETAILS.grievanceOfficerName ? (
+              <>
+                {BUSINESS_DETAILS.legalName ? <p><strong>Legal name:</strong> {BUSINESS_DETAILS.legalName}</p> : null}
+                {BUSINESS_DETAILS.principalAddress ? <p><strong>Principal address:</strong> {BUSINESS_DETAILS.principalAddress}</p> : null}
+                {BUSINESS_DETAILS.grievanceOfficerName ? (
+                  <p>
+                    <strong>Grievance officer:</strong> {BUSINESS_DETAILS.grievanceOfficerName}
+                    {BUSINESS_DETAILS.grievanceOfficerDesignation ? ` · ${BUSINESS_DETAILS.grievanceOfficerDesignation}` : ""}
+                    {BUSINESS_DETAILS.grievanceOfficerPhone ? ` · ${BUSINESS_DETAILS.grievanceOfficerPhone}` : ""}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <p className={styles.readiness}>
+                <strong>Commercial-launch requirement:</strong> the legal entity name, principal office address and designated grievance-officer details are not yet configured. Add the exact registered/operating business details before public commercial launch.
+              </p>
+            )}
           </section>
 
           {data.sections.map((section) => (
@@ -51,7 +68,7 @@ export default function LegalDocument({ document }: Props) {
 
           <div className={styles.contact}>
             <strong>Questions or requests:</strong>{" "}
-            <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a>
+            <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a>
           </div>
         </article>
 
