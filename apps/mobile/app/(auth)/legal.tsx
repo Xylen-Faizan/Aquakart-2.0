@@ -36,7 +36,7 @@ export default function LegalScreen() {
           <Text style={styles.cardTitle}>Business details</Text>
           <Text style={styles.body}>Operator name used in the service: {BUSINESS_DETAILS.displayName}</Text>
           <Text style={styles.body}>Service area: {BUSINESS_DETAILS.serviceArea}</Text>
-          <Text style={styles.body}>Support: {BUSINESS_DETAILS.supportEmail} · {BUSINESS_DETAILS.supportPhone}</Text>
+          <Text style={styles.body}>Support: {BUSINESS_DETAILS.supportPhone}</Text>
         </View>
 
         <View style={styles.tabs} accessibilityRole="tablist">

@@ -4,7 +4,7 @@ export const LEGAL_EFFECTIVE_DATE = "25 September 2026";
 export const BUSINESS_DETAILS = {
   displayName: "AquaKart 2.0",
   serviceArea: "Bokaro Steel City & Chas, Jharkhand, India",
-  supportEmail: "mukulkumarofficially@gmail.com",
+  supportEmail: "",
   supportPhone: "+91 74888 30394",
 };
 

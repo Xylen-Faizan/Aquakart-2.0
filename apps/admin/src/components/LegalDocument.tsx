@@ -51,7 +51,7 @@ export default function LegalDocument({ document }: Props) {
 
           <div className={styles.contact}>
             <strong>Questions or requests:</strong>{" "}
-            <a href={`mailto:${BUSINESS_DETAILS.supportEmail}`}>{BUSINESS_DETAILS.supportEmail}</a>
+            <a href={`tel:${BUSINESS_DETAILS.supportPhone.replace(/\\s/g, "")}`}>{BUSINESS_DETAILS.supportPhone}</a>
           </div>
         </article>
 
