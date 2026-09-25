@@ -19,7 +19,7 @@ export default function DispatchExceptionsPage() {
         customers:customer_id (
           profile_id,
           profiles:profile_id (
-            full_name
+            name
           )
         )
       `)
@@ -65,7 +65,7 @@ export default function DispatchExceptionsPage() {
               <div className={styles.cardHeader}>
                 <div className={styles.requestInfo}>
                   <h3 className={styles.customerName}>
-                    {exc.customers?.profiles?.full_name || 'Unknown Customer'}
+                    {exc.customers?.profiles?.name || 'Unknown Customer'}
                   </h3>
                   <span className={styles.requestDetails}>
                     Requested: <strong>{exc.quantity} jars</strong> • {new Date(exc.request_created_at).toLocaleString()}

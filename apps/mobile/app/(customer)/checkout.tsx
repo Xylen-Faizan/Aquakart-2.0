@@ -548,6 +548,8 @@ export default function CheckoutScreen() {
               ) : null}
             </TouchableOpacity>
 
+            {/* UPI disabled for Bokaro Pilot due to dispatch hardcoding */}
+            {/*
             <TouchableOpacity
               style={[
                 styles.paymentMethodCard,
@@ -589,6 +591,7 @@ export default function CheckoutScreen() {
                 </View>
               ) : null}
             </TouchableOpacity>
+            */}
           </View>
         </View>
 

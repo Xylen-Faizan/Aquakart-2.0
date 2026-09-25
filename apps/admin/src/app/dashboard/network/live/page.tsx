@@ -37,7 +37,7 @@ export default function LiveNetworkPage() {
     if (!liveError && liveState) {
       // Fetch capacity for each vehicle using RPC
       const vehiclePromises = liveState.map(async (v: any) => {
-        const { data: capData } = await supabase.rpc('get_vehicle_capacity_state', {
+        const { data: capData } = await supabase.rpc('admin_get_vehicle_capacity_state', {
           p_run_id: v.run_id
         });
         
@@ -134,8 +134,8 @@ export default function LiveNetworkPage() {
                   {selectedVehicle.capacity && (
                     <div className={styles.capacityCard}>
                       <h4>Live Capacity</h4>
-                      <div className={styles.capRow}><span>Loaded:</span> <span>{selectedVehicle.capacity.total_loaded}</span></div>
-                      <div className={styles.capRow}><span>Delivered:</span> <span>{selectedVehicle.capacity.total_delivered}</span></div>
+                      <div className={styles.capRow}><span>Loaded:</span> <span>{selectedVehicle.capacity.loaded_quantity}</span></div>
+                      <div className={styles.capRow}><span>Delivered:</span> <span>{selectedVehicle.capacity.delivered_quantity}</span></div>
                       <hr className={styles.capDivider}/>
                       <div className={styles.capRow}><span>Physical Remaining:</span> <span>{selectedVehicle.capacity.physical_remaining}</span></div>
                       <div className={styles.capRow}><span>Scheduled Remaining:</span> <span>{selectedVehicle.capacity.scheduled_remaining}</span></div>

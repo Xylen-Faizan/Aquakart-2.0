@@ -26,11 +26,7 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyC8BHwgKt388mWy1gAM_cfxeBgRBpfa_aY"
-        }
-      }
+      "config": {}
     },
     "plugins": [
       "expo-router",
