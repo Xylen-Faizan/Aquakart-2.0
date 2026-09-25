@@ -187,9 +187,11 @@ export default function SupplierAuthScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Want to join our network? </Text>
             <TouchableOpacity
-              onPress={() => alert("Partner onboarding request sent!")}
+              accessibilityRole="button"
+              accessibilityLabel="Call AquaKart to ask about supplier partnership"
+              onPress={() => Linking.openURL("tel:+917488830394")}
             >
-              <Text style={styles.linkText}>Partner with AquaKart</Text>
+              <Text style={styles.linkText}>Contact AquaKart</Text>
             </TouchableOpacity>
           </View>
         </View>
