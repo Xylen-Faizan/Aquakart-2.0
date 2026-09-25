@@ -31,4 +31,4 @@ a {
   text-decoration: none;
 }
 
-.skip-link{position:fixed;left:1rem;top:-4rem;z-index:9999;background:var(--color-primary-dark);color:#fff;padding:.75rem 1rem;border-radius:.375rem;font-weight:700}.skip-link:focus{top:1rem}:focus-visible{outline:3px solid var(--color-aqua);outline-offset:3px}button,input,select,textarea{font:inherit}button{min-height:44px}
+.skip-link{position:fixed;left:1rem;top:-4rem;z-index:9999;background:var(--color-primary-dark);color:#fff;padding:.75rem 1rem;border-radius:.375rem;font-weight:700}.skip-link:focus{top:1rem}:focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}button,input,select,textarea{font:inherit}button{min-height:44px}
