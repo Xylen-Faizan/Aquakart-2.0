@@ -112,7 +112,7 @@ export const routeOpsService = {
         *,
         profiles:customer_id (name, phone),
         addresses (label, address, lat, lng),
-        products (name, size, unit)
+        products (name, unit)
       `)
       .eq('run_id', runId)
       .order('sequence_number', { ascending: true });

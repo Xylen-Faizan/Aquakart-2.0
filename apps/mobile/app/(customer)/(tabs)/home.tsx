@@ -15,14 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Link, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback } from "react";
-import { useAuth } from "../../features/auth/AuthProvider";
-import { theme } from "../../constants/theme";
-import { SupplierService } from "../../services/supplier";
-import { AddressService } from "../../services/address";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { theme } from "../../../constants/theme";
+import { SupplierService } from "../../../services/supplier";
+import { AddressService } from "../../../services/address";
 import type { AvailableSupplier, Address } from "@aquakart/types";
-import { supabase } from "../../lib/supabase/client";
-import SubscribedHome from "../../components/customer/SubscribedHome";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { supabase } from "../../../lib/supabase/client";
+import SubscribedHome from "../../../components/customer/SubscribedHome";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
@@ -204,19 +204,19 @@ export default function HomeScreen() {
             {[
               {
                 name: "Bisleri",
-                image: require("../../assets/images/bisleri_20l.png"),
+                image: require("../../../assets/images/bisleri_20l.png"),
               },
               {
                 name: "Aquacia",
-                image: require("../../assets/images/aquacia_1l.png"),
+                image: require("../../../assets/images/aquacia_1l.png"),
               },
               {
                 name: "Aquafina",
-                image: require("../../assets/images/aquafina_20l.png"),
+                image: require("../../../assets/images/aquafina_20l.png"),
               },
               {
                 name: "Kinley",
-                image: require("../../assets/images/kinley_1l.png"),
+                image: require("../../../assets/images/kinley_1l.png"),
               },
             ].map((brand, i) => (
               <Pressable
@@ -360,7 +360,7 @@ export default function HomeScreen() {
             >
               <View style={styles.productIconWrapper}>
                 <Image
-                  source={require("../../assets/images/jar_20l.png")}
+                  source={require("../../../assets/images/jar_20l.png")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />
@@ -374,7 +374,7 @@ export default function HomeScreen() {
             >
               <View style={styles.productIconWrapper}>
                 <Image
-                  source={require("../../assets/images/bottle_1l.png")}
+                  source={require("../../../assets/images/bottle_1l.png")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />
@@ -388,7 +388,7 @@ export default function HomeScreen() {
             >
               <View style={styles.productIconWrapper}>
                 <Image
-                  source={require("../../assets/images/cool_jar.jpg")}
+                  source={require("../../../assets/images/cool_jar.jpg")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />

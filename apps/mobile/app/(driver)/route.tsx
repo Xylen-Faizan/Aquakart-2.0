@@ -11,12 +11,14 @@ import {
 import { routeOpsService } from "../../services/route-ops";
 import { locationService } from "../../services/location";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { BackgroundLocationDisclosure } from "../../components/legal/BackgroundLocationDisclosure";
 
 export default function DriverRouteScreen() {
   const { session } = useAuth();
   const [run, setRun] = useState<any>(null);
   const [stops, setStops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
 
   useEffect(() => {
     fetchTodayRoute();
@@ -49,14 +51,45 @@ export default function DriverRouteScreen() {
         p_run_id: run.id,
       });
       if (error) throw error;
-      await locationService.startTracking(run.id);
-      setRun({ ...run, status: "in_progress" });
-      Alert.alert("Route Started", "Background location tracking is active.");
+      
+      await locationService.requestForegroundPermission();
+      const needsDisclosure = await locationService.needsBackgroundDisclosure();
+
+      if (needsDisclosure) {
+        setShowLocationDisclosure(true);
+      } else {
+        await locationService.startTracking(run.id, true);
+        setRun({ ...run, status: "in_progress" });
+        Alert.alert("Route Started", "Background location tracking is active.");
+      }
     } catch (err: any) {
       Alert.alert(
         "Error",
         err.message || "Cannot start run. Ensure load is confirmed.",
       );
+    }
+  };
+
+  const onDisclosureContinue = async () => {
+    setShowLocationDisclosure(false);
+    try {
+      await locationService.requestBackgroundPermission();
+      await locationService.startTracking(run.id, true);
+      setRun({ ...run, status: "in_progress" });
+      Alert.alert("Route Started", "Background location tracking is active.");
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
+  const onDisclosureDismiss = async () => {
+    setShowLocationDisclosure(false);
+    try {
+      await locationService.startTracking(run.id, false);
+      setRun({ ...run, status: "in_progress" });
+      Alert.alert("Warning", "App will only track route when open. Keep app active.");
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
     }
   };
 
@@ -108,6 +141,11 @@ export default function DriverRouteScreen() {
 
   return (
     <View style={styles.container}>
+      <BackgroundLocationDisclosure
+        visible={showLocationDisclosure}
+        onContinue={onDisclosureContinue}
+        onDismiss={onDisclosureDismiss}
+      />
       <View style={styles.headerCard}>
         <Text style={styles.title}>
           Vehicle: {run.vehicles?.vehicle_number}
@@ -154,7 +192,7 @@ export default function DriverRouteScreen() {
               </View>
 
               <Text style={styles.address}>
-                {stop.addresses?.street}, {stop.addresses?.city}
+                {stop.addresses?.address || 'No address provided'}
               </Text>
 
               <Text style={styles.qty}>

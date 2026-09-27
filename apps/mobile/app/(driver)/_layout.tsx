@@ -1,4 +1,6 @@
-import { Stack, Redirect } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
+import { theme } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { ActivityIndicator, View } from "react-native";
 import { useEffect, useState } from "react";
@@ -47,11 +49,33 @@ export default function DriverLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen
+    <Tabs
+      screenOptions={{
+        headerShown: true,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+      }}
+    >
+      <Tabs.Screen
         name="route"
-        options={{ title: "Today's Route", headerShown: true }}
+        options={{
+          title: "Today's Route",
+          headerShown: true,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="map-outline" size={24} color={color} />
+          ),
+        }}
       />
-    </Stack>
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerShown: true,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={24} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }

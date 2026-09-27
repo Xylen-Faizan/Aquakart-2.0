@@ -10,16 +10,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useAndroidBack } from "../../hooks/useAndroidBack";
-import { OrderService } from "../../services/order";
-import { theme } from "../../constants/theme";
-import { Card, Badge, Button } from "../../components/ui";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { OrderService } from "../../../services/order";
+import { theme } from "../../../constants/theme";
+import { Card, Badge, Button } from "../../../components/ui";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
-} from "../../components/feedback";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+} from "../../../components/feedback";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function OrdersScreen() {
   useAndroidBack();

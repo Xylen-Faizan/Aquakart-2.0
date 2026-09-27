@@ -1,104 +1,46 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import { theme } from "../../constants/theme";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function SupplierLayout() {
   return (
-    <Tabs
+    <Stack
       screenOptions={{
-        headerShown: true,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textTertiary,
+        headerShown: false,
       }}
     >
-      <Tabs.Screen
-        name="today"
+      <Stack.Screen
+        name="(tabs)"
         options={{
-          title: "Today",
           headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={24} color={color} />
-          ),
         }}
       />
-      <Tabs.Screen
-        name="customers"
-        options={{
-          title: "Customers",
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="people-outline" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="fleet"
-        options={{
-          title: "Live Fleet",
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="car-outline" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="jars"
-        options={{
-          title: "Jars",
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="water-outline" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: "More",
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="menu-outline" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
+      <Stack.Screen
         name="order/[id]"
         options={{
-          href: null,
           title: "Order Details",
+          headerShown: true,
         }}
       />
-      <Tabs.Screen
+      <Stack.Screen
         name="routes"
         options={{
-          href: null,
           title: "Routes",
           headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="more/team"
-        options={{
-          href: null,
-          title: "Team & Crew",
-        }}
-      />
-      <Tabs.Screen
+      <Stack.Screen
         name="khata/[id]"
         options={{
-          href: null,
           title: "Khata",
           headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="more/marketplace-history"
+      <Stack.Screen
+        name="more"
         options={{
-          href: null,
-          title: "Marketplace History",
           headerShown: false,
         }}
       />
-    </Tabs>
+    </Stack>
   );
 }

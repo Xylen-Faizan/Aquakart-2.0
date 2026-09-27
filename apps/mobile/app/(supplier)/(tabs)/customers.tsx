@@ -12,16 +12,16 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { theme } from "../../constants/theme";
-import { Card, Badge, Button } from "../../components/ui";
+import { theme } from "../../../constants/theme";
+import { Card, Badge, Button } from "../../../components/ui";
 import {
   CustomerService,
   SupplierCustomer,
   CustomerType,
-} from "../../services/customer";
-import { LedgerService, CustomerLedger } from "../../services/ledger";
+} from "../../../services/customer";
+import { LedgerService, CustomerLedger } from "../../../services/ledger";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function CustomersScreen() {
   const { t } = useLanguage();
@@ -172,7 +172,7 @@ export default function CustomersScreen() {
 
     try {
       setIsUpdatingPrice(true);
-      const { supabase } = require("../../lib/supabase/client");
+      const { supabase } = require("../../../lib/supabase/client");
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -241,7 +241,7 @@ export default function CustomersScreen() {
 
     try {
       setIsUpdatingSchedule(true);
-      const { supabase } = require("../../lib/supabase/client");
+      const { supabase } = require("../../../lib/supabase/client");
       const {
         data: { user },
       } = await supabase.auth.getUser();

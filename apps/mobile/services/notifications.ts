@@ -40,6 +40,10 @@ export const notificationService = {
       }
       
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      if (!projectId) {
+        console.error('Project ID not found in app.json/app.config.js');
+        return null;
+      }
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     } else {
       console.log('Must use physical device for Push Notifications');
@@ -62,6 +66,7 @@ export const notificationService = {
             user_id: userId, 
             expo_push_token: token, 
             platform: Platform.OS, 
+            is_active: true,
             last_seen_at: new Date().toISOString() 
           },
           { onConflict: 'user_id, expo_push_token' }

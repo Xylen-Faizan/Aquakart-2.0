@@ -7,10 +7,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import MapView, { Marker, Callout, UrlTile } from "react-native-maps";
-import { theme } from "../../constants/theme";
-import { supabase } from "../../lib/supabase/client";
-import { useAuth } from "../../features/auth/AuthProvider";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { theme } from "../../../constants/theme";
+import { supabase } from "../../../lib/supabase/client";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 import { useFocusEffect } from "expo-router";
 
 export default function FleetScreen() {

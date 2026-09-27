@@ -8,12 +8,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
+import { legalService, LEGAL_URLS } from "../../services/legalService";
 
 export default function PhoneAuthScreen() {
   const { signInWithPhone, verifyPhoneOtp } = useAuth();
@@ -67,6 +69,7 @@ export default function PhoneAuthScreen() {
       if (error) {
         setError(error.message);
       } else {
+        await legalService.recordConsent('phone_login');
         router.replace("/");
       }
     } catch (err: any) {
@@ -163,8 +166,14 @@ export default function PhoneAuthScreen() {
                 onPress={handleVerifyOtp}
                 loading={loading}
                 size="lg"
-                style={{ marginTop: 16 }}
+                style={{ marginTop: 16, marginBottom: 16 }}
               />
+              <Text style={styles.termsText}>
+                By continuing, you agree to our{" "}
+                <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
+                {" "}&{" "}
+                <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
+              </Text>
             </>
           )}
         </View>
@@ -224,5 +233,15 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     marginBottom: theme.spacing.md,
     textAlign: "center",
+  },
+  termsText: {
+    fontSize: 12,
+    color: theme.colors.textTertiary,
+    textAlign: "center",
+    marginTop: theme.spacing.md,
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium as any,
   },
 });

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { theme } from "../../constants/theme";
-import { Card } from "../../components/ui";
-import { supabase } from "../../lib/supabase/client";
-import { LedgerService, KhataSummary, KhataEvent } from "../../services/ledger";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { theme } from "../../../constants/theme";
+import { Card } from "../../../components/ui";
+import { supabase } from "../../../lib/supabase/client";
+import { LedgerService, KhataSummary, KhataEvent } from "../../../services/ledger";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function CustomerKhataScreen() {
   const { t } = useLanguage();

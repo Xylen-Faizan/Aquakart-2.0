@@ -70,6 +70,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(initialSession.user);
           // Wait for profile so role is ready for navigation guard
           await fetchProfile(initialSession.user.id);
+          // Sync push token on restored session
+          notificationService.syncPushToken(initialSession.user.id);
         } else {
           console.log('[AuthProvider] Boot: persisted session (none)');
         }

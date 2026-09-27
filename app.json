@@ -6,7 +6,7 @@
       }
     },
     "android": {
-      "package": "com.faizan07.aquakart2"
+      "package": "com.aquakart.app"
     }
   }
 }

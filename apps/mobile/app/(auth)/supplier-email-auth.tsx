@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,6 +16,7 @@ import { z } from "zod";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
+import { legalService, LEGAL_URLS } from "../../services/legalService";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -40,6 +42,7 @@ export default function SupplierEmailAuthScreen() {
       if (error) {
         setErrors({ form: error.message });
       } else {
+        await legalService.recordConsent('supplier_email_login');
         router.replace("/");
       }
     } catch (error) {
@@ -146,6 +149,12 @@ export default function SupplierEmailAuthScreen() {
             style={styles.primaryButton}
             size="lg"
           />
+          <Text style={styles.termsText}>
+            By continuing, you agree to our{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
+            {" "}&{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -220,5 +229,15 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     marginBottom: theme.spacing.md,
     textAlign: "center",
+  },
+  termsText: {
+    fontSize: 12,
+    color: theme.colors.textTertiary,
+    textAlign: "center",
+    marginTop: theme.spacing.md,
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium as any,
   },
 });

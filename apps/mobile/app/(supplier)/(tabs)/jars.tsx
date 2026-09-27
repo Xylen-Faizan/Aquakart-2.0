@@ -12,16 +12,16 @@ import {
   Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { theme } from "../../constants/theme";
-import { Card, Badge, Button } from "../../components/ui";
+import { theme } from "../../../constants/theme";
+import { Card, Badge, Button } from "../../../components/ui";
 import {
   InventoryService,
   InventoryStats,
   JarActivity,
-} from "../../services/inventory";
-import { CustomerService, SupplierCustomer } from "../../services/customer";
+} from "../../../services/inventory";
+import { CustomerService, SupplierCustomer } from "../../../services/customer";
 import { useFocusEffect } from "expo-router";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function JarsScreen() {
   const { t } = useLanguage();

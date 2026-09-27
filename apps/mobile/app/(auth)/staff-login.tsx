@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import * as Linking from "expo-linking";
 import {
   View,
   Text,
@@ -16,8 +17,8 @@ import { Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
-import * as Linking from "expo-linking";
 import { supabase } from "../../lib/supabase/client";
+import { legalService, LEGAL_URLS } from "../../services/legalService";
 
 // Complete auth session if returning from web browser auth
 WebBrowser.maybeCompleteAuthSession();
@@ -54,16 +55,17 @@ export default function StaffAuthScreen() {
         if (result.type === "success" && result.url) {
           const parsedUrl = Linking.parse(result.url);
           const params = parsedUrl.queryParams || {};
+          const urlObj = new URL(result.url.replace("#", "?"));
+          const code = (params.code as string) || urlObj.searchParams.get("code");
 
-          const code = params.code as string;
           if (code) {
             const { error: sessionError } =
               await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
+            await legalService.recordConsent('staff_google_login');
             return;
           }
 
-          const urlObj = new URL(result.url.replace("#", "?"));
           const accessToken =
             (params.access_token as string) ||
             urlObj.searchParams.get("access_token");
@@ -77,6 +79,7 @@ export default function StaffAuthScreen() {
               refresh_token: refreshToken,
             });
             if (sessionError) throw sessionError;
+            await legalService.recordConsent('staff_google_login');
           } else {
             throw new Error(
               "Authentication failed: No valid session tokens returned from provider.",
@@ -173,6 +176,12 @@ export default function StaffAuthScreen() {
 
           {error && <Text style={styles.errorText}>{error}</Text>}
 
+          <Text style={styles.termsText}>
+            By continuing, you agree to our{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
+            {" "}&{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -235,5 +244,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 16,
     textAlign: "center",
+  },
+  termsText: {
+    fontSize: 12,
+    color: theme.colors.textTertiary,
+    textAlign: "center",
+    marginTop: theme.spacing.xl,
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium as any,
   },
 });

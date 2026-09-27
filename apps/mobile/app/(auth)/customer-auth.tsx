@@ -17,6 +17,7 @@ import { LoadingState } from "../../components/feedback";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as Linking from "expo-linking";
+import { legalService, LEGAL_URLS } from "../../services/legalService";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -82,6 +83,7 @@ export default function CustomerAuthScreen() {
             const { error: sessionError } =
               await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
+            await legalService.recordConsent('google_login');
             return; // Success handled by AuthProvider listener
           }
 
@@ -102,6 +104,7 @@ export default function CustomerAuthScreen() {
               refresh_token: refreshToken,
             });
             if (sessionError) throw sessionError;
+            await legalService.recordConsent('google_login');
           } else {
             throw new Error(
               "Authentication failed: No valid session tokens returned from provider.",
@@ -192,7 +195,10 @@ export default function CustomerAuthScreen() {
           </TouchableOpacity>
 
           <Text style={styles.termsText}>
-            By continuing, you agree to our Terms & Privacy Policy
+            By continuing, you agree to our{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
+            {" "}&{" "}
+            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
           </Text>
         </View>
       </View>
@@ -339,5 +345,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textTertiary,
     textAlign: "center",
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium as any,
   },
 });

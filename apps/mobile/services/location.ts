@@ -48,20 +48,26 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 });
 
 export const locationService = {
-  async requestPermissions() {
+  async needsBackgroundDisclosure() {
+    const { status } = await Location.getBackgroundPermissionsAsync();
+    return status !== 'granted';
+  },
+
+  async requestForegroundPermission() {
     const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
     if (foregroundStatus !== 'granted') {
       throw new Error('Foreground location permission denied');
     }
+  },
+
+  async requestBackgroundPermission() {
     const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus !== 'granted') {
       throw new Error('Background location permission denied');
     }
   },
 
-  async startTracking(runId: string) {
-    await this.requestPermissions();
-    
+  async startTracking(runId: string, backgroundGranted: boolean = true) {
     activeRunId = runId;
     await AsyncStorage.setItem(ACTIVE_RUN_STORAGE_KEY, runId);
 

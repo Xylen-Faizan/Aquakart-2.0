@@ -5,25 +5,23 @@ serve(async (req) => {
   try {
     const payload = await req.json()
 
-    // 1. Validate payload is an INSERT from delivery_notifications
     if (payload.type !== 'INSERT' || payload.table !== 'delivery_notifications') {
       return new Response("Ignored", { status: 200 })
     }
 
     const notification = payload.record
 
-    // 2. Initialize Supabase Client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // 3. Mark as processing
+    // Mark as processing
     await supabase
       .from('delivery_notifications')
       .update({ status: 'processing', updated_at: new Date().toISOString() })
       .eq('id', notification.id)
 
-    // 4. Get User Push Token
+    // Get active user push tokens
     const { data: devices, error: deviceError } = await supabase
       .from('user_devices')
       .select('expo_push_token')
@@ -33,12 +31,15 @@ serve(async (req) => {
     if (deviceError || !devices || devices.length === 0) {
       await supabase
         .from('delivery_notifications')
-        .update({ status: 'failed', error_message: 'No active devices found', failed_at: new Date().toISOString() })
+        .update({ 
+          status: 'failed', 
+          error_message: 'No active devices found in user_devices', 
+          failed_at: new Date().toISOString() 
+        })
         .eq('id', notification.id)
       return new Response("No devices found", { status: 200 })
     }
 
-    // 5. Send to Expo Push API
     const pushTokens = devices.map(d => d.expo_push_token)
     const expoMessage = {
       to: pushTokens,
@@ -60,13 +61,39 @@ serve(async (req) => {
 
     const ticketResponse = await res.json()
     
-    // Simplistic error handling for MVP
+    let hasError = false;
+    let errorDetails = '';
+
     if (ticketResponse.errors) {
+      hasError = true;
+      errorDetails = JSON.stringify(ticketResponse.errors);
+    } else if (ticketResponse.data) {
+      // Check individual token tickets
+      const tickets = ticketResponse.data;
+      for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        if (ticket.status === 'error') {
+          hasError = true;
+          errorDetails += `Token ${pushTokens[i]} failed: ${ticket.message}. `;
+          
+          if (ticket.details && ticket.details.error === 'DeviceNotRegistered') {
+            console.log(`Deactivating token: ${pushTokens[i]}`);
+            await supabase
+              .from('user_devices')
+              .update({ is_active: false })
+              .eq('expo_push_token', pushTokens[i])
+              .eq('user_id', notification.user_id);
+          }
+        }
+      }
+    }
+
+    if (hasError) {
       await supabase
         .from('delivery_notifications')
         .update({ 
           status: 'failed', 
-          error_message: JSON.stringify(ticketResponse.errors), 
+          error_message: errorDetails, 
           failed_at: new Date().toISOString() 
         })
         .eq('id', notification.id)
