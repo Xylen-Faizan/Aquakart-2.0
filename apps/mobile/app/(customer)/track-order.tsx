@@ -15,6 +15,7 @@ import { dispatchService } from "../../services/dispatch";
 import { supabase } from "../../lib/supabase/client";
 import MapView, { Marker } from "react-native-maps";
 import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { formatISTTime } from "../../lib/date";
 
 export default function TrackOrderScreen() {
   const { order_id } = useLocalSearchParams<{ order_id: string }>();
@@ -143,7 +144,7 @@ export default function TrackOrderScreen() {
             </Text>
             <Text style={styles.lastUpdated}>
               Updated:{" "}
-              {new Date(tracking.last_updated).toLocaleTimeString("en-IN")}
+              {formatISTTime(tracking.last_updated)}
             </Text>
           </View>
         )}
