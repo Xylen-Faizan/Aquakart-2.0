@@ -18,11 +18,13 @@ import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../../lib/supabase/client";
 import { Image } from "expo-image";
 import { Alert } from "react-native";
+import ProfileOverflowMenu from "../../../components/account/ProfileOverflowMenu";
 
 export default function MoreScreen() {
   const { profile, signOut } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
+  const [menuVisible, setMenuVisible] = React.useState(false);
 
   const menuItems = [
     {
@@ -146,8 +148,10 @@ export default function MoreScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('more.title')}</Text>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.headerMenu} accessibilityRole="button" accessibilityLabel="Account menu"><Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textPrimary} /></TouchableOpacity>
       </View>
 
+      <ProfileOverflowMenu visible={menuVisible} onClose={() => setMenuVisible(false)} settingsRoute="/(supplier)/more/settings-account" faqsRoute="/(supplier)/more/faqs" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -173,7 +177,7 @@ export default function MoreScreen() {
                 {profile?.name || t('more.waterSupplier')}
               </Text>
               <Text style={styles.phoneText}>{profile?.phone}</Text>
-              <Text style={styles.badgeText}>{t('more.verifiedPartner')}</Text>
+              <Text style={styles.badgeText}>Supplier account</Text>
             </View>
           </View>
         </Card>
@@ -230,6 +234,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
+  headerMenu: { marginLeft: "auto", padding: 6 },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",

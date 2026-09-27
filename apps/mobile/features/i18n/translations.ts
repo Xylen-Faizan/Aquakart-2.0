@@ -48,7 +48,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // ─── Customer Home ───
     "home.deliverTo": "Deliver to",
     "home.addAddress": "Add delivery address",
-    "home.freshWater": "Fresh & Pure Water\nDelivered to your doorstep",
+    "home.freshWater": "Water delivery\nTo your doorstep",
     "home.orderNow": "Order Now",
     "home.popularBrands": "Popular Brands",
     "home.nearbySuppliers": "Nearby Suppliers",
@@ -971,7 +971,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // ─── Customer Home ───
     "home.deliverTo": "डिलीवरी का पता",
     "home.addAddress": "डिलीवरी का पता जोड़ें",
-    "home.freshWater": "शुद्ध और ताज़ा पानी\nआपके घर तक",
+    "home.freshWater": "पानी की डिलीवरी\nआपके घर तक",
     "home.orderNow": "अभी ऑर्डर करें",
     "home.popularBrands": "लोकप्रिय ब्रांड",
     "home.nearbySuppliers": "आस-पास के आपूर्तिकर्ता",

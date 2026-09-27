@@ -12,14 +12,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useAndroidBack } from "../../../hooks/useAndroidBack";
+import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useAuth } from "../../../features/auth/AuthProvider";
-import { supabase } from "../../../lib/supabase/client";
-import { theme } from "../../../constants/theme";
-import { Card, Button } from "../../../components/ui";
-import { useLanguage } from "../../../features/i18n/LanguageProvider";
+import { useAuth } from "../../features/auth/AuthProvider";
+import { supabase } from "../../lib/supabase/client";
+import { theme } from "../../constants/theme";
+import { Card, Button } from "../../components/ui";
+import { useLanguage } from "../../features/i18n/LanguageProvider";
+import ProfileOverflowMenu from "../../components/account/ProfileOverflowMenu";
 
 export default function ProfileScreen() {
   const { profile, user, session, signOut, refreshProfile } = useAuth();
@@ -38,6 +39,7 @@ export default function ProfileScreen() {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Keep local state in sync when profile loads/updates
   useEffect(() => {
@@ -169,8 +171,10 @@ export default function ProfileScreen() {
           />
         </Pressable>
         <Text style={styles.title}>{t('profile.title')}</Text>
+        <Pressable onPress={() => setMenuVisible(true)} style={styles.menuButton} accessibilityRole="button" accessibilityLabel="Profile menu"><Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textPrimary} /></Pressable>
       </View>
 
+      <ProfileOverflowMenu visible={menuVisible} onClose={() => setMenuVisible(false)} settingsRoute="/(customer)/settings" faqsRoute="/(customer)/faqs" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ padding: theme.spacing.lg }}
@@ -301,6 +305,26 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal & Privacy</Text>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "privacy" } } as any)} accessibilityRole="button" accessibilityLabel="Open Privacy Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Privacy Policy</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "terms" } } as any)} accessibilityRole="button" accessibilityLabel="Open Terms of Service">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Terms of Service</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "refunds" } } as any)} accessibilityRole="button" accessibilityLabel="Open Refund and Cancellation Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Refund & Cancellation</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.settingItem} onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "cookies" } } as any)} accessibilityRole="button" accessibilityLabel="Open Cookie Policy">
+            <View style={styles.settingItemLeft}><Text style={styles.settingText}>Cookie Policy</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
 
           <Pressable
@@ -308,7 +332,7 @@ export default function ProfileScreen() {
             onPress={() =>
               Alert.alert(
                 t('profile.helpCenter'),
-                "Our customer support team is available at support@aquakart.in",
+                "Customer support is available at +91 74888 30394.",
               )
             }
           >
@@ -321,31 +345,6 @@ export default function ProfileScreen() {
                 />
               </View>
               <Text style={styles.settingText}>{t('profile.helpCenter')}</Text>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.textTertiary}
-            />
-          </Pressable>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.accountPrivacy') || 'ACCOUNT & PRIVACY'}</Text>
-
-          <Pressable
-            style={styles.settingItem}
-            onPress={() => router.push("/delete-account" as any)}
-          >
-            <View style={styles.settingItemLeft}>
-              <View style={styles.settingIconWrapper}>
-                <Ionicons
-                  name="trash-outline"
-                  size={20}
-                  color={theme.colors.error}
-                />
-              </View>
-              <Text style={styles.settingText}>{t('profile.deleteAccount') || 'Delete Account'}</Text>
             </View>
             <Ionicons
               name="chevron-forward"
@@ -376,6 +375,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   backBtn: { marginRight: theme.spacing.md },
+  menuButton: { marginLeft: "auto", padding: 6 },
   title: {
     fontSize: theme.fontSize.xl,
     fontWeight: "bold",

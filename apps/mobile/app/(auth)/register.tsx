@@ -8,8 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Linking,
-  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -17,7 +15,8 @@ import { z } from "zod";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
-import { legalService, LEGAL_URLS } from "../../services/legalService";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -31,17 +30,16 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleRegister = async () => {
     try {
       setErrors({});
       signUpSchema.parse({ name, email, password });
-
-      if (!agreedToTerms) {
-        setErrors({ form: "You must agree to the Terms of Service and Privacy Policy" });
+      if (!legalAccepted) {
+        setErrors({ form: "Please agree to the Terms of Service and acknowledge the Privacy Policy." });
         return;
       }
 
@@ -51,9 +49,9 @@ export default function RegisterScreen() {
       if (error) {
         setErrors({ form: error.message });
       } else {
+        await legalService.persistForCurrentUser("mobile-email-signup");
         // Show verification message or navigate
         // Auth state change will handle routing if auto-login
-        await legalService.recordConsent('registration');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -82,6 +80,8 @@ export default function RegisterScreen() {
         {/* Top Bar with Back Button */}
         <View style={styles.topBar}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             onPress={() =>
               router.canGoBack()
                 ? router.back()
@@ -167,27 +167,10 @@ export default function RegisterScreen() {
 
           {errors.form && <Text style={styles.errorText}>{errors.form}</Text>}
 
-          <View style={styles.termsContainer}>
-            <Pressable 
-              style={styles.checkbox}
-              onPress={() => setAgreedToTerms(!agreedToTerms)}
-            >
-              <Ionicons 
-                name={agreedToTerms ? "checkbox" : "checkbox-outline"} 
-                size={24} 
-                color={theme.colors.primary} 
-              />
-            </Pressable>
-            <Text style={styles.termsText}>
-              I agree to the{" "}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms of Service</Text>
-              {" "}and{" "}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
-            </Text>
-          </View>
+          <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
 
           <Button
-            title="Sign Up"
+            title="Create account"
             onPress={handleRegister}
             loading={loading}
             style={styles.primaryButton}
@@ -292,25 +275,5 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold as any,
-  },
-  termsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xs,
-  },
-  checkbox: {
-    marginRight: theme.spacing.sm,
-  },
-  termsText: {
-    flex: 1,
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    lineHeight: 20,
-  },
-  termsLink: {
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeight.medium as any,
   },
 });

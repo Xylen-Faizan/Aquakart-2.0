@@ -8,14 +8,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
-import { legalService, LEGAL_URLS } from "../../services/legalService";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 export default function PhoneAuthScreen() {
   const { signInWithPhone, verifyPhoneOtp } = useAuth();
@@ -26,6 +26,7 @@ export default function PhoneAuthScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleSendOtp = async () => {
     if (!phone || phone.length < 10) {
@@ -36,6 +37,10 @@ export default function PhoneAuthScreen() {
     }
 
     try {
+      if (!legalAccepted) {
+        setError("Please agree to the Terms of Service and acknowledge the Privacy Policy.");
+        return;
+      }
       setLoading(true);
       setError(null);
       const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
@@ -69,7 +74,7 @@ export default function PhoneAuthScreen() {
       if (error) {
         setError(error.message);
       } else {
-        await legalService.recordConsent('phone_login');
+        await legalService.persistForCurrentUser("mobile-phone");
         router.replace("/");
       }
     } catch (err: any) {
@@ -135,6 +140,7 @@ export default function PhoneAuthScreen() {
                 }
               />
               {error && <Text style={styles.errorText}>{error}</Text>}
+              <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
               <Button
                 title="Send Code"
                 onPress={handleSendOtp}
@@ -166,14 +172,8 @@ export default function PhoneAuthScreen() {
                 onPress={handleVerifyOtp}
                 loading={loading}
                 size="lg"
-                style={{ marginTop: 16, marginBottom: 16 }}
+                style={{ marginTop: 16 }}
               />
-              <Text style={styles.termsText}>
-                By continuing, you agree to our{" "}
-                <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
-                {" "}&{" "}
-                <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
-              </Text>
             </>
           )}
         </View>
@@ -233,15 +233,5 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     marginBottom: theme.spacing.md,
     textAlign: "center",
-  },
-  termsText: {
-    fontSize: 12,
-    color: theme.colors.textTertiary,
-    textAlign: "center",
-    marginTop: theme.spacing.md,
-  },
-  termsLink: {
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeight.medium as any,
   },
 });

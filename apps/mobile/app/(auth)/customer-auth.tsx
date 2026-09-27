@@ -17,16 +17,22 @@ import { LoadingState } from "../../components/feedback";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as Linking from "expo-linking";
-import { legalService, LEGAL_URLS } from "../../services/legalService";
+import { LegalConsent } from "../../components/legal/LegalConsent";
+import { legalService } from "../../services/legal";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function CustomerAuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
+      if (!legalAccepted) {
+        setError("Please agree to the Terms of Service and acknowledge the Privacy Policy.");
+        return;
+      }
       setLoading(true);
       setError(null);
 
@@ -48,6 +54,7 @@ export default function CustomerAuthScreen() {
           if (signUpError) throw signUpError;
         }
 
+        await legalService.persistForCurrentUser("mobile-google-development");
         router.replace("/");
         return;
       }
@@ -83,7 +90,7 @@ export default function CustomerAuthScreen() {
             const { error: sessionError } =
               await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
-            await legalService.recordConsent('google_login');
+            await legalService.persistForCurrentUser("mobile-google");
             return; // Success handled by AuthProvider listener
           }
 
@@ -104,7 +111,6 @@ export default function CustomerAuthScreen() {
               refresh_token: refreshToken,
             });
             if (sessionError) throw sessionError;
-            await legalService.recordConsent('google_login');
           } else {
             throw new Error(
               "Authentication failed: No valid session tokens returned from provider.",
@@ -194,12 +200,7 @@ export default function CustomerAuthScreen() {
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.termsText}>
-            By continuing, you agree to our{" "}
-            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms</Text>
-            {" "}&{" "}
-            <Text style={styles.termsLink} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>
-          </Text>
+          <LegalConsent checked={legalAccepted} onChange={setLegalAccepted} />
         </View>
       </View>
     </SafeAreaView>
@@ -345,9 +346,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textTertiary,
     textAlign: "center",
-  },
-  termsLink: {
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeight.medium as any,
   },
 });
