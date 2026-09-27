@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabase/client";
 import { theme } from "../../constants/theme";
 import { Card, Button } from "../../components/ui";
 import { useLanguage } from "../../features/i18n/LanguageProvider";
+import ProfileOverflowMenu from "../../components/account/ProfileOverflowMenu";
 
 export default function ProfileScreen() {
   const { profile, user, session, signOut, refreshProfile } = useAuth();
@@ -38,6 +39,7 @@ export default function ProfileScreen() {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Keep local state in sync when profile loads/updates
   useEffect(() => {
@@ -169,8 +171,10 @@ export default function ProfileScreen() {
           />
         </Pressable>
         <Text style={styles.title}>{t('profile.title')}</Text>
+        <Pressable onPress={() => setMenuVisible(true)} style={styles.menuButton} accessibilityRole="button" accessibilityLabel="Profile menu"><Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textPrimary} /></Pressable>
       </View>
 
+      <ProfileOverflowMenu visible={menuVisible} onClose={() => setMenuVisible(false)} settingsRoute="/(customer)/settings" faqsRoute="/(customer)/faqs" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ padding: theme.spacing.lg }}
@@ -328,7 +332,7 @@ export default function ProfileScreen() {
             onPress={() =>
               Alert.alert(
                 t('profile.helpCenter'),
-                "Our customer support team is available at support@aquakart.com",
+                "Customer support is available at +91 74888 30394.",
               )
             }
           >
@@ -371,6 +375,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   backBtn: { marginRight: theme.spacing.md },
+  menuButton: { marginLeft: "auto", padding: 6 },
   title: {
     fontSize: theme.fontSize.xl,
     fontWeight: "bold",
