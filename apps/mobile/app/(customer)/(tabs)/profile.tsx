@@ -12,15 +12,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useAndroidBack } from "../../hooks/useAndroidBack";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useAuth } from "../../features/auth/AuthProvider";
-import { supabase } from "../../lib/supabase/client";
-import { theme } from "../../constants/theme";
-import { Card, Button } from "../../components/ui";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
-import ProfileOverflowMenu from "../../components/account/ProfileOverflowMenu";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { supabase } from "../../../lib/supabase/client";
+import { theme } from "../../../constants/theme";
+import { Card, Button } from "../../../components/ui";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
+import ProfileOverflowMenu from "../../../components/account/ProfileOverflowMenu";
 
 export default function ProfileScreen() {
   const { profile, user, session, signOut, refreshProfile } = useAuth();

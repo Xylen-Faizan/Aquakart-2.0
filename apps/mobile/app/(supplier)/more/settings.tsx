@@ -75,6 +75,7 @@ export default function SettingsScreen() {
           <TouchableOpacity onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "terms" } } as any)} style={{ paddingVertical: 12 }} accessibilityRole="button" accessibilityLabel="Open Terms of Service"><Text style={{ color: theme.colors.primary, fontWeight: "700" }}>Terms of Service</Text></TouchableOpacity>
           <TouchableOpacity onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "refunds" } } as any)} style={{ paddingVertical: 12 }} accessibilityRole="button" accessibilityLabel="Open Refund and Cancellation Policy"><Text style={{ color: theme.colors.primary, fontWeight: "700" }}>Refund & Cancellation Policy</Text></TouchableOpacity>
           <TouchableOpacity onPress={() => router.push({ pathname: "/(auth)/legal", params: { document: "cookies" } } as any)} style={{ paddingVertical: 12 }} accessibilityRole="button" accessibilityLabel="Open Cookie Policy"><Text style={{ color: theme.colors.primary, fontWeight: "700" }}>Cookie Policy</Text></TouchableOpacity>
+      </Card>
       </View>
     </SafeAreaView>
   );

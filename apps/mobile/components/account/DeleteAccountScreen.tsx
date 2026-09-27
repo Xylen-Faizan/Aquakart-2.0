@@ -95,11 +95,10 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
           style={[styles.deleteButton, submitting && styles.disabledButton]}
           onPress={submit}
           disabled={submitting}
-          accessibilityRole="button"
           accessibilityLabel="Request Account Deletion"
         >
           <Text style={styles.deleteButtonText}>
-            {submitting ? t("account.delete.submitting") : t("account.delete.requestButton")}
+            {submitting ? "Submitting Request..." : "Request Account Deletion"}
           </Text>
         </TouchableOpacity>
 

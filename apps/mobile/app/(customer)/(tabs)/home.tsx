@@ -15,14 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Link, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback } from "react";
-import { useAuth } from "../../features/auth/AuthProvider";
-import { theme } from "../../constants/theme";
-import { SupplierService } from "../../services/supplier";
-import { AddressService } from "../../services/address";
+import { useAuth } from "../../../features/auth/AuthProvider";
+import { theme } from "../../../constants/theme";
+import { SupplierService } from "../../../services/supplier";
+import { AddressService } from "../../../services/address";
 import type { AvailableSupplier, Address } from "@aquakart/types";
-import { supabase } from "../../lib/supabase/client";
-import SubscribedHome from "../../components/customer/SubscribedHome";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
+import { supabase } from "../../../lib/supabase/client";
+import SubscribedHome from "../../../components/customer/SubscribedHome";
+import { useLanguage } from "../../../features/i18n/LanguageProvider";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();

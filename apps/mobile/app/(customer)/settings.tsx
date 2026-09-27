@@ -15,7 +15,7 @@ export default function CustomerSettings() {
     </View>
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text style={styles.section}>{t("account.settings")}</Text>
+        <Text style={styles.section}>Account Settings</Text>
         <TouchableOpacity style={styles.row} onPress={() => router.push("/(customer)/faqs" as any)}>
           <Ionicons name="help-circle-outline" size={22} color={theme.colors.primary}/><Text style={styles.rowText}>FAQs</Text><Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary}/>
         </TouchableOpacity>
