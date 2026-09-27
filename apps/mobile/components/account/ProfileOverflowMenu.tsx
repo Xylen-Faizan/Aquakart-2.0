@@ -43,18 +43,18 @@ export default function ProfileOverflowMenu({
         <Pressable style={styles.menu} onPress={(event) => event.stopPropagation()}>
           <Pressable style={styles.item} onPress={() => open(settingsRoute)}>
             <Ionicons name="settings-outline" size={21} color={theme.colors.textPrimary} />
-            <Text style={styles.itemText}>{t("account.settings")}</Text>
+            <Text style={styles.itemText}>Settings</Text>
           </Pressable>
 
           <Pressable style={styles.item} onPress={() => open(faqsRoute)}>
             <Ionicons name="help-circle-outline" size={21} color={theme.colors.textPrimary} />
-            <Text style={styles.itemText}>{t("account.faqs")}</Text>
+            <Text style={styles.itemText}>FAQs</Text>
           </Pressable>
 
           <View style={styles.divider} />
 
           <Pressable style={styles.cancelItem} onPress={onClose}>
-            <Text style={styles.cancelText}>{t("common.cancel")}</Text>
+            <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
         </Pressable>
       </Pressable>
