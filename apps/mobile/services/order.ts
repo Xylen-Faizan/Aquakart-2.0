@@ -31,7 +31,7 @@ export const OrderService = {
       .select(`
         *,
         supplier:supplier_id (business_name, phone),
-        order_items (*, product:product_id(name, category))
+        order_items (*, product:product_id(name))
       `)
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false });
@@ -47,7 +47,7 @@ export const OrderService = {
         *,
         supplier:supplier_id (business_name, phone, address),
         address:address_id (*),
-        order_items (*, product:product_id(name, category)),
+        order_items (*, product:product_id(name)),
         history:order_status_history (*)
       `)
       .eq('id', orderId)
