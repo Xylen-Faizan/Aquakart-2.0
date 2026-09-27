@@ -23,7 +23,6 @@ type Props = {
 export default function DeleteAccountScreen({ source = "mobile" }: Props) {
   const router = useRouter();
   const { signOut } = useAuth();
-  const { t } = useLanguage();
   const [confirmation, setConfirmation] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -31,7 +30,7 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
 
   const submit = async () => {
     if (confirmation.trim().toUpperCase() !== "DELETE") {
-      Alert.alert(t("account.delete.title"), t("account.delete.typeDelete"));
+      Alert.alert("Delete Account", "Please type DELETE exactly to confirm.");
       return;
     }
 
@@ -43,12 +42,12 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
       Alert.alert(
         t("account.delete.requestedTitle"),
         t("account.delete.requestedMessage"),
-        [{ text: t("common.ok"), onPress: () => signOut() }],
+        [{ text: "OK", onPress: () => signOut() }],
       );
     } catch (error: any) {
       Alert.alert(
         t("account.delete.errorTitle"),
-        error?.message || t("account.delete.errorMessage"),
+        error?.message || "We could not submit the deletion request. Please try again or contact support.",
       );
     } finally {
       setSubmitting(false);
