@@ -204,19 +204,19 @@ export default function HomeScreen() {
             {[
               {
                 name: "Bisleri",
-                image: require("../../assets/images/bisleri_20l.png"),
+                image: require("../../../assets/images/bisleri_20l.png"),
               },
               {
                 name: "Aquacia",
-                image: require("../../assets/images/aquacia_1l.png"),
+                image: require("../../../assets/images/aquacia_1l.png"),
               },
               {
                 name: "Aquafina",
-                image: require("../../assets/images/aquafina_20l.png"),
+                image: require("../../../assets/images/aquafina_20l.png"),
               },
               {
                 name: "Kinley",
-                image: require("../../assets/images/kinley_1l.png"),
+                image: require("../../../assets/images/kinley_1l.png"),
               },
             ].map((brand, i) => (
               <Pressable
