@@ -40,13 +40,13 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
       setSubmitting(true);
       await accountService.requestDeletion(source);
       Alert.alert(
-        t("account.delete.requestedTitle"),
-        t("account.delete.requestedMessage"),
+        "Request submitted",
+        "Your account deletion request has been submitted. You have been signed out.",
         [{ text: "OK", onPress: () => signOut() }],
       );
     } catch (error: any) {
       Alert.alert(
-        t("account.delete.errorTitle"),
+        "Request failed",
         error?.message || "We could not submit the deletion request. Please try again or contact support.",
       );
     } finally {
@@ -87,7 +87,7 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
             placeholder="DELETE"
             placeholderTextColor={theme.colors.textTertiary}
             style={styles.input}
-            accessibilityLabel=Type DELETE to confirm account deletion
+            accessibilityLabel="Type DELETE to confirm account deletion"
           />
         </View>
 
@@ -96,7 +96,7 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
           onPress={submit}
           disabled={submitting}
           accessibilityRole="button"
-          accessibilityLabel=Request Account Deletion
+          accessibilityLabel="Request Account Deletion"
         >
           <Text style={styles.deleteButtonText}>
             {submitting ? t("account.delete.submitting") : t("account.delete.requestButton")}
