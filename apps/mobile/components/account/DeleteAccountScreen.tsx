@@ -12,7 +12,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../features/auth/AuthProvider";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { useAndroidBack } from "../../hooks/useAndroidBack";
 import { accountService } from "../../services/account";
 import { theme } from "../../constants/theme";
@@ -62,25 +61,25 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>{t("account.delete.title")}</Text>
+        <Text style={styles.title}>Delete Account</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.warningCard}>
           <Ionicons name="warning-outline" size={30} color={theme.colors.error} />
-          <Text style={styles.warningTitle}>{t("account.delete.warningTitle")}</Text>
-          <Text style={styles.warningText}>{t("account.delete.warningText")}</Text>
+          <Text style={styles.warningTitle}>Account deletion request</Text>
+          <Text style={styles.warningText}>This starts an account deletion request. Some records may need to be retained for legal, accounting, security or dispute-resolution reasons.</Text>
         </View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>{t("account.delete.whatHappensTitle")}</Text>
-          <Text style={styles.body}>{t("account.delete.whatHappensText")}</Text>
-          <Text style={styles.body}>{t("account.delete.retentionText")}</Text>
+          <Text style={styles.sectionTitle}>What happens?</Text>
+          <Text style={styles.body}>Your request is recorded for review. Account data that can be deleted will be processed according to AquaKart retention requirements.</Text>
+          <Text style={styles.body}>Deletion is not an instant destructive database operation.</Text>
         </View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>{t("account.delete.confirmTitle")}</Text>
-          <Text style={styles.body}>{t("account.delete.confirmInstruction")}</Text>
+          <Text style={styles.sectionTitle}>Confirm your request</Text>
+          <Text style={styles.body}>Type DELETE below to confirm that you want to request account deletion.</Text>
           <TextInput
             value={confirmation}
             onChangeText={setConfirmation}
@@ -89,7 +88,7 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
             placeholder="DELETE"
             placeholderTextColor={theme.colors.textTertiary}
             style={styles.input}
-            accessibilityLabel={t("account.delete.confirmInputLabel")}
+            accessibilityLabel=Type DELETE to confirm account deletion
           />
         </View>
 
@@ -98,14 +97,14 @@ export default function DeleteAccountScreen({ source = "mobile" }: Props) {
           onPress={submit}
           disabled={submitting}
           accessibilityRole="button"
-          accessibilityLabel={t("account.delete.requestButton")}
+          accessibilityLabel=Request Account Deletion
         >
           <Text style={styles.deleteButtonText}>
             {submitting ? t("account.delete.submitting") : t("account.delete.requestButton")}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.supportNote}>{t("account.delete.supportNote")}</Text>
+        <Text style={styles.supportNote}>For deletion questions, contact AquaKart support at +91 74888 30394.</Text>
       </ScrollView>
     </SafeAreaView>
   );
