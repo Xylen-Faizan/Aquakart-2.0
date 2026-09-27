@@ -23,6 +23,9 @@ CREATE POLICY "Users can view own legal consents"
   FOR SELECT
   USING (user_id = auth.uid());
 
+DROP FUNCTION IF EXISTS public.record_legal_consent(text, text, text);
+DROP FUNCTION IF EXISTS public.record_legal_consent(text, text);
+
 CREATE OR REPLACE FUNCTION public.record_legal_consent(
   p_terms_version TEXT,
   p_privacy_version TEXT,
