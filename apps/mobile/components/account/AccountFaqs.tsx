@@ -11,21 +11,19 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { theme } from "../../constants/theme";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { useAndroidBack } from "../../hooks/useAndroidBack";
 
 const FAQ_KEYS = [
-  ["account.faq.order.q", "account.faq.order.a"],
-  ["account.faq.delivery.q", "account.faq.delivery.a"],
-  ["account.faq.cancel.q", "account.faq.cancel.a"],
-  ["account.faq.payment.q", "account.faq.payment.a"],
-  ["account.faq.khata.q", "account.faq.khata.a"],
-  ["account.faq.delete.q", "account.faq.delete.a"],
+  ["How do I place an order?","Choose a supplier or product, select quantity and delivery address, then confirm the order."],
+  ["How do I track my delivery?","Open an order from Orders to see available delivery status and tracking."],
+  ["Can I cancel an order?","Cancellation depends on the current order and delivery state. Use the available option or contact support promptly."],
+  ["How are payments recorded?","The app records the payment method and, where applicable, the amount actually collected by the supplier."],
+  ["What is Khata?","Khata shows delivery, billing and payment history for supported recurring supplier relationships."],
+  ["How do I delete my account?","Open Profile, tap the three-dot menu, open Settings, then choose Delete Account. Confirmation is required before submission."],
 ] as const;
 
 export default function AccountFaqs() {
   const router = useRouter();
-  const { t } = useLanguage();
   useAndroidBack();
 
   return (
@@ -34,14 +32,14 @@ export default function AccountFaqs() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>{t("account.faqs")}</Text>
+        <Text style={styles.title}>FAQs</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {FAQ_KEYS.map(([questionKey, answerKey]) => (
           <View key={questionKey} style={styles.card}>
-            <Text style={styles.question}>{t(questionKey)}</Text>
-            <Text style={styles.answer}>{t(answerKey)}</Text>
+            <Text style={styles.question}>{questionKey}</Text>
+            <Text style={styles.answer}>{answerKey}</Text>
           </View>
         ))}
 
@@ -52,7 +50,7 @@ export default function AccountFaqs() {
         >
           <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.supportTitle}>{t("account.contactSupport")}</Text>
+            <Text style={styles.supportTitle}>Contact Support</Text>
             <Text style={styles.supportText}>+91 74888 30394</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
