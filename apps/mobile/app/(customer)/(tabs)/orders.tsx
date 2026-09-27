@@ -20,6 +20,7 @@ import {
   LoadingState,
 } from "../../../components/feedback";
 import { useLanguage } from "../../../features/i18n/LanguageProvider";
+import { formatISTDateTime } from "../../../lib/date";
 
 export default function OrdersScreen() {
   useAndroidBack();
@@ -76,18 +77,7 @@ export default function OrdersScreen() {
       : isPastOrder(order.status),
   );
 
-  const formatDateTime = (isoString: string) => {
-    const date = new Date(isoString);
-    return (
-      date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }) +
-      " • " +
-      date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    );
-  };
+  const formatDateTime = (isoString: string) => formatISTDateTime(isoString);
 
   if (loading) return <LoadingState message={t('common.loading')} />;
   if (error)
