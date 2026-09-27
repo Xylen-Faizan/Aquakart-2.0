@@ -56,7 +56,7 @@ function ProtectedLayout() {
 
   useEffect(() => {
     if (user) {
-      notificationService.registerForPushNotificationsAsync();
+      notificationService.syncPushToken(user.id);
     }
   }, [user]);
 

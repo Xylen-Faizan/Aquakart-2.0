@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../lib/date';
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -27,7 +28,7 @@ export default function DriverRouteScreen() {
   const fetchTodayRoute = async () => {
     try {
       setLoading(true);
-      const today = new Date().toISOString().split("T")[0];
+      const today = getIndiaBusinessDate();
       const runs = await routeOpsService.getDriverRuns(session!.user.id, today);
 
       if (runs && runs.length > 0) {

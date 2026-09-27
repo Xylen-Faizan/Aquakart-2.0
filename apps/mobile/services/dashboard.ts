@@ -166,5 +166,29 @@ export const DashboardService = {
       p_order_id: orderId
     });
     if (error) throw error;
+  },
+
+  async getSupplierReviews(limit: number = 10, offset: number = 0) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+
+    // We need the supplier's UUID. Usually it's obtained from profiles/suppliers relation.
+    // The RPC takes p_supplier_id. Let's get the supplier_id for the current user first.
+    const { data: supplierData } = await supabase
+      .from("suppliers")
+      .select("id")
+      .eq("profile_id", user.id)
+      .single();
+      
+    if (!supplierData) throw new Error("Supplier not found for user");
+
+    const { data, error } = await supabase.rpc('get_supplier_reviews', {
+      p_supplier_id: supplierData.id,
+      p_limit: limit,
+      p_offset: offset
+    });
+
+    if (error) throw error;
+    return data;
   }
 };

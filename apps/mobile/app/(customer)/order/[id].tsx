@@ -29,6 +29,7 @@ export default function OrderDetailScreen() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewableDelivery, setReviewableDelivery] = useState<any>(null);
 
   useEffect(() => {
     fetchOrder();
@@ -59,8 +60,15 @@ export default function OrderDetailScreen() {
     try {
       setLoading(true);
       setError(null);
-      const data = await OrderService.getOrderDetails(id!);
+      const [data, reviewables] = await Promise.all([
+        OrderService.getOrderDetails(id!),
+        OrderService.getReviewableDeliveries()
+      ]);
       setOrder(data);
+      const matchingReviewable = reviewables?.find(r => r.order_id === id);
+      if (matchingReviewable) {
+        setReviewableDelivery(matchingReviewable);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load order details");
     } finally {
@@ -273,7 +281,9 @@ export default function OrderDetailScreen() {
               <View key={item.id} style={styles.itemRow}>
                 <View style={styles.itemLeft}>
                   <Text style={styles.itemQuantity}>{item.quantity}x</Text>
-                  <Text style={styles.itemName}>20L RO Water Can</Text>
+                  <Text style={styles.itemName}>
+                    {item.product?.name || "20L Water Can"}
+                  </Text>
                 </View>
                 <Text style={styles.itemPrice}>
                   ₹{item.total_price || item.total}
@@ -308,6 +318,22 @@ export default function OrderDetailScreen() {
           <Button
             title={t('order.findAlternate') || "Find Alternate Supplier"}
             onPress={() => router.push("/(customer)/suppliers")}
+            style={styles.actionButton}
+          />
+        ) : reviewableDelivery ? (
+          <Button
+            title="Rate Supplier"
+            variant="primary"
+            onPress={() => {
+              router.push({
+                pathname: "/(customer)/rate-supplier",
+                params: {
+                  delivery_id: reviewableDelivery.delivery_id,
+                  supplier_name: order.supplier?.business_name,
+                  order_id: order.id
+                }
+              });
+            }}
             style={styles.actionButton}
           />
         ) : (

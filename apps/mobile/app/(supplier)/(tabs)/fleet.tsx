@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -146,7 +147,7 @@ export default function FleetScreen() {
                       </>
                     )}
                     <Text style={styles.calloutTime}>
-                      GPS: {new Date(v.captured_at).toLocaleTimeString()}
+                      GPS: {formatISTTime(v.captured_at)}
                     </Text>
                   </View>
                 </Callout>

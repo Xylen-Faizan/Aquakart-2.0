@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -348,7 +349,7 @@ export default function JarsScreen() {
                       <Text style={styles.activityTitle}>{title}</Text>
                       <Text style={styles.activitySubtitle}>
                         {act.customer_name} •{" "}
-                        {new Date(act.created_at).toLocaleString()}
+                        {formatISTDateTime(act.created_at)}
                       </Text>
                     </View>
                   </View>

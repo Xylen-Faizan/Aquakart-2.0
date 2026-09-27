@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
@@ -79,8 +80,8 @@ export default function MarketplaceHistoryScreen() {
                     <Text style={styles.statLabel}>Amount</Text>
                   </View>
                   <View style={styles.statBox}>
-                    <Text style={styles.statValue}>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                    <Text style={styles.statLabel}>{date.toLocaleDateString()}</Text>
+                    <Text style={styles.statValue}>{formatISTTime(date)}</Text>
+                    <Text style={styles.statLabel}>{formatISTDate(date)}</Text>
                   </View>
                 </View>
               </Card>

@@ -119,7 +119,9 @@ export default function SupplierDetailScreen() {
           <View style={styles.tagsContainer}>
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={14} color="#F59E0B" />
-              <Text style={styles.ratingText}>4.8</Text>
+              <Text style={styles.ratingText}>
+                {supplier.average_rating > 0 ? supplier.average_rating.toFixed(1) : 'New'}
+              </Text>
             </View>
             <Badge
               label={

@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../lib/date';
 import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
@@ -31,7 +32,7 @@ export default function OfferAlertOverlay({
   const loadRun = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getIndiaBusinessDate();
       const runs = await helperOpsService.getHelperRun(user.id, today);
       if (runs && runs.length > 0) {
         setActiveRunId(runs[0].id);

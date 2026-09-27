@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -262,7 +263,7 @@ export default function CustomersScreen() {
       }
 
       // First delivery is today (in a real app, you might let them select the date)
-      const firstDeliveryDate = new Date().toISOString().split("T")[0];
+      const firstDeliveryDate = getIndiaBusinessDate();
 
       await CustomerService.setCustomerSchedule({
         customerId: selectedCustomer.id,
@@ -773,7 +774,7 @@ export default function CustomersScreen() {
                             color: theme.colors.textSecondary,
                           }}
                         >
-                          {new Date(entry.created_at).toLocaleDateString()}
+                          {formatISTDate(entry.created_at)}
                         </Text>
                       </View>
                       <Text

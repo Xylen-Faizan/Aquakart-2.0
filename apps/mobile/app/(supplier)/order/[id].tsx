@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SupplierOrderService } from "../../../services/supplier-order";
+import { DashboardService } from "../../../services/dashboard";
 import { theme } from "../../../constants/theme";
 import { Button, Card, Badge } from "../../../components/ui";
 import { ErrorState, LoadingState } from "../../../components/feedback";
@@ -95,7 +96,11 @@ export default function SupplierOrderDetailScreen() {
           onPress: async () => {
             try {
               setActionLoading(true);
-              await SupplierOrderService.updateOrderStatus(id!, newStatus);
+              if (newStatus === 'delivered') {
+                await DashboardService.completeOrder(id!);
+              } else {
+                await SupplierOrderService.updateOrderStatus(id!, newStatus);
+              }
               fetchOrder();
             } catch (err: any) {
               Alert.alert(t('order.update_failed'), err.message);

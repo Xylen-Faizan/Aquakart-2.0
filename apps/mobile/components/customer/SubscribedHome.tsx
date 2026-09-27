@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../lib/date';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -185,7 +186,7 @@ export default function SubscribedHome({ subscription }: SubscribedHomeProps) {
                     {entry.type === 'delivery' ? t('khata.deliveryReceived') || 'Delivery Received' : t('khata.paymentMade') || 'Payment Made'}
                   </Text>
                   <Text style={styles.entrySub}>
-                    {new Date(entry.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {formatISTDate(entry.created_at)}
                   </Text>
                   {entry.type === 'delivery' && entry.jars && (
                     <Text style={styles.jarSub}>

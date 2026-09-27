@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../lib/date';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -29,7 +30,7 @@ export default function HelperDashboard() {
   const [supplierProducts, setSupplierProducts] = useState<any[]>([]);
   const [loadQuantities, setLoadQuantities] = useState<Record<string, string>>({});
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getIndiaBusinessDate();
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
@@ -148,11 +149,7 @@ export default function HelperDashboard() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Helper Dashboard</Text>
           <Text style={styles.headerDate}>
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+            {formatISTDate(new Date())}
           </Text>
         </View>
 

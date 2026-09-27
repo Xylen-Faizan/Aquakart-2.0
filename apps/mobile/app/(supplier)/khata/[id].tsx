@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -141,7 +142,7 @@ export default function KhataScreen() {
                       </View>
                       <View style={styles.eventFooter}>
                         <Text style={styles.eventTime}>
-                          {date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} • {date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}
+                          {formatISTDateTime(date)}
                         </Text>
                         {!isDelivery && event.payment_method && (
                           <Text style={styles.paymentMethod}>

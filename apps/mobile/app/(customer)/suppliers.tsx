@@ -137,6 +137,15 @@ export default function SuppliersScreen() {
                             : "Nearby"}
                         </Text>
                       </View>
+                      
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                        <Text style={{ fontSize: 13, color: '#fbbf24', fontWeight: 'bold' }}>
+                          ★ {item.average_rating > 0 ? item.average_rating.toFixed(1) : ''}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: theme.colors.textSecondary, marginLeft: 4 }}>
+                          {item.review_count > 0 ? `(${item.review_count})` : "No reviews yet"}
+                        </Text>
+                      </View>
                     </View>
                     <View style={styles.priceContainer}>
                       <Text style={styles.priceSymbol}>₹</Text>

@@ -3,47 +3,7 @@ import type { OrderWithItems, PlaceOrderParams } from '@aquakart/types';
 import * as Crypto from 'expo-crypto';
 
 export const OrderService = {
-  async notifySupplier(supplierId: string, quantity: number) {
-    try {
-      // 1. Get the supplier's push token securely using RPC
-      const { data: pushToken, error: tokenError } = await supabase
-        .rpc('get_supplier_push_token', { p_supplier_id: supplierId });
 
-      if (tokenError || !pushToken) {
-        console.log("No push token found for supplier", supplierId);
-        return;
-      }
-
-      // 3. Get customer info for the message
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: customerProfile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user?.id)
-        .single();
-      
-      const customerName = customerProfile?.name || 'A customer';
-
-      // 4. Send Expo Push Notification
-      await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: pushToken,
-          sound: 'default',
-          title: 'New Order Received! 💧',
-          body: `${customerName} just ordered ${quantity} jar(s).`,
-          data: { route: '/(supplier)/today' },
-        }),
-      });
-    } catch (error) {
-      console.error("Failed to notify supplier:", error);
-    }
-  },
 
   async placeOrder(params: PlaceOrderParams & { payment_method?: string }) {
     const idempotencyKey = Crypto.randomUUID();
@@ -59,9 +19,6 @@ export const OrderService = {
 
     if (error) throw error;
 
-    // Fire and forget notification
-    this.notifySupplier(params.supplier_id, params.items[0].quantity).catch(console.error);
-
     return orderId as string;
   },
 
@@ -74,10 +31,9 @@ export const OrderService = {
       .select(`
         *,
         supplier:supplier_id (business_name, phone),
-        order_items (*)
+        order_items (*, product:product_id(name, category))
       `)
       .eq('customer_id', user.id)
-      .eq('fulfillment_mode', 'opportunistic_route')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -91,7 +47,7 @@ export const OrderService = {
         *,
         supplier:supplier_id (business_name, phone, address),
         address:address_id (*),
-        order_items (*),
+        order_items (*, product:product_id(name, category)),
         history:order_status_history (*)
       `)
       .eq('id', orderId)
@@ -99,5 +55,27 @@ export const OrderService = {
 
     if (error) throw error;
     return data as any;
+  },
+
+  async getReviewableDeliveries() {
+    const { data, error } = await supabase.rpc('get_reviewable_deliveries');
+    if (error) throw error;
+    return data as {
+      delivery_id: string;
+      order_id: string;
+      supplier_id: string;
+      supplier_name: string;
+      delivery_date: string;
+    }[];
+  },
+
+  async submitSupplierReview(deliveryId: string, rating: number, comment?: string) {
+    const { data, error } = await supabase.rpc('submit_supplier_review', {
+      p_delivery_id: deliveryId,
+      p_rating: rating,
+      p_comment: comment || null
+    });
+    if (error) throw error;
+    return data;
   }
 };

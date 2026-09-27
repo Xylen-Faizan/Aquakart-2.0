@@ -35,7 +35,6 @@ export default function SupplierTodayScreen() {
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [manifest, setManifest] = useState<TodayManifestItem[]>([]);
   const [forecast, setForecast] = useState<SupplierForecast | null>(null);
-  const [alerts, setAlerts] = useState<SupplierAlert[]>([]);
   const [capacity, setCapacity] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -52,16 +51,14 @@ export default function SupplierTodayScreen() {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsData, manifestData, forecastData, alertsData] = await Promise.all([
+      const [statsData, manifestData, forecastData] = await Promise.all([
         DashboardService.getTodayStats(),
         DashboardService.getTodayManifest(),
         DashboardService.getForecast(),
-        DashboardService.getSupplierAlerts(),
       ]);
       setStats(statsData);
       setManifest(manifestData);
       setForecast(forecastData);
-      setAlerts(alertsData);
     } catch (error) {
       console.error("Failed to fetch dashboard main data:", error);
     }
@@ -332,38 +329,7 @@ export default function SupplierTodayScreen() {
           </View>
         )}
 
-        {/* ALERTS / NOTIFICATIONS */}
-        {alerts.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("today.operationalAlerts")}</Text>
-            {alerts.slice(0, 3).map((alert) => (
-              <Card
-                key={alert.id}
-                style={{
-                  padding: 16,
-                  marginBottom: 8,
-                  backgroundColor: alert.notification_type === 'alert' ? theme.colors.error + "10" : theme.colors.surface,
-                  borderColor: alert.notification_type === 'alert' ? theme.colors.error : theme.colors.border,
-                  borderWidth: 1,
-                  borderLeftWidth: 4,
-                  borderLeftColor: alert.notification_type === 'alert' ? theme.colors.error : theme.colors.primary,
-                }}
-              >
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <Text style={{ fontWeight: "bold", color: theme.colors.textPrimary, marginBottom: 4, flex: 1 }}>
-                    {alert.title}
-                  </Text>
-                  <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
-                    {formatISTTime(alert.created_at)}
-                  </Text>
-                </View>
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>
-                  {alert.body}
-                </Text>
-              </Card>
-            ))}
-          </View>
-        )}
+
 
         {/* TODAY's MARKETPLACE CAPACITY */}
         <View style={styles.section}>

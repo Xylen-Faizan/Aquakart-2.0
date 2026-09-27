@@ -29,6 +29,7 @@ export default function OrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "past">("active");
+  const [reviewableDeliveries, setReviewableDeliveries] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,8 +40,12 @@ export default function OrdersScreen() {
     try {
       setLoading(true);
       setError(null);
-      const data = await OrderService.getMyOrders();
+      const [data, reviewables] = await Promise.all([
+        OrderService.getMyOrders(),
+        OrderService.getReviewableDeliveries()
+      ]);
       setOrders(data);
+      setReviewableDeliveries(reviewables || []);
     } catch (err: any) {
       setError(err.message || "Failed to load orders");
     } finally {
@@ -143,6 +148,7 @@ export default function OrdersScreen() {
               0,
             ) || 1;
           const isPast = isPastOrder(item.status);
+          const reviewableDelivery = reviewableDeliveries.find(d => d.order_id === item.id);
 
           return (
             <TouchableOpacity
@@ -196,19 +202,38 @@ export default function OrdersScreen() {
                 </View>
 
                 <View style={styles.actionContainer}>
-                  <Button
-                    title={isPast ? t('orderDetail.reorder') : t('orderDetail.trackOrder')}
-                    variant={isPast ? "outline" : "primary"}
-                    size="sm"
-                    style={styles.actionButton}
-                    onPress={() => {
-                      if (isPast) {
-                        router.push(`/(customer)/supplier/${item.supplier_id}`);
-                      } else {
-                        router.push(`/(customer)/order/${item.id}`);
-                      }
-                    }}
-                  />
+                  {reviewableDelivery ? (
+                    <Button
+                      title="Rate Supplier"
+                      variant="primary"
+                      size="sm"
+                      style={styles.actionButton}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/(customer)/rate-supplier",
+                          params: { 
+                            delivery_id: reviewableDelivery.delivery_id,
+                            supplier_name: item.supplier?.business_name,
+                            order_id: item.id
+                          }
+                        });
+                      }}
+                    />
+                  ) : (
+                    <Button
+                      title={isPast ? t('orderDetail.reorder') : t('orderDetail.trackOrder')}
+                      variant={isPast ? "outline" : "primary"}
+                      size="sm"
+                      style={styles.actionButton}
+                      onPress={() => {
+                        if (isPast) {
+                          router.push(`/(customer)/supplier/${item.supplier_id}`);
+                        } else {
+                          router.push(`/(customer)/order/${item.id}`);
+                        }
+                      }}
+                    />
+                  )}
                 </View>
               </Card>
             </TouchableOpacity>

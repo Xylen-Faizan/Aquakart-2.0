@@ -1,3 +1,4 @@
+import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../lib/date';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -21,7 +22,7 @@ export default function HelperRoute() {
   const [stops, setStops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getIndiaBusinessDate();
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;

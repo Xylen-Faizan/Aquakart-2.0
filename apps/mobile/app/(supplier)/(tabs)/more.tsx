@@ -46,6 +46,12 @@ export default function MoreScreen() {
       route: "/(supplier)/more/marketplace-history",
     },
     {
+      icon: "star-outline",
+      title: "Customer Reviews",
+      subtitle: "See feedback on completed deliveries",
+      route: "/(supplier)/more/reviews",
+    },
+    {
       icon: "people-outline",
       title: t('more.teamCrew'),
       subtitle: t('more.teamCrewSubtitle'),
