@@ -364,7 +364,7 @@ export default function HomeScreen() {
               <View style={styles.productIconWrapper}>
                 <Image
                   accessibilityLabel="20 litre water jar"
-                  source={require("../../assets/images/jar_20l.png")}
+                  source={require("../../../assets/images/jar_20l.png")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />
@@ -379,7 +379,7 @@ export default function HomeScreen() {
               <View style={styles.productIconWrapper}>
                 <Image
                   accessibilityLabel="1 litre water bottle"
-                  source={require("../../assets/images/bottle_1l.png")}
+                  source={require("../../../assets/images/bottle_1l.png")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />
@@ -394,7 +394,7 @@ export default function HomeScreen() {
               <View style={styles.productIconWrapper}>
                 <Image
                   accessibilityLabel="20 litre water cooler jar"
-                  source={require("../../assets/images/cool_jar.jpg")}
+                  source={require("../../../assets/images/cool_jar.jpg")}
                   style={styles.productImage}
                   resizeMode="contain"
                 />
