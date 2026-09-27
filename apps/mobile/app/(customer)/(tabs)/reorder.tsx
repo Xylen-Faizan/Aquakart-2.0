@@ -22,6 +22,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useAndroidBack } from "../../../hooks/useAndroidBack";
 import { useCallback } from "react";
 import { useLanguage } from "../../../features/i18n/LanguageProvider";
+import { formatISTDate } from "../../../lib/date";
 
 export default function ReorderScreen() {
   useAndroidBack();
@@ -135,10 +136,7 @@ export default function ReorderScreen() {
                   <Text style={styles.detailLabel}>{t('reorder.nextDelivery')}</Text>
                   <Text style={styles.detailValue}>
                     {item.next_delivery_date
-                      ? new Date(item.next_delivery_date).toLocaleDateString(
-                          "en-GB",
-                          { day: "2-digit", month: "short", year: "numeric" },
-                        )
+                      ? formatISTDate(item.next_delivery_date)
                       : t('reorder.pending')}
                   </Text>
                 </View>
