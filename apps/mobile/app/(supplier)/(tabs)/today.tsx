@@ -26,6 +26,7 @@ import { Alert, TextInput, Modal } from "react-native";
 
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { useLanguage } from "../../../features/i18n/LanguageProvider";
+import { formatISTDate, formatISTTime, getIndiaBusinessDate, getIndiaHour } from "../../../lib/date";
 
 export default function SupplierTodayScreen() {
   const router = useRouter();
@@ -134,10 +135,7 @@ export default function SupplierTodayScreen() {
         return;
       }
 
-      const d = new Date();
-      const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-      const nd = new Date(utc + 3600000 * 5.5); // IST is UTC+5.5
-      const dateStr = nd.toISOString().split("T")[0];
+      const dateStr = getIndiaBusinessDate();
 
       const { error: rpcError } = await supabase.rpc("set_supplier_capacity", {
         p_date: dateStr,
@@ -192,13 +190,8 @@ export default function SupplierTodayScreen() {
 
   // Format the date header
   const today = new Date();
-  const dateString = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-  });
-
-  const currentHour = today.getHours();
+  const dateString = formatISTDate(today);
+  const currentHour = getIndiaHour();
   let greeting = t("today.greetingEvening");
   if (currentHour < 12) greeting = t("today.greeting");
   else if (currentHour < 17) greeting = t("today.greetingAfternoon");
@@ -361,7 +354,7 @@ export default function SupplierTodayScreen() {
                     {alert.title}
                   </Text>
                   <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
-                    {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatISTTime(alert.created_at)}
                   </Text>
                 </View>
                 <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>
