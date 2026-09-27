@@ -9,7 +9,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { theme } from "../../constants/theme";
-import { useLanguage } from "../../features/i18n/LanguageProvider";
 
 type Props = {
   visible: boolean;
@@ -25,7 +24,6 @@ export default function ProfileOverflowMenu({
   faqsRoute,
 }: Props) {
   const router = useRouter();
-  const { t } = useLanguage();
 
   const open = (route: string) => {
     onClose();
