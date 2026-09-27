@@ -1,0 +1,11 @@
+import React from "react";
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { theme } from "../../../constants/theme";
+import { useAndroidBack } from "../../../hooks/useAndroidBack";
+export default function SupplierAccountSettings(){
+ const router=useRouter(); useAndroidBack();
+ return <SafeAreaView style={s.safe}><View style={s.header}><TouchableOpacity onPress={()=>router.back()} style={s.back}><Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary}/></TouchableOpacity><Text style={s.title}>Account Settings</Text></View><ScrollView contentContainerStyle={s.content}><View style={s.card}><Text style={s.section}>Account</Text><TouchableOpacity style={s.row} onPress={()=>router.push("/(supplier)/more/faqs" as any)}><Ionicons name="help-circle-outline" size={22} color={theme.colors.primary}/><Text style={s.text}>FAQs</Text><Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary}/></TouchableOpacity><TouchableOpacity style={s.row} onPress={()=>router.push("/(supplier)/more/delete-account" as any)}><Ionicons name="trash-outline" size={22} color={theme.colors.error}/><Text style={[s.text,{color:theme.colors.error}]}>Delete Account</Text><Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary}/></TouchableOpacity></View></ScrollView></SafeAreaView>
+}
+const s=StyleSheet.create({safe:{flex:1,backgroundColor:theme.colors.background},header:{flexDirection:"row",alignItems:"center",padding:theme.spacing.lg,backgroundColor:theme.colors.surface,borderBottomWidth:1,borderBottomColor:theme.colors.border},back:{marginRight:theme.spacing.md},title:{fontSize:theme.fontSize.xl,fontWeight:"700",color:theme.colors.textPrimary},content:{padding:theme.spacing.lg},card:{backgroundColor:theme.colors.surface,borderRadius:theme.borderRadius.md,borderWidth:1,borderColor:theme.colors.border,padding:theme.spacing.lg},section:{fontSize:theme.fontSize.md,fontWeight:"700",color:theme.colors.textSecondary,marginBottom:8},row:{minHeight:54,flexDirection:"row",alignItems:"center",gap:12,borderBottomWidth:1,borderBottomColor:theme.colors.border},text:{flex:1,fontSize:theme.fontSize.md,fontWeight:"600",color:theme.colors.textPrimary}});
