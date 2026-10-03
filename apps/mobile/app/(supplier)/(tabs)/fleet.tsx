@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import MapView, { Marker, Callout, UrlTile } from "react-native-maps";
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import { theme } from "../../../constants/theme";
 import { supabase } from "../../../lib/supabase/client";
 import { useAuth } from "../../../features/auth/AuthProvider";
@@ -127,6 +127,9 @@ export default function FleetScreen() {
     return () => {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
+      if (focusRunId && markerRefs.current[focusRunId]?.hideCallout) {
+        try { markerRefs.current[focusRunId].hideCallout(); } catch(e){}
+      }
     };
   }, [focusRunId, vehicles]);
 
@@ -166,6 +169,7 @@ export default function FleetScreen() {
         ) : (
           <MapView
             ref={mapRef}
+            provider={PROVIDER_GOOGLE}
             style={styles.map}
             initialRegion={defaultRegion}
           >

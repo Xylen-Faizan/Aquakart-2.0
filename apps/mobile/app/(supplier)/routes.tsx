@@ -416,7 +416,7 @@ export default function SupplierRoutesScreen() {
             ).length || 0;
 
           return (
-            <TouchableOpacity key={run.id} style={styles.card} onPress={() => router.push({ pathname: '/(supplier)/(tabs)/fleet', params: { focusRunId: run.id } })} activeOpacity={0.7}>
+            <TouchableOpacity key={run.id} style={styles.card} onPress={() => router.navigate({ pathname: '/(supplier)/(tabs)/fleet', params: { focusRunId: run.id } })} activeOpacity={0.7}>
               {/* Vehicle + Status */}
               <View style={styles.cardHeader}>
                 <View style={styles.vehicleInfo}>
