@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Xylen-Faizan/Aquakart-2.0/main/screens/13_Admin_Dashboard_cropped.png" alt="AquaKart Logo" width="150" style="border-radius:20px"/>
+  <img src="https://raw.githubusercontent.com/Xylen-Faizan/Aquakart-2.0/main/screens/aquakart_logo.png" alt="AquaKart Logo" width="200"/>
 
   # AquaKart 2.0 💧
 
