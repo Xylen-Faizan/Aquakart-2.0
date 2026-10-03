@@ -296,7 +296,11 @@ export default function HomeScreen() {
                           size={12}
                           color={theme.colors.warning}
                         />
-                        <Text style={styles.supplierRating}>Rating not yet available</Text>
+                        <Text style={styles.supplierRating}>
+                          {supplier.review_count > 0
+                            ? `${Number(supplier.average_rating).toFixed(1)} (${supplier.review_count})`
+                            : "Rating not yet available"}
+                        </Text>
                         {supplier.distance != null && (
                           <>
                             <Text style={styles.supplierDot}>•</Text>

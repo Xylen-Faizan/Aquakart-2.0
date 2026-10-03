@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
  * Usage: Call `useAndroidBack()` at the top of any screen component that should
  * have proper "go back" behavior on Android hardware back press.
  */
-export function useAndroidBack() {
+export function useAndroidBack(customHandler?: () => boolean) {
   const router = useRouter();
 
   useEffect(() => {
@@ -25,6 +25,9 @@ export function useAndroidBack() {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        if (customHandler) {
+          return customHandler();
+        }
         if (router.canGoBack()) {
           router.back();
           return true; // Prevent default tab-switching behavior
@@ -34,5 +37,5 @@ export function useAndroidBack() {
     );
 
     return () => backHandler.remove();
-  }, [router]);
+  }, [router, customHandler]);
 }

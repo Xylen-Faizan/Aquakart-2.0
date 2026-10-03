@@ -56,69 +56,105 @@ serve(async (req) => {
       return new Response("No push tokens", { status: 200 })
     }
 
-    const expoMessage = {
-      to: pushTokens,
-      sound: 'default',
-      title: notification.title,
-      body: notification.body,
-      data: notification.payload ?? {},
-    }
+    let hasError = false
+    let errorDetails = ''
+    let totalSuccess = 0
 
-    const res = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(expoMessage),
-    })
+    // Send notifications individually to prevent PUSH_TOO_MANY_EXPERIENCE_IDS errors
+    // when a user has multiple devices registered across different Expo preview apps
+    for (const token of pushTokens) {
+      const expoMessage = {
+        to: token,
+        sound: 'default',
+        title: notification.title,
+        body: notification.body,
+        data: notification.payload ?? {},
+      }
 
-    const ticketResponse = await res.json()
-    let hasError = !res.ok
-    let errorDetails = res.ok ? '' : JSON.stringify(ticketResponse)
+      try {
+        const res = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Accept-encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(expoMessage),
+        })
 
-    if (ticketResponse.data && Array.isArray(ticketResponse.data)) {
-      for (let i = 0; i < ticketResponse.data.length; i++) {
-        const ticket = ticketResponse.data[i]
-        if (ticket.status === 'error') {
+        const ticketResponse = await res.json()
+        
+        if (!res.ok) {
           hasError = true
-          errorDetails += `Token ${pushTokens[i]} failed: ${ticket.message ?? 'unknown error'}. `
-
-          if (ticket.details?.error === 'DeviceNotRegistered') {
-            await supabase
-              .from('user_devices')
-              .update({ is_active: false })
-              .eq('expo_push_token', pushTokens[i])
-              .eq('user_id', notification.user_id)
-          }
+          errorDetails += `Token ${token} failed HTTP: ${JSON.stringify(ticketResponse)}. `
+          continue;
         }
+
+        if (ticketResponse.data && ticketResponse.data.status === 'error') {
+           hasError = true
+           errorDetails += `Token ${token} failed: ${ticketResponse.data.message ?? 'unknown error'}. `
+           
+           if (ticketResponse.data.details?.error === 'DeviceNotRegistered') {
+             await supabase
+               .from('user_devices')
+               .update({ is_active: false })
+               .eq('expo_push_token', token)
+               .eq('user_id', notification.user_id)
+           }
+        } else if (ticketResponse.data && Array.isArray(ticketResponse.data)) {
+           // Sometimes Expo returns an array even for a single message
+           const ticket = ticketResponse.data[0]
+           if (ticket && ticket.status === 'error') {
+             hasError = true
+             errorDetails += `Token ${token} failed: ${ticket.message ?? 'unknown error'}. `
+             if (ticket.details?.error === 'DeviceNotRegistered') {
+               await supabase
+                 .from('user_devices')
+                 .update({ is_active: false })
+                 .eq('expo_push_token', token)
+                 .eq('user_id', notification.user_id)
+             }
+           } else {
+             totalSuccess++;
+           }
+        } else {
+          totalSuccess++;
+        }
+      } catch (err: any) {
+        hasError = true
+        errorDetails += `Token ${token} exception: ${err.message}. `
       }
     }
 
-    if (hasError) {
+    if (totalSuccess === 0 && hasError) {
       await supabase
         .from('delivery_notifications')
         .update({
           status: 'failed',
-          error_message: errorDetails || 'Expo push request failed',
+          error_message: errorDetails || 'Expo push request failed for all tokens',
           failed_at: new Date().toISOString()
         })
         .eq('id', notification.id)
+      
+      return new Response(JSON.stringify({ error: errorDetails }), {
+        headers: { "Content-Type": "application/json" },
+        status: 502,
+      })
     } else {
       await supabase
         .from('delivery_notifications')
         .update({
           status: 'sent',
-          sent_at: new Date().toISOString()
+          sent_at: new Date().toISOString(),
+          error_message: hasError ? 'Partial success. Errors: ' + errorDetails : null
         })
         .eq('id', notification.id)
-    }
 
-    return new Response(JSON.stringify(ticketResponse), {
-      headers: { "Content-Type": "application/json" },
-      status: res.ok ? 200 : 502,
-    })
+      return new Response(JSON.stringify({ success: true, totalSuccess }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      })
+    }
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { "Content-Type": "application/json" },

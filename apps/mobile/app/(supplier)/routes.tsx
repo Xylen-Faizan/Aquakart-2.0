@@ -20,10 +20,12 @@ import { supabase } from "../../lib/supabase/client";
 import { Button } from "../../components/ui";
 import { useLanguage } from "../../features/i18n/LanguageProvider";
 import { useAndroidBack } from "../../hooks/useAndroidBack";
+import { useRouter } from "expo-router";
 
 export default function SupplierRoutesScreen() {
   const { session } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   useAndroidBack();
   const [runs, setRuns] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
@@ -414,7 +416,7 @@ export default function SupplierRoutesScreen() {
             ).length || 0;
 
           return (
-            <View key={run.id} style={styles.card}>
+            <TouchableOpacity key={run.id} style={styles.card} onPress={() => router.push({ pathname: '/(supplier)/(tabs)/fleet', params: { focusRunId: run.id } })} activeOpacity={0.7}>
               {/* Vehicle + Status */}
               <View style={styles.cardHeader}>
                 <View style={styles.vehicleInfo}>
@@ -495,7 +497,7 @@ export default function SupplierRoutesScreen() {
                   ]}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })
       )}

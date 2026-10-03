@@ -1,5 +1,5 @@
 import { formatISTDate, formatISTTime, formatISTDateTime, getIndiaBusinessDate } from '../../../lib/date';
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,17 @@ import { theme } from "../../../constants/theme";
 import { supabase } from "../../../lib/supabase/client";
 import { useAuth } from "../../../features/auth/AuthProvider";
 import { useLanguage } from "../../../features/i18n/LanguageProvider";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 
 export default function FleetScreen() {
   const { session } = useAuth();
   const { t } = useLanguage();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { focusRunId } = useLocalSearchParams<{ focusRunId?: string }>();
+  const mapRef = useRef<MapView
+            ref={mapRef}>(null);
+  const markerRefs = useRef<{ [key: string]: any }>({});
   
   // Center of Bokaro
   const defaultRegion = {
@@ -93,6 +97,27 @@ export default function FleetScreen() {
     };
   }, [fetchFleet]);
 
+
+  useEffect(() => {
+    if (focusRunId && vehicles.length > 0) {
+      const targetVehicle = vehicles.find(v => v.run_id === focusRunId);
+      if (targetVehicle && mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: targetVehicle.latitude,
+          longitude: targetVehicle.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        }, 1000);
+        
+        setTimeout(() => {
+          if (markerRefs.current[focusRunId]) {
+            markerRefs.current[focusRunId].showCallout();
+          }
+        }, 1200);
+      }
+    }
+  }, [focusRunId, vehicles]);
+
   const getMarkerColor = (vehicle: any) => {
     const staleThreshold = 5 * 60 * 1000; // 5 mins
     const isStale = (new Date().getTime() - new Date(vehicle.captured_at).getTime()) > staleThreshold;
@@ -128,11 +153,13 @@ export default function FleetScreen() {
           />
         ) : (
           <MapView
+            ref={mapRef}
             style={styles.map}
             initialRegion={defaultRegion}
           >
             {vehicles.map((v) => (
               <Marker
+                ref={(ref) => { if (ref) markerRefs.current[v.run_id] = ref; }}
                 key={v.run_id}
                 coordinate={{ latitude: v.latitude, longitude: v.longitude }}
                 pinColor={getMarkerColor(v)}

@@ -38,7 +38,7 @@ export const dispatchService = {
       p_order_id: orderId,
     });
     if (error) throw error;
-    return data;
+    return data as any; // Type is complex, we will handle in UI component
   },
 
   // Subscribe to dispatch request changes (realtime)

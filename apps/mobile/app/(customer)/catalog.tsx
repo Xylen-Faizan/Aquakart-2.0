@@ -54,6 +54,13 @@ export default function CatalogScreen() {
     fetchProducts();
   }, []);
 
+  const getFallbackImage = (name: string) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes("1l") || lowerName.includes("bottle")) return require("../../assets/images/bottle_1l.png");
+    if (lowerName.includes("cool")) return require("../../assets/images/cool_jar.jpg");
+    return require("../../assets/images/jar_20l.png");
+  };
+
   const handleCheckout = () => {
     if (!selectedProduct) return;
 
@@ -61,9 +68,13 @@ export default function CatalogScreen() {
       pathname: "/(customer)/checkout",
       params: {
         product_id: selectedProduct.id,
+        product_name: selectedProduct.name,
         quantity: quantity.toString(),
         price: "80", // Base fallback price, could be made dynamic later
         business_name: "AquaKart Assured", // For generic dispatch
+        image_url: selectedProduct.image_url && selectedProduct.image_url !== "https://via.placeholder.com/150" 
+          ? selectedProduct.image_url 
+          : "fallback", // indicate checkout to use fallback
       },
     } as any);
   };
@@ -89,7 +100,11 @@ export default function CatalogScreen() {
               resizeMode="contain"
             />
           ) : (
-            <Text style={{ fontSize: 32 }}>💧</Text>
+            <Image
+              source={getFallbackImage(product.name)}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
           )}
         </View>
         <View style={styles.productInfo}>

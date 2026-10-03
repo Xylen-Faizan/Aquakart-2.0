@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SupplierService } from "../../../services/supplier";
+import { ReviewService } from "../../../services/review";
 import { theme } from "../../../constants/theme";
 import { Card, Button, Badge } from "../../../components/ui";
 import { ErrorState, LoadingState } from "../../../components/feedback";
@@ -27,6 +28,7 @@ export default function SupplierDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [ratingData, setRatingData] = useState<{average: number, count: number}>({ average: 0, count: 0 });
 
   useEffect(() => {
     fetchSupplierDetails();
@@ -36,8 +38,12 @@ export default function SupplierDetailScreen() {
     try {
       setLoading(true);
       setError(null);
-      const details = await SupplierService.getSupplierDetailForCustomer(id!);
+      const [details, ratings] = await Promise.all([
+        SupplierService.getSupplierDetailForCustomer(id!),
+        ReviewService.getSupplierRatingAggregate(id!)
+      ]);
       setData(details);
+      setRatingData(ratings);
     } catch (err: any) {
       setError(err.message || "Failed to load supplier details");
     } finally {
@@ -120,7 +126,7 @@ export default function SupplierDetailScreen() {
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={14} color="#F59E0B" />
               <Text style={styles.ratingText}>
-                {supplier.average_rating > 0 ? supplier.average_rating.toFixed(1) : 'New'}
+                {ratingData.count > 0 ? `${ratingData.average} (${ratingData.count} reviews)` : 'New'}
               </Text>
             </View>
             <Badge

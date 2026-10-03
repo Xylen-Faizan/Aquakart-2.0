@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { OrderService } from '../../services/order';
+import { ReviewService } from '../../services/review';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RateSupplierScreen() {
@@ -24,7 +24,7 @@ export default function RateSupplierScreen() {
 
     try {
       setIsSubmitting(true);
-      await OrderService.submitSupplierReview(delivery_id as string, rating, comment);
+      await ReviewService.submitReview(delivery_id as string, rating, comment);
       Alert.alert("Thank you!", "Your review has been verified and submitted.", [
         {
           text: "OK",

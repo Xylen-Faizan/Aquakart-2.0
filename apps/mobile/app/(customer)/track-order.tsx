@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,154 +78,119 @@ export default function TrackOrderScreen() {
   }
 
   const isDelivered = tracking?.order_status === "delivered";
-  const isFresh = tracking?.gps_fresh;
+  
+  // Compute step
+  let currentStepIndex = 0; // Confirmed
+  if (tracking?.stop_status === "planned" || tracking?.order_status === "preparing") currentStepIndex = 1;
+  if (tracking?.stop_status === "en_route" || tracking?.order_status === "out_for_delivery") currentStepIndex = 2;
+  if (isDelivered || tracking?.stop_status === "delivered") currentStepIndex = 3;
+
+  const steps = [
+    { label: "Confirmed", icon: "checkmark-done" },
+    { label: "Preparing", icon: "receipt-outline" },
+    { label: "Out for Delivery", icon: "bicycle" },
+    { label: "Delivered", icon: "cube-outline" }
+  ];
+
+  const handleCall = () => {
+    if (tracking?.driver_phone) {
+      Linking.openURL(`tel:${tracking.driver_phone}`);
+    }
+  };
+
+  // Format order date nicely
+  let formattedDate = "";
+  if (tracking?.order_created_at) {
+    const dateObj = new Date(tracking.order_created_at);
+    formattedDate = dateObj.toLocaleString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#F8FAFC" />
+          <Ionicons name="arrow-back" size={24} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('track.title')}</Text>
+        <Text style={styles.headerTitle}>{t('Track Order')}</Text>
       </View>
 
       <View style={styles.content}>
-        {/* Status Card */}
-        <View style={styles.statusCard}>
-          <Ionicons
-            name={isDelivered ? "checkmark-circle" : "navigate-circle"}
-            size={48}
-            color={isDelivered ? "#22C55E" : "#0EA5E9"}
-          />
-          <Text style={styles.statusTitle}>
-            {isDelivered
-              ? t('Delivered!')
-              : tracking?.order_status === "out_for_delivery"
-                ? t('On the Way')
-                : tracking?.order_status?.toUpperCase() || t('Tracking')}
-          </Text>
-          {tracking?.vehicle_number && (
-            <Text style={styles.vehicleInfo}>
-              Vehicle: {tracking.vehicle_number}
-            </Text>
-          )}
+        {/* Order Details */}
+        <View style={styles.orderDetails}>
+          <Text style={styles.orderIdText}>Order #{order_id?.slice(0,8).toUpperCase()}</Text>
+          {formattedDate ? (
+            <Text style={styles.placedOnText}>Placed on {formattedDate}</Text>
+          ) : null}
         </View>
 
-        {/* ETA Card */}
-        {!isDelivered && tracking?.eta_minutes != null && (
-          <View style={styles.etaCard}>
-            <View style={styles.etaRow}>
-              <Ionicons name="time-outline" size={24} color="#F59E0B" />
-              <View>
-                <Text style={styles.etaValue}>~{tracking.eta_minutes} min</Text>
-                <Text style={styles.etaLabel}>Estimated arrival</Text>
-              </View>
-            </View>
-          </View>
-        )}
+        {/* Stepper */}
+        <View style={styles.stepperContainer}>
+          <View style={styles.stepperLineBackground} />
+          <View style={[styles.stepperLineActive, { width: `${(currentStepIndex / 3) * 100}%` }]} />
+          
+          <View style={styles.stepsRow}>
+            {steps.map((step, index) => {
+              const isPast = index < currentStepIndex;
+              const isCurrent = index === currentStepIndex;
+              const isFuture = index > currentStepIndex;
 
-        {/* GPS Freshness */}
-        {!isDelivered && tracking?.last_updated && (
-          <View
-            style={[
-              styles.freshnessCard,
-              { borderLeftColor: isFresh ? "#22C55E" : "#F59E0B" },
-            ]}
-          >
-            <Ionicons
-              name={isFresh ? "radio-button-on" : "alert-circle"}
-              size={16}
-              color={isFresh ? "#22C55E" : "#F59E0B"}
-            />
-            <Text style={styles.freshnessText}>
-              {isFresh
-                ? "Live tracking active"
-                : "Location data may be delayed"}
-            </Text>
-            <Text style={styles.lastUpdated}>
-              Updated:{" "}
-              {formatISTTime(tracking.last_updated)}
-            </Text>
-          </View>
-        )}
-
-        {/* Stop Status */}
-        {tracking?.stop_status && (
-          <View style={styles.stopStatusCard}>
-            <Text style={styles.stopStatusLabel}>Delivery Status</Text>
-            <View style={styles.timeline}>
-              {["planned", "en_route", "delivered"].map((step, i) => {
-                const isActive = step === tracking.stop_status;
-                const isPast =
-                  ["planned", "en_route", "delivered"].indexOf(
-                    tracking.stop_status,
-                  ) >= i;
-                return (
-                  <View key={step} style={styles.timelineItem}>
-                    <View
-                      style={[
-                        styles.dot,
-                        isPast && styles.dotActive,
-                        isActive && styles.dotCurrent,
-                      ]}
-                    >
-                      {isPast && (
-                        <Ionicons name="checkmark" size={12} color="#FFF" />
-                      )}
-                    </View>
-                    <Text
-                      style={[
-                        styles.timelineText,
-                        isPast && styles.timelineTextActive,
-                      ]}
-                    >
-                      {step === "planned"
-                        ? t('Confirmed')
-                        : step === "en_route"
-                          ? t('Nearby')
-                          : t('Delivered')}
-                    </Text>
-                    {i < 2 && (
-                      <View
-                        style={[
-                          styles.timelineLine,
-                          isPast && styles.timelineLineActive,
-                        ]}
+              return (
+                <View key={step.label} style={styles.stepItem}>
+                  <View
+                    style={[
+                      styles.stepIconContainer,
+                      isPast && styles.stepIconPast,
+                      isCurrent && styles.stepIconCurrent,
+                      isFuture && styles.stepIconFuture,
+                    ]}
+                  >
+                    {isPast ? (
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                    ) : (
+                      <Ionicons 
+                        name={step.icon as any} 
+                        size={16} 
+                        color={isCurrent ? "#FFFFFF" : "#94A3B8"} 
                       />
                     )}
                   </View>
-                );
-              })}
-            </View>
+                  <Text style={[
+                    styles.stepLabel,
+                    isCurrent && styles.stepLabelCurrent,
+                    isFuture && styles.stepLabelFuture
+                  ]}>
+                    {t(step.label)}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
-        )}
-
-        {isDelivered && (
-          <TouchableOpacity
-            style={styles.doneBtn}
-            onPress={() => router.replace("/(customer)/home")}
-          >
-            <Text style={styles.doneBtnText}>{t('Back to Home')}</Text>
-          </TouchableOpacity>
-        )}
+        </View>
 
         {/* Map Visualization */}
-        {!isDelivered && tracking?.vehicle_lat && tracking?.vehicle_lng && (
-          <View style={styles.mapContainer}>
+        <View style={styles.mapContainer}>
+          {tracking?.vehicle_lat && tracking?.vehicle_lng ? (
             <MapView
               style={styles.map}
               initialRegion={{
                 latitude: tracking.vehicle_lat,
                 longitude: tracking.vehicle_lng,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.015,
+                longitudeDelta: 0.015,
               }}
               region={{
                 latitude: tracking.vehicle_lat,
                 longitude: tracking.vehicle_lng,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.015,
+                longitudeDelta: 0.015,
               }}
             >
               <Marker
@@ -232,18 +198,42 @@ export default function TrackOrderScreen() {
                   latitude: tracking.vehicle_lat,
                   longitude: tracking.vehicle_lng,
                 }}
-                title={tracking.vehicle_number || "Delivery Vehicle"}
-                description={
-                  tracking.eta_minutes
-                    ? `ETA: ${tracking.eta_minutes} min`
-                    : undefined
-                }
               >
                 <View style={styles.markerContainer}>
-                  <Ionicons name="car" size={24} color="#0EA5E9" />
+                  <Ionicons name="bicycle" size={20} color="#FFFFFF" />
                 </View>
               </Marker>
             </MapView>
+          ) : (
+             <View style={styles.mapPlaceholder}>
+               <ActivityIndicator size="small" color="#0EA5E9" />
+               <Text style={styles.mapPlaceholderText}>Locating vehicle...</Text>
+             </View>
+          )}
+        </View>
+
+        {/* Delivery Partner */}
+        <View style={styles.deliveryPartnerCard}>
+          <Text style={styles.deliveryPartnerTitle}>{t('Your delivery partner')}</Text>
+          <View style={styles.driverRow}>
+            <View style={styles.driverAvatar}>
+              <Ionicons name="person" size={24} color="#64748B" />
+            </View>
+            <View style={styles.driverInfo}>
+              <Text style={styles.driverName}>{tracking?.driver_name || "Delivery Partner"}</Text>
+              <Text style={styles.driverPhone}>{tracking?.driver_phone || "+91 ••••••••••"}</Text>
+            </View>
+            <TouchableOpacity style={styles.callBtn} onPress={handleCall}>
+              <Ionicons name="call" size={20} color="#0EA5E9" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ETA */}
+        {!isDelivered && tracking?.eta_minutes != null && (
+          <View style={styles.etaContainer}>
+            <Text style={styles.etaLabel}>{t('Estimated Delivery')}</Text>
+            <Text style={styles.etaValue}>~{tracking.eta_minutes} min</Text>
           </View>
         )}
       </View>
@@ -252,112 +242,189 @@ export default function TrackOrderScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0F172A" },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12 },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 22, fontWeight: "800", color: "#F8FAFC" },
-  content: { flex: 1, padding: 16 },
-  statusCard: {
-    backgroundColor: "#1E293B",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#0F172A" },
+  content: { flex: 1, padding: 20 },
+  
+  orderDetails: {
+    marginBottom: 24,
+    alignItems: "center"
   },
-  statusTitle: { fontSize: 22, fontWeight: "800", color: "#F8FAFC" },
-  vehicleInfo: { fontSize: 14, color: "#64748B" },
-  etaCard: {
-    backgroundColor: "#1E293B",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
+  orderIdText: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 4
   },
-  etaRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-  etaValue: { fontSize: 28, fontWeight: "800", color: "#F8FAFC" },
-  etaLabel: { fontSize: 12, color: "#64748B" },
-  freshnessCard: {
-    backgroundColor: "#1E293B",
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    borderLeftWidth: 4,
-    marginBottom: 16,
-  },
-  freshnessText: {
-    color: "#F8FAFC",
+  placedOnText: {
     fontSize: 14,
-    marginLeft: 8,
-    fontWeight: "500",
-    flex: 1,
+    color: "#64748B",
+    fontWeight: "500"
   },
-  lastUpdated: { color: "#94A3B8", fontSize: 12 },
-  stopStatusCard: { backgroundColor: "#1E293B", borderRadius: 14, padding: 16 },
-  stopStatusLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#94A3B8",
-    marginBottom: 16,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+
+  stepperContainer: {
+    marginBottom: 32,
+    position: 'relative'
   },
-  timeline: {
+  stepperLineBackground: {
+    position: 'absolute',
+    top: 14,
+    left: 20,
+    right: 20,
+    height: 2,
+    backgroundColor: "#E2E8F0",
+    zIndex: 1
+  },
+  stepperLineActive: {
+    position: 'absolute',
+    top: 14,
+    left: 20,
+    height: 2,
+    backgroundColor: "#0EA5E9",
+    zIndex: 2
+  },
+  stepsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    zIndex: 3
   },
-  timelineItem: { alignItems: "center", flex: 1 },
-  dot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#334155",
+  stepItem: {
+    alignItems: "center",
+    width: 70
+  },
+  stepIconContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 6,
-  },
-  dotActive: { backgroundColor: "#0EA5E9" },
-  dotCurrent: {
-    backgroundColor: "#22C55E",
+    marginBottom: 8,
+    backgroundColor: "#FFFFFF",
     borderWidth: 2,
-    borderColor: "#22C55E40",
   },
-  timelineText: { fontSize: 11, color: "#64748B", fontWeight: "600" },
-  timelineTextActive: { color: "#F8FAFC" },
-  timelineLine: {
-    position: "absolute",
-    top: 14,
-    left: "60%",
-    width: "80%",
-    height: 2,
-    backgroundColor: "#334155",
-  },
-  timelineLineActive: { backgroundColor: "#0EA5E9" },
-  doneBtn: {
+  stepIconPast: {
     backgroundColor: "#0EA5E9",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 24,
+    borderColor: "#0EA5E9"
   },
-  doneBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  stepIconCurrent: {
+    backgroundColor: "#0EA5E9",
+    borderColor: "#0EA5E9"
+  },
+  stepIconFuture: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E2E8F0"
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#0F172A",
+    textAlign: "center"
+  },
+  stepLabelCurrent: {
+    color: "#0EA5E9"
+  },
+  stepLabelFuture: {
+    color: "#94A3B8"
+  },
+
   mapContainer: {
-    height: 200,
-    width: "100%",
-    borderRadius: 12,
+    flex: 1,
+    borderRadius: 24,
     overflow: "hidden",
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: "#334155",
+    marginBottom: 24,
+    backgroundColor: "#F8FAFC"
   },
-  map: { position: "absolute", top: 0, bottom: 0, left: 0, right: 0 },
+  map: { 
+    position: "absolute", top: 0, bottom: 0, left: 0, right: 0 
+  },
+  mapPlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  mapPlaceholderText: {
+    marginTop: 8,
+    color: "#64748B",
+    fontSize: 14,
+    fontWeight: "500"
+  },
   markerContainer: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#0EA5E9",
     padding: 6,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: "#0EA5E9",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
+
+  deliveryPartnerCard: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20
+  },
+  deliveryPartnerTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
+    marginBottom: 16
+  },
+  driverRow: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  driverAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16
+  },
+  driverInfo: {
+    flex: 1
+  },
+  driverName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 2
+  },
+  driverPhone: {
+    fontSize: 14,
+    color: "#64748B",
+    fontWeight: "500"
+  },
+  callBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#E0F2FE",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+
+  etaContainer: {
+    alignItems: "center",
+    marginBottom: 12
+  },
+  etaLabel: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "500",
+    marginBottom: 4
+  },
+  etaValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A"
+  }
 });

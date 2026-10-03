@@ -8,12 +8,15 @@ import {
   Platform,
   Alert,
   Linking,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useLanguage } from "../../../features/i18n/LanguageProvider";
 import { OrderService } from "../../../services/order";
+import { ReviewService } from "../../../services/review";
 import { theme } from "../../../constants/theme";
 import { Button, Card, Badge } from "../../../components/ui";
 import { ErrorState, LoadingState } from "../../../components/feedback";
@@ -30,6 +33,10 @@ export default function OrderDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reviewableDelivery, setReviewableDelivery] = useState<any>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -47,6 +54,13 @@ export default function OrderDetailScreen() {
         },
         (payload) => {
           setOrder((prev: any) => ({ ...prev, ...payload.new }));
+          if (payload.new.status === "delivered") {
+            // Need to fetch reviewables to get the delivery_id if it's not loaded
+            fetchOrder().then((o) => {
+              // The fetchOrder function sets reviewableDelivery and order
+              // So we will rely on a separate useEffect to pop it up when reviewableDelivery is set
+            });
+          }
         },
       )
       .subscribe();
@@ -56,13 +70,20 @@ export default function OrderDetailScreen() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (reviewableDelivery && order?.status === "delivered" && !showReviewModal) {
+      // Small delay to let the UI settle before popping the modal
+      setTimeout(() => setShowReviewModal(true), 500);
+    }
+  }, [reviewableDelivery, order?.status]);
+
   const fetchOrder = async () => {
     try {
       setLoading(true);
       setError(null);
       const [data, reviewables] = await Promise.all([
         OrderService.getOrderDetails(id!),
-        OrderService.getReviewableDeliveries()
+        ReviewService.getReviewableDeliveries()
       ]);
       setOrder(data);
       const matchingReviewable = reviewables?.find(r => r.order_id === id);
@@ -129,6 +150,26 @@ export default function OrderDetailScreen() {
       Linking.openURL(`tel:${order.supplier.phone}`);
     } else {
       Alert.alert(t('unavailable') || "Unavailable", t('order.noPhone') || "No phone number provided for this supplier.");
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      Alert.alert("Rating Required", "Please select a rating from 1 to 5 stars.");
+      return;
+    }
+    if (!reviewableDelivery) return;
+
+    try {
+      setIsSubmittingReview(true);
+      await ReviewService.submitReview(reviewableDelivery.delivery_id, rating, comment);
+      Alert.alert("Thank you!", "Your review has been verified and submitted.");
+      setShowReviewModal(false);
+      setReviewableDelivery(null); // Hide the button
+    } catch (err: any) {
+      Alert.alert("Submission Failed", err.message || "An error occurred while submitting your review.");
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -324,16 +365,7 @@ export default function OrderDetailScreen() {
           <Button
             title="Rate Supplier"
             variant="primary"
-            onPress={() => {
-              router.push({
-                pathname: "/(customer)/rate-supplier",
-                params: {
-                  delivery_id: reviewableDelivery.delivery_id,
-                  supplier_name: order.supplier?.business_name,
-                  order_id: order.id
-                }
-              });
-            }}
+            onPress={() => setShowReviewModal(true)}
             style={styles.actionButton}
           />
         ) : (
@@ -346,6 +378,61 @@ export default function OrderDetailScreen() {
           />
         )}
       </View>
+
+      <Modal
+        visible={showReviewModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReviewModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Rate Your Delivery</Text>
+              <TouchableOpacity onPress={() => setShowReviewModal(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>How was your delivery from {order.supplier?.business_name}?</Text>
+            
+            <View style={styles.starsContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setRating(star)}
+                  activeOpacity={0.7}
+                  style={styles.starButton}
+                >
+                  <Text style={[styles.starIcon, rating >= star && styles.starIconActive]}>
+                    {rating >= star ? '★' : '☆'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.ratingText}>
+              {rating === 0 ? "Select a rating" : `${rating} out of 5 stars`}
+            </Text>
+
+            <TextInput
+              style={styles.textInput}
+              multiline
+              numberOfLines={3}
+              placeholder="Add a comment (optional)"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={comment}
+              onChangeText={setComment}
+              maxLength={1000}
+            />
+
+            <Button 
+              title={isSubmittingReview ? "Submitting..." : "Submit Review"} 
+              onPress={handleSubmitReview}
+              disabled={rating === 0 || isSubmittingReview}
+              style={{ marginTop: theme.spacing.lg }}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -598,5 +685,67 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: "100%",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.borderRadius.lg,
+    borderTopRightRadius: theme.borderRadius.lg,
+    padding: theme.spacing.xl,
+    paddingBottom: Platform.OS === "ios" ? 40 : theme.spacing.xl,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm,
+  },
+  modalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.bold as any,
+    color: theme.colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xl,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
+  },
+  starButton: {
+    padding: theme.spacing.sm,
+  },
+  starIcon: {
+    fontSize: 40,
+    color: theme.colors.border,
+  },
+  starIconActive: {
+    color: "#fbbf24",
+  },
+  ratingText: {
+    textAlign: "center",
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xl,
+    fontWeight: theme.fontWeight.medium as any,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    backgroundColor: theme.colors.background,
+    minHeight: 100,
+    textAlignVertical: "top",
   },
 });
