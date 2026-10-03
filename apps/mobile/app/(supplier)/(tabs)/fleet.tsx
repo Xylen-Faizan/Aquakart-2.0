@@ -99,23 +99,35 @@ export default function FleetScreen() {
 
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
+
     if (focusRunId && vehicles.length > 0) {
       const targetVehicle = vehicles.find(v => v.run_id === focusRunId);
-      if (targetVehicle && mapRef.current) {
-        mapRef.current.animateToRegion({
-          latitude: targetVehicle.latitude,
-          longitude: targetVehicle.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }, 1000);
+      if (targetVehicle && mapRef.current && targetVehicle.latitude != null && targetVehicle.longitude != null) {
+        try {
+          mapRef.current.animateToRegion({
+            latitude: Number(targetVehicle.latitude),
+            longitude: Number(targetVehicle.longitude),
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          }, 1000);
+        } catch (e) {}
         
-        setTimeout(() => {
-          if (markerRefs.current[focusRunId]) {
-            markerRefs.current[focusRunId].showCallout();
+        timeoutId = setTimeout(() => {
+          if (isMounted && markerRefs.current[focusRunId]?.showCallout) {
+            try {
+              markerRefs.current[focusRunId].showCallout();
+            } catch (e) {}
           }
         }, 1200);
       }
     }
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [focusRunId, vehicles]);
 
   const getMarkerColor = (vehicle: any) => {
@@ -157,11 +169,11 @@ export default function FleetScreen() {
             style={styles.map}
             initialRegion={defaultRegion}
           >
-            {vehicles.map((v) => (
+            {vehicles.filter(v => v.latitude != null && v.longitude != null).map((v) => (
               <Marker
                 ref={(ref) => { if (ref) markerRefs.current[v.run_id] = ref; }}
                 key={v.run_id}
-                coordinate={{ latitude: v.latitude, longitude: v.longitude }}
+                coordinate={{ latitude: Number(v.latitude), longitude: Number(v.longitude) }}
                 pinColor={getMarkerColor(v)}
               >
                 <Callout>
