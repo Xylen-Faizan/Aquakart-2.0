@@ -1,151 +1,135 @@
-# AquaKart 2.0
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Xylen-Faizan/Aquakart-2.0/main/screens/13_Admin_Dashboard_cropped.png" alt="AquaKart Logo" width="150" style="border-radius:20px"/>
 
-> Local Water Supply Network Platform — Bokaro Steel City & Chas, Jharkhand, India
+  # AquaKart 2.0 💧
 
-## What is AquaKart?
+  **The Ultimate Real-Time Water Supply & Fleet Management Network**
 
-AquaKart connects local water suppliers with customers who need reliable water delivery. Customers discover nearby suppliers, place orders, and track delivery status. Suppliers manage orders, capacity, and availability digitally.
+  [Features](#features) • [Architecture](#architecture) • [Roles](#role-based-workflows) • [Quick Start](#quick-start) • [Screenshots](#screenshots)
 
-## Architecture
+</div>
 
+---
+
+## 🌟 Overview
+
+**AquaKart 2.0** is a next-generation platform designed to digitize and optimize the localized water supply chain. It connects customers, water suppliers, delivery drivers, and helpers into a unified, real-time ecosystem. 
+
+Whether it's scheduled daily deliveries, live fleet tracking, or on-the-fly "Opportunistic" orders powered by smart dispatching, AquaKart automates everything from inventory management to monthly ledger (Khata) settlements.
+
+---
+
+## ✨ Key Features
+
+### 🚀 Real-Time Fleet & Dispatch System
+- **Live GPS Tracking**: Suppliers can monitor their active delivery vehicles on a live map. Auto-focus and color-coded markers indicate capacity and freshness.
+- **Smart Opportunistic Dispatch**: When a customer requests an immediate order, the system automatically finds the nearest eligible delivery vehicle and alerts the driver in real-time.
+- **Route Planning**: Create daily runs, assign drivers and helpers, and track the exact ETA to the next stop.
+
+### 💼 Comprehensive Supplier Dashboard
+- **Jar Management**: Real-time tracking of 20L jars, 1L bottles, and cool jars.
+- **Shortfall Risk Detection**: The system intelligently warns suppliers if their current physical stock won't meet the daily scheduled demands.
+- **Automated Digital Khata**: Replaces paper ledgers. Tracks monthly deliveries, outstanding balances, and one-tap "Settled" stamps.
+
+### 🧑‍🤝‍🧑 Role-Based Ecosystem
+- **Customers**: Browse local suppliers, place scheduled or immediate orders, and track the delivery vehicle live.
+- **Suppliers**: Manage inventory, create delivery runs, track fleet, and settle accounts.
+- **Drivers & Helpers**: Receive real-time turn-by-turn navigation, handle on-demand orders, and mark deliveries as complete on the go.
+
+### 🌍 Localization & Accessibility
+- **Bilingual Interface**: Full support for both **English** and **Hindi**, easily switchable in settings for local ground staff.
+- **Push Notifications**: Powered by OneSignal to keep all parties updated on order statuses, new assignments, and payments.
+
+---
+
+## 🏗 Architecture & Tech Stack
+
+AquaKart is built as a robust Monorepo utilizing the best modern web and mobile technologies.
+
+```mermaid
+graph TD
+    A[Mobile App - Expo/React Native] -->|REST/RPC/WebSockets| C(Supabase - PostgreSQL)
+    B[Admin Panel - Next.js] -->|REST/RPC| C
+    C --> D{Edge Functions}
+    D -->|Push| E[OneSignal Notifications]
 ```
-┌──────────────┐    ┌──────────────┐    ┌─────────────────┐
-│  Mobile App  │    │  Admin App   │    │    Supabase      │
-│  (Expo/RN)   │───▶│  (Next.js)   │───▶│  (PostgreSQL)    │
-│  Customer +  │    │  Dashboard   │    │  Auth + RLS      │
-│  Supplier    │    │              │    │  Realtime        │
-└──────────────┘    └──────────────┘    └─────────────────┘
-```
 
-### Monorepo Structure
+### Stack Details
+* **Mobile**: Expo, React Native, TypeScript, React Navigation, Expo Router.
+* **Web Admin**: Next.js 14, Tailwind CSS, Shadcn UI.
+* **Backend**: Supabase (PostgreSQL, Row Level Security, Realtime Subscriptions, Edge Functions).
+* **Maps & GPS**: `react-native-maps`, `expo-location`.
+* **State & Data**: React Hooks, Supabase Realtime Channels.
+
+---
+
+## 📁 Repository Structure
 
 ```
 aquakart-2/
 ├── apps/
-│   ├── mobile/          # Expo + React Native + TypeScript
-│   └── admin/           # Next.js 14 + TypeScript
+│   ├── mobile/          # Expo + React Native + TypeScript (Core App)
+│   └── admin/           # Next.js 14 + TypeScript (Admin Dashboard)
 ├── packages/
-│   ├── types/           # Shared TypeScript types
-│   ├── validation/      # Zod schemas + business logic
-│   └── config/          # Constants + status transitions
+│   ├── types/           # Shared TypeScript interfaces and DB schema
+│   ├── validation/      # Zod validation schemas
+│   └── config/          # Global constants and state configs
 ├── supabase/
-│   └── migrations/      # PostgreSQL migrations (001-012)
-├── docs/                # Documentation
-└── .env.example         # Environment variable template
+│   ├── migrations/      # 20+ Sequential SQL migrations
+│   └── functions/       # Deno-based Edge Functions (Push Notifications)
+├── docs/                # Setup & API Documentation
+└── README.md            
 ```
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js >= 18.18
-- npm
-- A [Supabase](https://supabase.com) project (free tier)
-- Expo Go app (for mobile testing)
+- npm or yarn
+- A [Supabase](https://supabase.com) project (Free tier works perfectly)
+- Expo Go app on your phone (or a configured Android/iOS emulator)
 
-### Setup
+### Installation
 
-```bash
-# 1. Clone and install
-git clone <repo-url>
-cd aquakart-2
-npm install
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Xylen-Faizan/Aquakart-2.0.git
+   cd aquakart-2
+   npm install
+   ```
 
-# 2. Configure environment
-cp .env.example .env
-# Fill in your Supabase URL and keys
+2. **Configure Environment Variables**
+   ```bash
+   cp .env.example .env
+   # Add your Supabase URL, Anon Key, and OneSignal App ID
+   ```
 
-# 3. Apply database migrations
-# Run each file in supabase/migrations/ in order via Supabase SQL editor
+3. **Database Setup**
+   Run the SQL migrations located in `supabase/migrations/` sequentially in your Supabase SQL editor to create all tables, RPCs, and RLS policies.
 
-# 4. Run mobile app
-cd apps/mobile
-npx expo start
+4. **Start the Mobile App**
+   ```bash
+   cd apps/mobile
+   npx expo start
+   ```
 
-# 5. Run admin dashboard (separate terminal)
-cd apps/admin
-npm run dev
-```
+5. **Start the Admin Dashboard** (Optional)
+   ```bash
+   cd apps/admin
+   npm run dev
+   ```
 
-See [docs/setup.md](docs/setup.md) for detailed instructions.
+---
 
-## Environment Variables
+## 🔒 Security & Data Integrity
 
-| Variable | Used By | Description |
-|---|---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | Mobile | Supabase project URL |
-| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Mobile | Supabase anon/publishable key |
-| `NEXT_PUBLIC_SUPABASE_URL` | Admin | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Admin | Supabase anon/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Admin (server only) | Service role key — **NEVER** expose to client |
+- **Row Level Security (RLS)**: Strictly enforced at the PostgreSQL layer. Customers can only see their own orders, suppliers can only modify their fleet, and drivers can only update active runs.
+- **RPC Transactions**: Critical operations (like completing a delivery and deducting inventory) are handled via atomic Postgres RPCs to prevent race conditions.
 
-## Development Commands
+---
 
-| Command | Description |
-|---|---|
-| `npm run mobile` | Start Expo dev server |
-| `npm run admin` | Start Next.js dev server |
-| `npm run typecheck` | TypeScript check all workspaces |
-| `npm test` | Run tests in all workspaces |
-
-## Database
-
-13 migrations in `supabase/migrations/`:
-
-1. **profiles** — User profiles linked to Supabase Auth
-2. **suppliers** — Supplier business information
-3. **products** — Product catalog (V1: 20L Water Jar)
-4. **supplier_products** — Supplier-specific pricing
-5. **supplier_capacity** — Daily capacity tracking (max / reserved / fulfilled)
-6. **addresses** — Customer delivery addresses
-7. **orders** — Order records with status tracking
-8. **order_items** — Line items per order
-9. **order_status_history** — Audit trail of status changes
-10. **rls** — Row Level Security policies (hardened)
-11. **functions** — Business logic RPCs (place_order, accept_order, etc.)
-12. **seed** — Development seed data
-13. **supplier_updates** — Capacity crossover fix and supplier product RPC
-
-### Security
-
-- **RLS on all tables** — no public write access
-- **Order mutations via RPCs only** — no direct client writes to orders
-- **Capacity fields system-controlled** — reserved/fulfilled modified only by transactional functions
-- **Role assignment hardcoded** — signup always creates `customer` role
-- **Service-role key isolated** — server-only, never in client bundles
-
-## V1 Scope
-
-### Included
-- Customer registration & login
-- Address management
-- Supplier discovery (active, accepting, with capacity)
-- Order placement, tracking, and history
-- Supplier order management (accept/reject/status updates)
-- Supplier capacity management
-- Admin dashboard with metrics
-- Admin supplier/customer/order management
-- Manual order reassignment (placed orders only)
-- Realtime order status updates
-
-### Not Included (Future)
-- Online payment gateway
-- Live GPS tracking
-- AI/chatbot features
-- Subscriptions
-- Delivery agent management
-- Route optimization
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Mobile | React Native, Expo SDK 52, Expo Router, TypeScript |
-| Admin | Next.js 14, TypeScript, CSS Modules |
-| Backend | Supabase (PostgreSQL, Auth, RLS, Realtime) |
-| Validation | Zod |
-| Monorepo | npm workspaces |
-
-## License
-
-Private — All rights reserved.
+<div align="center">
+  <i>Built with ❤️ for a smarter water distribution network.</i>
+</div>
