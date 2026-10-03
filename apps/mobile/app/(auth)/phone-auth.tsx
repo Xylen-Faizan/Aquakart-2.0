@@ -16,9 +16,11 @@ import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
 import { LegalConsent } from "../../components/legal/LegalConsent";
 import { legalService } from "../../services/legal";
+import { useLocalSearchParams } from "expo-router";
 
 export default function PhoneAuthScreen() {
   const { signInWithPhone, verifyPhoneOtp } = useAuth();
+  const { intendedRole } = useLocalSearchParams<{ intendedRole?: string }>();
 
   const [step, setStep] = useState<"PHONE" | "OTP">("PHONE");
   const [phone, setPhone] = useState("");
@@ -75,6 +77,9 @@ export default function PhoneAuthScreen() {
         setError(error.message);
       } else {
         await legalService.persistForCurrentUser("mobile-phone");
+        if (intendedRole === 'supplier') {
+          await supabase.rpc('ensure_supplier_role');
+        }
         router.replace("/");
       }
     } catch (err: any) {

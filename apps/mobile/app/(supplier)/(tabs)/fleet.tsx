@@ -81,7 +81,8 @@ export default function FleetScreen() {
 
   useEffect(() => {
     // Subscribe to realtime updates
-    const channel = supabase.channel('public:delivery_run_live_state')
+    const channelName = `fleet-live-${Date.now()}`;
+    const channel = supabase.channel(channelName)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'delivery_run_live_state' },

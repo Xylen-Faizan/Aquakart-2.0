@@ -63,6 +63,7 @@ export default function SupplierAuthScreen() {
               await supabase.auth.exchangeCodeForSession(code);
             if (sessionError) throw sessionError;
             await legalService.recordConsent('supplier_google_login');
+            await supabase.rpc('ensure_supplier_role');
             return;
           }
 
@@ -80,6 +81,7 @@ export default function SupplierAuthScreen() {
             });
             if (sessionError) throw sessionError;
             await legalService.recordConsent('supplier_google_login');
+            await supabase.rpc('ensure_supplier_role');
           } else {
             throw new Error(
               "Authentication failed: No valid session tokens returned from provider.",
@@ -95,7 +97,7 @@ export default function SupplierAuthScreen() {
   };
 
   const handlePhoneSignIn = () => {
-    router.push("/(auth)/phone-auth" as any);
+    router.push({ pathname: "/(auth)/phone-auth", params: { intendedRole: 'supplier' } } as any);
   };
 
   return (

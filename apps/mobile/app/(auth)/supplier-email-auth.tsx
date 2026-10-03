@@ -17,6 +17,7 @@ import { useAuth } from "../../features/auth/AuthProvider";
 import { Input, Button } from "../../components/ui";
 import { theme } from "../../constants/theme";
 import { legalService, LEGAL_URLS } from "../../services/legalService";
+import { supabase } from "../../lib/supabase/client";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -43,6 +44,7 @@ export default function SupplierEmailAuthScreen() {
         setErrors({ form: error.message });
       } else {
         await legalService.recordConsent('supplier_email_login');
+        await supabase.rpc('ensure_supplier_role');
         router.replace("/");
       }
     } catch (error) {
