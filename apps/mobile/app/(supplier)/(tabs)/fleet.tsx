@@ -20,8 +20,7 @@ export default function FleetScreen() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { focusRunId } = useLocalSearchParams<{ focusRunId?: string }>();
-  const mapRef = useRef<MapView
-            ref={mapRef}>(null);
+  const mapRef = useRef<any>(null);
   const markerRefs = useRef<{ [key: string]: any }>({});
   
   // Center of Bokaro
