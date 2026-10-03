@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BUSINESS_DETAILS } from "@aquakart/config";
-import styles from "../components/legal.module.css";
+import styles from "@/components/legal.module.css";
 
 export const metadata = {
   title: "Delete AquaKart Account",

@@ -96,7 +96,7 @@
   color: var(--color-text-secondary);
   font-size: .82rem;
 }
-a:focus-visible {
+.page a:focus-visible {
   outline: 3px solid var(--color-aqua);
   outline-offset: 3px;
 }
